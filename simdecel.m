@@ -5,7 +5,7 @@ function rsf = simdecel()
 %   stick with this struct implementation nonetheless. See simrun.m for the
 %   legacy classdef version
 
-    cd('~/Documents/MATLAB')
+    %cd('~/Documents/MATLAB')
 
     %% constants for general use
     r.k = 1.381e-23;
@@ -19,18 +19,18 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'Helium';
-    r.num = 1e2;
-    r.tempxy = 100e-3;
-    r.spreadxy = 1e-3;
-    r.tempz = 100e-3;
-    r.spreadz = 1e-3;
-    r.initvz = 1685;
+    r.dname = 'Detection_Details';
+    r.num = 1e4;
+    r.tempxy = 200e-3;
+    r.spreadxy = 3e-3;
+    r.tempz = 200e-3;
+    r.spreadz = 4e-3;
+    r.initvz = 810;
     r.dist = 'homogeneous';
     
     % decelerator configuration variables
-    r.stages = 1200;%{100,125,150,175,200,225,250,275,300};      
-    r.vdd = 20e-3;
+    r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
+    r.vdd = 10e-3;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
@@ -38,7 +38,7 @@ function rsf = simdecel()
     
     % decelerator timing variables
     r.deceltiming = 'finalvz';
-    r.finalvz = 33;%{10 20 30 40 50 75 100 150};
+    r.finalvz = 50;%{10 20 30 40 50 75 100 150};
     r.phase = 75;%{0 10 20 30 30.39};
     
     % simulation timing variables
@@ -65,8 +65,11 @@ function rsf = simdecel()
     % Save the struct of runs, just in case the fitsim2data or results
     % functions have petty errors. Wouldn't want to lost everything.
     t = datestr(now,'mmmm-dd-yyyy_HH-MM-SS');
+    if ~exist('autosaves','dir')
+        mkdir('autosaves')
+    end
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
-    system(['cp simdecel.m ~/Documents/MATLAB/autosaves/simdecel_' t '_' r.dname '.m']);
+    system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
     resultsdecel(rsf)
 end
 

@@ -12,3 +12,7 @@
 # Occasionally there may be files in it worth holding on to.
 # In this case they should be moved into the main directory.
 Cluster/
+
+#The autosave feature predates version control, and should be unnecessary
+# moving forward. It will still be useful while working locally.
+autosaves/

@@ -20,17 +20,17 @@ function rsf = simdecel()
     
     % variables for the initial distribution
     r.dname = 'Detection_Details';
-    r.num = 1e4;
-    r.tempxy = 200e-3;
+    r.num = 1e5;
+    r.tempxy = 1000e-3;
     r.spreadxy = 3e-3;
-    r.tempz = 200e-3;
-    r.spreadz = 4e-3;
+    r.tempz = 2000e-3;
+    r.spreadz = 10e-3;
     r.initvz = 810;
     r.dist = 'homogeneous';
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
-    r.vdd = 10e-3;
+    r.vdd = 10e-4;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
@@ -38,8 +38,8 @@ function rsf = simdecel()
     
     % decelerator timing variables
     r.deceltiming = 'finalvz';
-    r.finalvz = 50;%{10 20 30 40 50 75 100 150};
-    r.phase = 75;%{0 10 20 30 30.39};
+    r.finalvz = 37; %{1000 810 500 200 100 50 37};
+    r.phase = -25;%{0 10 20 30 30.39};
     
     % simulation timing variables
     r.smallt = 1e-7;
@@ -70,7 +70,8 @@ function rsf = simdecel()
     end
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
-    resultsdecel(rsf)
+   % resultsdecel(rsf)
+    resultsToF(rsf) 
 end
 
 function r = init(r)
@@ -95,7 +96,7 @@ function r = initdecel(r)
     % number.
     if strcmp(r.deceltiming,'finalvz')
         energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/r.stages;
-        r.phase = fminbnd(@(phi) (r.f.renergy(phi)-energyper)^2,0,90);
+        r.phase = fminbnd(@(phi) (r.f.renergy(phi)-energyper)^2,-90,90); %changed the bounds for acceleration
         fprintf('Phase Angle: %2.3f\n',r.phase);    
     end
 end
@@ -161,7 +162,7 @@ end
 % magnetic quadrupole focusing.
 function r = tofirststage(r)
     time = ((-90+r.phase)*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
-    r.pos = r.pos + r.vel*time;
+    r.pos = r.pos + r.vel*3*time;
 end
 
 %% The stage function.

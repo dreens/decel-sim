@@ -8,6 +8,9 @@
 #Windows Matlab Autosaves
 **.asv
 
+#EMACS Autosaves
+\#*#
+
 #Cluster Directory. Note ignoring the whole thing saves lots of clutter.
 # Occasionally there may be files in it worth holding on to.
 # In this case they should be moved into the main directory.

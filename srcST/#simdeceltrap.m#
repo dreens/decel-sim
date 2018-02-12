@@ -1,0 +1,101 @@
+function rsf = simdeceltrap()
+
+    cd('~/Documents/MATLAB/slowANDtrap/src')
+
+    %% constants for general use
+    r.k = 1.381e-23;
+    r.mOH = 2.82328e-26; % Accounts for Oxygen binding energy
+    r.uOH = 9.27401e-24 * 1.4;
+    r.h = 6.62607e-34;
+    r.hb = r.h/(2*pi);
+    
+    %% initialization of a run
+    % Like the fortran sim, these can be put in braces to indicate several
+    % runs over different parameter options.
+    
+    % Set for cluster submissions
+    r.parallel = false;
+    
+    % variables for the initial distribution
+    r.dname = 'Magpin_test_detection';
+    r.num = 1e2;
+    r.tempxy = 1000e-3;
+    r.spreadxy = 5e-3;
+    r.tempz = 1000e-3;
+    r.spreadz = 10e-3;
+    r.initvz = 280;%{480 620 760};
+    r.dist = 'homogeneous';
+    
+    % set this to force field reloading. 
+    r.reloadfields = false;
+    
+    % Set these functions to plot or fit sim results
+    r.plotdata = @results_synch;
+    r.fitdata  = @(x)[];
+    
+    % decelerator configuration variables
+    r.stages = 60;%{100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290 300 350 400 500}; %227
+    r.vdd = 20e-3;
+    r.decel = 'normal';%('electrodering','uniformmagnet','normal','magneticpin'};
+    %r.decel = 'normal';
+    %r.loadname = 'tricycleload';
+    r.loadname = 'magneticpinload';
+    %r.trapname = 'tricycletrap';
+    r.trapname = 'magneticpintrap';
+    
+    % decelerator timing variables
+    % Choose finalvz, magdecelspecial, phaseangle, phaseramp;
+    r.deceltiming = 'phaseramp'; 
+    r.finalvz = {39}; % not used for magdecelspecial or phaseramp
+    %r.finalvz = {480 426 365 289 40}; %for 142 stages 480m/s, 0-10-20-30-working phaseangle
+    %r.finalvz = {380 20 0};
+    %r.finalvz = {480 390 273 40};%for 227 stages 480m/s, 0-10-20-working phaseangle
+    %r.finalvz = {620 554 478 385.5 40}; %for 227 stages 620m/s, 0-10-20-30-working phaseangle
+    r.rampN = 2;%{1 2 3 4 5 6}; % How many stages to ramp the phase
+    
+    
+    
+    % loading configuration variables
+    r.traploadstyle = 'loadvelz';
+    r.loadtime = 300e-6; %{280e-6 290e-6 300e-6 310e-6 320e-6 330e-6};
+    r.loaddist = 8e-3;
+    r.loadvelz = 5;%{0 2 4 6 8 10};
+    r.loadphase = 84;%{72 75 78 81 84 87 90 93};
+    r.addflip = true;%{false true};
+    r.voltagescaling = 1;
+    
+    % simulation timing variables
+    r.tinyt = 1e-10;        % accuracy of decel switching
+    r.smallt = 5e-7;        % propagator timescale
+    r.decelt = 1e-6;        % data update timescale during deceleration
+    r.loadt = 1e-6;         % ditto, during loading
+    r.trapt = 1e-4;         % ditto, during trapping
+    r.traptime = 5e-4;      % total time in the trap
+    r.decelofftime = 0;     % will be set when decel turns off
+    r.loadingofftime = 0;      % will be set when trapping begins
+    
+    % laser beam variables
+    r.lasertype = 'disk'; % may implement gaussian or elliptical
+    r.LBD = 2.2e-3;
+    r.detection = 'free flight';
+    
+    % random number seed.
+    r.doseed = false;
+    r.seed = 100;
+
+    % Choose unpacking type (must precede overwriting, but unpacking itself
+    % must follow overwriting)
+    r.packtype = 'product';
+        
+    % Unpack r into a struct of runs
+    rs = unpacker(r);
+    
+    % Loop through each run, save data call processing functions
+    if r.parallel
+        mqsub('runall',{rs},'Name',r.dname,'Cores',16,'Queue','hexadec')
+    else
+        rsf = runall(rs);
+    end    
+    
+end
+

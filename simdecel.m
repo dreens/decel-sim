@@ -390,7 +390,7 @@ function r = processfields(r)
     % smooth it for better derivatives. I tuned the standard deviation, 3,
     % until surfaces (run "figure;surf(squeeze(dvdzm(1,:,:)))" for example)
     % don't show waviness or chopiness.
-    vv = smooth3(vv,'gaussian',7,3);
+    % vv = smooth3(vv,'gaussian',7,3);
     
     %% Take derivatives to get force fields
     
@@ -402,9 +402,9 @@ function r = processfields(r)
     
     % perform the derivatives. Convolution style differentiation requires
     % scaling by the matrix point spacing.
-    dvdxm = convn(vv,xd,'same')/xsp;
-    dvdym = convn(vv,yd,'same')/ysp;
-    dvdzm = convn(vv,zd,'same')/zsp;
+    dvdxu = convn(vv,xd,'same')/xsp;
+    dvdyu = convn(vv,yd,'same')/ysp;
+    dvdzu = convn(vv,zd,'same')/zsp;
     
     % zero the forces outside of the geometry mask. This ensures that
     % molecules aren't accidentally reflected off of pathologically large
@@ -412,16 +412,31 @@ function r = processfields(r)
     % COMSOL. Instead, molecules that hit geometry will continue through
     % until they fall out of the force field and are removed by the
     % molecule stepper which looks for this.
-    dvdxm(mm~=0)=0;
-    dvdym(mm~=0)=0;
-    dvdzm(mm~=0)=0;
+    mmx = convn(mm,abs(xd),'same') > 0;
+    mmy = convn(mm,abs(yd),'same') > 0;
+    mmz = convn(mm,abs(zd),'same') > 0;
+    dvdxu(mmx)=0;
+    dvdyu(mmy)=0;
+    dvdzu(mmz)=0;
+    dvdxu(1,:,:)=0; dvdxu(end,:,:) = dvdxu(end-1,:,:);
+    dvdyu(:,1,:)=0; dvdyu(:,end,:) = dvdyu(:,end-1,:);
+    dvdzu(:,:,[1 end])=0;    
+    dvdxu(mmx)=2e-19;
+    dvdyu(mmy)=2e-19;
+    dvdzu(mmz)=2e-19;
+    dvdxm = shiftableBF3D(dvdxu,2,2e-20,1e-4,2e-19);
+    dvdym = shiftableBF3D(dvdyu,2,2e-20,1e-4,2e-19);
+    dvdzm = shiftableBF3D(dvdzu,2,2e-20,1e-4,2e-19);
+    dvdxm(mmx)=0;
+    dvdym(mmy)=0;
+    dvdzm(mmz)=0;
     
     % zero the x,y force along their respective lines of symmetry. This
     % should already be the case but convolution based derivatives can
     % behave strangely near borders due to zero padding assumptions.
-    dvdxm(1,:,:)=0; dvdxm(end,:,:)=0;
-    dvdym(:,1,:)=0; dvdym(:,end,:)=0;
-    dvdzm(:,:,1)=0; dvdzm(:,:,end)=0;
+    dvdxm(1,:,:)=0;
+    dvdym(:,1,:)=0;
+    dvdzm(:,:,[1 end])=0;
     
     %% Create interpolants
     % These convenient datatypes can be evaluated directly as functions and
@@ -429,7 +444,7 @@ function r = processfields(r)
     dvdxg  = griddedInterpolant(xx,yy,zz,dvdxm,'linear','none');
     dvdyg  = griddedInterpolant(xx,yy,zz,dvdym,'linear','none');
     dvdzg  = griddedInterpolant(xx,yy,zz,dvdzm,'linear','none');
-    vf = griddedInterpolant(xx,yy,zz,vv);
+    vfg = griddedInterpolant(xx,yy,zz,vv);
     % bf = griddedInterpolant(xx,yy,zz,bb);
     % ef = griddedInterpolant(xx,yy,zz,ee);
     % mf = griddedInterpolant(xx,yy,zz,mm);
@@ -466,20 +481,28 @@ function r = processfields(r)
     % This returns the energy removed per stage as a function of phase
     % angle. Its inverse enables quickly choosing the phase angle given a
     % final velocity. 
-    renergy = @(phi) vf(0,0,(phi-90)/360 * zstagel) - ...
-        vf(0,0,(-phi-90)/360 * zstagel);
+    renergy = @(phi) vfg(0,0,(phi-90)/360 * zstagel) - ...
+        vfg(0,0,(-phi-90)/360 * zstagel);
+    
+    % This is the potential energy at a given phase angle, measured
+    % relative to the potential energy at phi=-90 degrees. One could
+    % subtract this from itself reversed to get renergy above.
+    aenergy = @(phi) vfg(0,0,(phi-90)/360 * zstagel) - vfg(0,0,-zstagel/2);
 
     % These functions reference the gridded interpolants, but with the
     % coordinates appropriately wrapped.
     dvdxa = @(x,y,z,n) dvdxg(abs(x),abs(y),wrap(z,n)).*sign(x);
     dvdya = @(x,y,z,n) dvdyg(abs(x),abs(y),wrap(z,n)).*sign(y);
     dvdza = @(x,y,z,n) dvdzg(abs(x),abs(y),wrap(z,n)).*side(z,n);
+    vfa = @(x,y,z,n) vfg(abs(x),abs(y),wrap(z,n));
     dvdx = @(xyz,n) dvdxa(xyz(:,1),xyz(:,2),xyz(:,3),n);
     dvdy = @(xyz,n) dvdya(xyz(:,1),xyz(:,2),xyz(:,3),n);
     dvdz = @(xyz,n) dvdza(xyz(:,1),xyz(:,2),xyz(:,3),n);
+    vf = @(xyz,n) vfa(xyz(:,1),xyz(:,2),xyz(:,3),n);
     
     % Save in a file for loading and propagating during decel simulation.
-    save(['Decels/' r.decel '.mat'],'dvdx','dvdy','dvdz','phase','zstagel','renergy')
+    save(['Decels/' r.decel '.mat'],'dvdx','dvdy','dvdz',...
+        'vf','phase','zstagel','renergy','aenergy');
 end
 
 

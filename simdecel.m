@@ -21,12 +21,13 @@ function rsf = simdecel()
     % variables for the initial distribution
     r.dname = 'Detection_Details';
     r.num = 1e5;
-    r.tempxy = 1000e-3;
-    r.spreadxy = 3e-3;
+    r.tempxy = 5000e-3;
+    r.spreadxy = 8e-3;
     r.tempz = 2000e-3;
     r.spreadz = 10e-3;
     r.initvz = 810;
     r.dist = 'homogeneous';
+    r.guide = true;
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
@@ -34,7 +35,7 @@ function rsf = simdecel()
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
-    r.decel = 'normal';%{'varygap2p0','varygap2p1','varygap2p2','varygap2p3','varygap2p4','varygap2p5'};
+    r.decel = 'ppmm_2mm';%{'varygap2p0','varygap2p1','varygap2p2','varygap2p3','varygap2p4','varygap2p5','ppmm_2mm','pmpm_2mm'};
     
     % decelerator timing variables
     r.deceltiming = 'finalvz';
@@ -152,11 +153,9 @@ function r = run(r)
         r = stage(r);
         fprintf('step:%3d/%d,\t%d\n',r.numstage,r.stages,r.molnum(r.numstage))
         r.numstage = r.numstage + 1;
-        %r.pos(:,1:2) = r.pos(:,[2 1]); r.pos(:,1) = -r.pos(:,1);
-        %r.vel(:,1:2) = r.vel(:,[2 1]); r.vel(:,1) = -r.vel(:,1);
     end
 end
-
+    
 %% Propagate Molecules to first stage
 % Eventually this could be modified to include hexapole focusing or maybe
 % magnetic quadrupole focusing.
@@ -168,26 +167,34 @@ end
 %% The stage function.
 % Propagates one decel stage. Removes lost molecules, checks number, etc.
 function r = stage(r)
-    % Step until the synchronous molecule is past the required phase angle.
-    while r.f.phase(r.pos(1,3),r.numstage) < r.phase  && r.vel(1,3) > 0
-        r = smallstep(r,r.smallt);
+    if r.guide
+        zt = r.pos(1,3);
+        while r.pos(1,3) < zt + r.f.zstagel
+            r = smallstep(r,r.smallt);
+        end
+        r.numstage = r.numstage + 1;
+    else
+        % Step until the synchronous molecule is past the required phase angle.
+        while r.f.phase(r.pos(1,3),r.numstage) < r.phase  && r.vel(1,3) > 0
+            r = smallstep(r,r.smallt);
+        end
+
+        % Iterate forward/backward in time until synchronous molecule is right
+        % on top of the correct phase angle.
+        undershoot = 1;
+        while abs(undershoot) > 1e-9 && r.vel(1,3) > 0
+            % get the undershoot in terms of phase
+            undershoot = r.phase - r.f.phase(r.pos(1,3),r.numstage);
+
+            % translate to time ignoring acceleration
+            undershoot = undershoot *r.f.zstagel/360/r.vel(1,3);
+
+            % step the molecules according to this time
+            r = smallstep(r,undershoot);
+        end
     end
     
-    % Iterate forward/backward in time until synchronous molecule is right
-    % on top of the correct phase angle.
-    undershoot = 1;
-    while abs(undershoot) > 1e-9 && r.vel(1,3) > 0
-        % get the undershoot in terms of phase
-        undershoot = r.phase - r.f.phase(r.pos(1,3),r.numstage);
-        
-        % translate to time ignoring acceleration
-        undershoot = undershoot *r.f.zstagel/360/r.vel(1,3);
-        
-        % step the molecules according to this time
-        r = smallstep(r,undershoot);
-    end
-    
-    r.pos(abs(r.pos(:,3)-r.pos(1,3))>15e-3,:)=nan;
+    r.pos(abs(r.pos(:,3)-r.pos(1,3))>150e-3,:)=nan;
     r.pos(r.vel(:,3)<0,:)=nan;
     r.lost    = isnan(sum(r.pos,2));
     r.pos     = r.pos(~r.lost,:);
@@ -420,7 +427,7 @@ function r = processfields(r)
     dvdzu(mmz)=0;
     dvdxu(1,:,:)=0; dvdxu(end,:,:) = dvdxu(end-1,:,:);
     dvdyu(:,1,:)=0; dvdyu(:,end,:) = dvdyu(:,end-1,:);
-    dvdzu(:,:,[1 end])=0;    
+    dvdzu(:,:,[1 end])=dvdzu(:,:,[2, end-1]);    
     dvdxu(mmx)=2e-19;
     dvdyu(mmy)=2e-19;
     dvdzu(mmz)=2e-19;
@@ -430,13 +437,22 @@ function r = processfields(r)
     dvdxm(mmx)=0;
     dvdym(mmy)=0;
     dvdzm(mmz)=0;
-    
+        
     % zero the x,y force along their respective lines of symmetry. This
     % should already be the case but convolution based derivatives can
     % behave strangely near borders due to zero padding assumptions.
     dvdxm(1,:,:)=0;
     dvdym(:,1,:)=0;
     dvdzm(:,:,[1 end])=0;
+    
+    % finally, kill the fields inside obstacles:
+    dvdxm(mmx)=nan;
+    dvdym(mmy)=nan;
+    dvdzm(mmz)=nan;
+    dvdxm(~~mm)=nan;
+    dvdym(~~mm)=nan;
+    dvdzm(~~mm)=nan;
+
     
     %% Create interpolants
     % These convenient datatypes can be evaluated directly as functions and
@@ -503,7 +519,70 @@ function r = processfields(r)
     % Save in a file for loading and propagating during decel simulation.
     save(['Decels/' r.decel '.mat'],'dvdx','dvdy','dvdz',...
         'vf','phase','zstagel','renergy','aenergy');
+
+    %% Produce Output Figure for Debugging
+    % There are many potential errors that could be made in the COMSOL
+    % output, data input processing. 
+    cc = 4e-20;
+    
+    figure('position',[50,50,1100,1100])
+    subplot(2,2,1)
+    surf(cap(squeeze(dvdzm(:,1,:)),cc));
+    title(['Decelerator dvdz, X-Z plane, ' r.decel '.dat']);
+
+    % You might think the labels are backwards, but they're not. surf uses
+    % the second index (the column of the matrix) as the x-axis and the
+    % first index (the row) as the y-axis. It makes sense if you think of
+    % matrices as oriented with x going left-right and y going up-down, but
+    % its crazy when working in 3D.
+    xlabel(['Z axis (' num2str(zsp) ')']);
+    ylabel(['X axis (' num2str(xsp) ')']);
+    zlim([-cc cc])
+
+    subplot(2,2,2)
+    surf(cap(squeeze(dvdzm(1,:,:)),cc));
+    title(['Decelerator dvdz, Y-Z plane, ' r.decel '.dat']); 
+    xlabel(['Z axis (' num2str(zsp) ')']);
+    ylabel(['X axis (' num2str(xsp) ')']);
+    zlim([-cc cc])
+
+    subplot(2,2,3)
+    surf(cap(squeeze(dvdxm(:,1,:)),cc));
+    title(['Decelerator dvdx, X-Z plane, ' r.decel '.dat']);
+    xlabel(['Z axis (' num2str(zsp) ')']);
+    ylabel(['X axis (' num2str(xsp) ')']);
+    zlim([-cc cc])
+
+    subplot(2,2,4)
+    surf(cap(squeeze(dvdym(1,:,:)),cc));
+    title(['Decelerator dvdy, Y-Z plane, ' r.decel '.dat']);
+    xlabel(['Z axis (' num2str(zsp) ')']);
+    ylabel(['X axis (' num2str(xsp) ')']);
+    zlim([-cc cc])
+
+    %{
+    figure('position',[100,200,400,400])
+    plot(abs(zs),vf([zeros(length(zs),2) zs(:)],1))
+    title(['Decel Potential along Z-axis, ' r.trapname '.dat'])
+    xlabel('Z axis')
+    ylabel('Potential Energy (J)')
+    %}
 end
+
+function x = cap(x,varargin)
+    if length(varargin)==1
+        c = varargin{1};
+        x(x>c) = c;
+        x(x<-c) = -c;
+    else
+        [cl, ch] = varargin{:};
+        x(x>ch) = ch;
+        x(x<cl) = cl;
+    end
+end
+
+
+
 
 
 

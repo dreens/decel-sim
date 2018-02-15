@@ -29,6 +29,8 @@ function rsf = simdecel()
     r.dist = 'homogeneous';
     r.guide = true;
     
+    r.voltage = 6.5;
+    
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
     r.vdd = 10e-4;
@@ -212,7 +214,7 @@ end
 % offset by half of a timestep.
 function r = smallstep(r,t)
     r.pos = r.pos + r.vel*t/2;
-    r.vel = r.vel + acc(r)*t;
+    r.vel = r.vel + r.voltage/12.5*acc(r)*t;
     r.pos = r.pos + r.vel*t/2;
             
     %update time.

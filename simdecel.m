@@ -21,28 +21,29 @@ function rsf = simdecel()
     % variables for the initial distribution
     r.dname = 'Detection_Details';
     r.num = 1e5;
-    r.tempxy = 5000e-3;
-    r.spreadxy = 8e-3;
-    r.tempz = 2000e-3;
-    r.spreadz = 10e-3;
-    r.initvz = 810;
-    r.dist = 'homogeneous';
-    r.guide = true;
+    r.tempxy = 200e-3;
+    r.spreadxy = 4e-3;
+    r.tempz = 200e-3;
+    r.spreadz = 5e-3;
+    r.initvz = 820;
+    r.dist = 'gaussian';
+    r.guide = false;
     
-    r.voltage = 6.5;
+    r.voltage = {6.5 7.5 8.5 9.5 10.5 11.5 12.5};
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
-    r.vdd = 10e-4;
+    r.vdd = 20e-3;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
-    r.decel = 'ppmm_2mm';%{'varygap2p0','varygap2p1','varygap2p2','varygap2p3','varygap2p4','varygap2p5','ppmm_2mm','pmpm_2mm'};
+    r.decel = 'normal';%{'varygap2p0','varygap2p1','varygap2p2','varygap2p3','varygap2p4','varygap2p5','ppmm_2mm','pmpm_2mm'};
+    r.reloadfields = false;
     
     % decelerator timing variables
     r.deceltiming = 'finalvz';
-    r.finalvz = 37; %{1000 810 500 200 100 50 37};
-    r.phase = -25;%{0 10 20 30 30.39};
+    r.finalvz = 500; %{1000 810 500 200 100 50 37};
+    r.phase = 0;%{0 10 20 30 30.39};
     
     % simulation timing variables
     r.smallt = 1e-7;
@@ -73,8 +74,8 @@ function rsf = simdecel()
     end
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
-   % resultsdecel(rsf)
-    resultsToF(rsf) 
+    resultsdecel(rsf)
+    %resultsToF(rsf) 
 end
 
 function r = init(r)
@@ -86,9 +87,9 @@ end
 function r = initdecel(r)
     % Load the mat file, or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
-    if exist(['Decels/' r.decel '.mat'],'file');
+    if exist(['Decels/' r.decel '.mat'],'file') && ~r.reloadfields
         r.f = load(['Decels/' r.decel '.mat']);
-    elseif exist(['Decels/' r.decel '.dat'],'file');
+    elseif exist(['Decels/' r.decel '.dat'],'file')
         r = processfields(r);
         r.f = load(['Decels/' r.decel '.mat']);
     else
@@ -99,7 +100,7 @@ function r = initdecel(r)
     % number.
     if strcmp(r.deceltiming,'finalvz')
         energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/r.stages;
-        r.phase = fminbnd(@(phi) (r.f.renergy(phi)-energyper)^2,-90,90); %changed the bounds for acceleration
+        r.phase = fminbnd(@(phi) (r.f.renergy(phi)*r.voltage/12.5-energyper)^2,-90,90); %changed the bounds for acceleration
         fprintf('Phase Angle: %2.3f\n',r.phase);    
     end
 end
@@ -163,7 +164,7 @@ end
 % magnetic quadrupole focusing.
 function r = tofirststage(r)
     time = ((-90+r.phase)*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
-    r.pos = r.pos + r.vel*3*time;
+    r.pos = r.pos + r.vel*time;
 end
 
 %% The stage function.
@@ -196,7 +197,7 @@ function r = stage(r)
         end
     end
     
-    r.pos(abs(r.pos(:,3)-r.pos(1,3))>150e-3,:)=nan;
+    r.pos(abs(r.pos(:,3)-r.pos(1,3))>7e-3,:)=nan;
     r.pos(r.vel(:,3)<0,:)=nan;
     r.lost    = isnan(sum(r.pos,2));
     r.pos     = r.pos(~r.lost,:);
@@ -207,6 +208,11 @@ function r = stage(r)
     r.times(r.numstage) = r.time;
     r.molnum(r.numstage) = r.numleft;
     
+    if r.guide
+        r.vels(r.numstage-1) = r.vels(r.numstage);
+        r.times(r.numstage-1) = r.times(r.numstage);
+        r.molnum(r.numstage-1) = r.molnum(r.numstage);
+    end    
 end
 
 %% Small simulation step.

@@ -19,9 +19,9 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'Test pmpm no-sym';
-    r.num = 1e4;
-    r.tempxy = 200e-3;
+    r.dname = 'pmpm_ppmm_more';
+    r.num = 1e5;
+    r.tempxy = {100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 4e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
@@ -38,8 +38,8 @@ function rsf = simdecel()
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    r.decel = 'pmpm_2mm_no-sym';
-    r.reloadfields = true;
+    r.decel = {'pmpm_2mm_no-sym','ppmm_2mm'};
+    r.reloadfields = false;
     r.fieldsymmetryXY = false;
     r.fieldsymmetryZ = true;
     

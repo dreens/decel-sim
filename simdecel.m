@@ -20,7 +20,7 @@ function rsf = simdecel()
     
     % variables for the initial distribution
     r.dname = 'Detection_Details';
-    r.num = 1e5;
+    r.num = 1e6;
     r.tempxy = 200e-3;
     r.spreadxy = 4e-3;
     r.tempz = 200e-3;
@@ -29,7 +29,7 @@ function rsf = simdecel()
     r.dist = 'gaussian';
     r.guide = false;
     
-    r.voltage = {6.5 7.5 8.5 9.5 10.5 11.5 12.5};
+    r.voltage = num2cell(6.5:.5:12.5);
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      

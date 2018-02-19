@@ -19,17 +19,17 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'Detection_Details';
-    r.num = 1e6;
+    r.dname = 'Test pmpm no-sym';
+    r.num = 1e4;
     r.tempxy = 200e-3;
     r.spreadxy = 4e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
-    r.guide = false;
+    r.guide = true;
     
-    r.voltage = num2cell(6.5:.5:12.5);
+    r.voltage = 12.5; %num2cell(6.5:.5:12.5);
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
@@ -37,8 +37,11 @@ function rsf = simdecel()
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
-    r.decel = 'normal';%{'varygap2p0','varygap2p1','varygap2p2','varygap2p3','varygap2p4','varygap2p5','ppmm_2mm','pmpm_2mm'};
-    r.reloadfields = false;
+    % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
+    r.decel = 'pmpm_2mm_no-sym';
+    r.reloadfields = true;
+    r.fieldsymmetryXY = false;
+    r.fieldsymmetryZ = true;
     
     % decelerator timing variables
     r.deceltiming = 'finalvz';
@@ -100,7 +103,8 @@ function r = initdecel(r)
     % number.
     if strcmp(r.deceltiming,'finalvz')
         energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/r.stages;
-        r.phase = fminbnd(@(phi) (r.f.renergy(phi)*r.voltage/12.5-energyper)^2,-90,90); %changed the bounds for acceleration
+        % changed the bounds for acceleration
+        r.phase = fminbnd(@(phi) (r.f.renergy(phi)*r.voltage/12.5-energyper)^2,-90,90); 
         fprintf('Phase Angle: %2.3f\n',r.phase);    
     end
 end
@@ -118,7 +122,8 @@ function r = initmols(r)
         r.vel = r.vel.*sqrt(temps);
         r.pos = (rand(r.num,3)-.5).*spreads;
     else
-        error(['Distribution type ''' lower(r.dist) ''' not recognized. Capitalization not important.'])
+        error(['Distribution type ''' lower(r.dist) ''' not recognized.'...
+            ' Capitalization not important.'])
     end
 
     %First molecule always 'perfect' for timing
@@ -363,16 +368,16 @@ function r = processfields(r)
     
     % create lookup functions that tell you 'n' for a given x value such
     % that x is the nth x value.
-    x2i = @(x) int16(1+x/xsp);
-    y2i = @(y) int16(1+y/ysp);
-    z2i = @(z) int16(length(zs)+z/zsp);
+    x2i = @(xx) arrayfun(@(x) find(x==xs),xx);
+    y2i = @(yy) arrayfun(@(y) find(y==ys),yy);
+    z2i = @(zz) arrayfun(@(z) find(z==zs),zz);
     
     % check for datapoint uniformity, and x,y starting from zero
     if length(xsp)+length(ysp)+length(zsp) > 3
         error('Non-uniform Datapoint Spacing');
-    elseif abs(xs(1)) > 1e-6
+    elseif abs(xs(1)) > 1e-6 && r.fieldsymmetryXY
         error('X data doesn''t begin at zero')
-    elseif abs(ys(1)) > 1e-6
+    elseif abs(ys(1)) > 1e-6 && r.fieldsymmetryXY
         error('Y data doesn''t begin at zero')
     end
     
@@ -433,8 +438,15 @@ function r = processfields(r)
     dvdxu(mmx)=0;
     dvdyu(mmy)=0;
     dvdzu(mmz)=0;
-    dvdxu(1,:,:)=0; dvdxu(end,:,:) = dvdxu(end-1,:,:);
-    dvdyu(:,1,:)=0; dvdyu(:,end,:) = dvdyu(:,end-1,:);
+    if r.fieldsymmetryXY
+        dvdxu(1,:,:)=0; 
+        dvdyu(:,1,:)=0; 
+        dvdxu(end,:,:)=dvdxu(end-1,:,:);
+        dvdyu(:,end,:)=dvdyu(:,end-1,:);
+    else
+        dvdxu([1 end],:,:)=dvdxu([2,end-1],:,:);
+        dvdyu(:,[1 end],:)=dvdyu(:,[2,end-1],:);
+    end
     dvdzu(:,:,[1 end])=dvdzu(:,:,[2, end-1]);    
     dvdxu(mmx)=2e-19;
     dvdyu(mmy)=2e-19;
@@ -449,9 +461,13 @@ function r = processfields(r)
     % zero the x,y force along their respective lines of symmetry. This
     % should already be the case but convolution based derivatives can
     % behave strangely near borders due to zero padding assumptions.
-    dvdxm(1,:,:)=0;
-    dvdym(:,1,:)=0;
-    dvdzm(:,:,[1 end])=0;
+    if r.fieldsymmetryXY
+        dvdxm(1,:,:)=0;
+        dvdym(:,1,:)=0;
+    end
+    if r.fieldsymmetryZ
+        dvdzm(:,:,[1 end])=0;
+    end
     
     % finally, kill the fields inside obstacles:
     dvdxm(mmx)=nan;
@@ -501,6 +517,10 @@ function r = processfields(r)
     wrapc = @(z,n) (phase(z,n)-90)/360 * zstagel;
     wrap = @(z,n) abs(wrapc(z,n)+zstagel/2)-zstagel/2;
     side = @(z,n) (wrapc(z,n) > -zstagel/2)*2 - 1;
+    if ~r.fieldsymmetryZ
+        wrap = wrapc;
+        side = @(z,n) 1;
+    end
     
     % This returns the energy removed per stage as a function of phase
     % angle. Its inverse enables quickly choosing the phase angle given a
@@ -515,10 +535,17 @@ function r = processfields(r)
 
     % These functions reference the gridded interpolants, but with the
     % coordinates appropriately wrapped.
-    dvdxa = @(x,y,z,n) dvdxg(abs(x),abs(y),wrap(z,n)).*sign(x);
-    dvdya = @(x,y,z,n) dvdyg(abs(x),abs(y),wrap(z,n)).*sign(y);
-    dvdza = @(x,y,z,n) dvdzg(abs(x),abs(y),wrap(z,n)).*side(z,n);
-    vfa = @(x,y,z,n) vfg(abs(x),abs(y),wrap(z,n));
+    if r.fieldsymmetryXY
+        dvdxa = @(x,y,z,n) dvdxg(abs(x),abs(y),wrap(z,n)).*sign(x);
+        dvdya = @(x,y,z,n) dvdyg(abs(x),abs(y),wrap(z,n)).*sign(y);
+        dvdza = @(x,y,z,n) dvdzg(abs(x),abs(y),wrap(z,n)).*side(z,n);
+        vfa = @(x,y,z,n) vfg(abs(x),abs(y),wrap(z,n));
+    else
+        dvdxa = @(x,y,z,n) dvdxg(x,y,wrap(z,n));
+        dvdya = @(x,y,z,n) dvdyg(x,y,wrap(z,n));
+        dvdza = @(x,y,z,n) dvdzg(x,y,wrap(z,n)).*side(z,n);
+        vfa = @(x,y,z,n) vfg(x,y,wrap(z,n));
+    end
     dvdx = @(xyz,n) dvdxa(xyz(:,1),xyz(:,2),xyz(:,3),n);
     dvdy = @(xyz,n) dvdya(xyz(:,1),xyz(:,2),xyz(:,3),n);
     dvdz = @(xyz,n) dvdza(xyz(:,1),xyz(:,2),xyz(:,3),n);

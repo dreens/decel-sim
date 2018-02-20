@@ -29,7 +29,7 @@ function rsf = simdecel()
     r.dist = 'gaussian';
     r.guide = true;
     
-    r.voltage = 12.5; %num2cell(6.5:.5:12.5);
+    r.voltage = 6.5; %num2cell(6.5:.5:12.5);
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      

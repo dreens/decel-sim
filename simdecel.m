@@ -21,31 +21,34 @@ function rsf = simdecel()
     % variables for the initial distribution
     r.dname = 'pmpm_ppmm_more';
     r.num = 1e5;
-    r.tempxy = {100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    r.spreadxy = 4e-3;
+    r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.spreadxy = 2e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
-    r.guide = true;
+    r.guide = false;
     
-    r.voltage = 6.5; %num2cell(6.5:.5:12.5);
+    r.voltage = 12.5; %num2cell(6.5:.5:12.5);
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
-    r.vdd = 20e-3;
+    r.vdd = 2e-3;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    r.decel = {'pmpm_2mm_no-sym','ppmm_2mm'};
+    r.decel =  'normal'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    
     r.reloadfields = false;
-    r.fieldsymmetryXY = false;
+    
+    % Make sure are true except for guiding fields
+    r.fieldsymmetryXY = true;
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
     r.deceltiming = 'finalvz';
-    r.finalvz = 500; %{1000 810 500 200 100 50 37};
+    r.finalvz = 37; %{1000 810 500 200 100 50 37};
     r.phase = 0;%{0 10 20 30 30.39};
     
     % simulation timing variables
@@ -77,6 +80,8 @@ function rsf = simdecel()
     end
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
+   
+    
     resultsdecel(rsf)
     %resultsToF(rsf) 
 end

@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'collision_search';
-    r.num = 1e6;
+    r.dname = 'collision_search_testphifix';
+    r.num = 1e3;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
@@ -180,7 +180,13 @@ end
 % Eventually this could be modified to include hexapole focusing or maybe
 % magnetic quadrupole focusing.
 function r = tofirststage(r)
-    time = ((-90+r.phases(1))*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
+    %time = ((-90+r.phases(1))*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
+    % I used to artificially change the decelerator start time according to
+    % the phase angle to make sure that even the first stage was equal
+    % length with all others. This made phase angle calculations for a
+    % given final velocity target easier. For collision hunting this is not
+    % good. Instead:
+    time = (-90*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
     r.pos = r.pos + r.vel*time;
 end
 

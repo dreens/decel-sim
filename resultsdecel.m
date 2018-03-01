@@ -2,11 +2,12 @@
 function resultsdecel(rs)
     figure('Position',[0,0,2000,2000])
     colors = get(gca,'ColorOrder');
-    colors = [colors ; colors ; colors ; colors];
+    colors = [colors ; (1-colors) ; colors ; colors];
+    colors = jet(length(rs));
     for i=1:length(rs)
         r = rs(i);
         subplot(2,3,1); hold on
-        n = min(find(r.phases==-70))-1;
+        n = min(find(r.phases==70))-1;
         plot(r.molnum/r.molnum(1),'b-','DisplayName',['st=' num2str(n)],'Color',colors(i,:));
         subplot(2,3,2); hold on
         plot(0:length(r.modes),[r.initvz r.vels],'b-','Color',colors(i,:));
@@ -56,10 +57,9 @@ function resultsdecel(rs)
     
     
     subplot (2,3,5)
-    colors = get(gca,'ColorOrder');
-    colors = [colors ; colors ; colors ; colors];
     diamL = 2.5e-3;
     distL = 8e-3 + r.pos(1,3);
+    maxes = zeros(size(rs));
     for j=1:length(rs)
         r = rs(j);
         tof = zeros(1,1000);
@@ -72,17 +72,22 @@ function resultsdecel(rs)
             tof(i) = sum( zsq + xsq < diamL^2/4 & ya < 2e-3);
         end
         plot(times*1e6,tof,'Color',colors(j,:))
+        maxes(j) = max(tof);
     end
     xlabel('Time \mus')
     ylabel('Population (arb)')
     title('Time of Flight')
-    legend('11 mm','22 mm','33 mm')
     grid on
     
     
     
     
     subplot(2,3,6)
+    hold on
+    for i=1:length(rs)
+        n = min(find(rs(i).phases==70))-1;
+        errorbar(n,maxes(i),sqrt(maxes(i)),'bx','Color',colors(i,:))
+    end
     xlabel('Initial Deceleration Stages','FontSize',12)
     ylabel('Remaining Population','FontSize',12)
     title('Phase Space Acceptance','FontSize',14)

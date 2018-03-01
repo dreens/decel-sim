@@ -47,7 +47,13 @@ function rsf = simdecel()
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    r.deceltiming = 'finalvz';
+    r.deceltiming = 'phases';
+    r.phases = {};
+    for i=0:8:72
+        r.phases{end+1} = [70*ones(1,i) ...
+            repmat([-70 -70 70 70],1,36) 70*ones(1,72-i) zeros(1,39)];
+    end
+    r.modes = [ones(1,216) 3*ones(1,39)];
     r.finalvz = 37; %{1000 810 500 200 100 50 37};
     r.phase = 0;%{0 10 20 30 30.39};
     
@@ -107,10 +113,11 @@ function r = initdecel(r)
     % Choose the phase angle as a function of vfinal, vinitial, and stage
     % number.
     if strcmp(r.deceltiming,'finalvz')
-        energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/r.stages;
+        energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/length(r.mode);
         % changed the bounds for acceleration
         r.phase = fminbnd(@(phi) (r.f.renergy(phi)*r.voltage/12.5-energyper)^2,-90,90); 
-        fprintf('Phase Angle: %2.3f\n',r.phase);    
+        fprintf('Phase Angle: %2.3f\n',r.phase);
+        r.phases = r.phase*ones(1,length(r.mode));
     end
 end
 %% Initialize Molecules
@@ -173,7 +180,7 @@ end
 % Eventually this could be modified to include hexapole focusing or maybe
 % magnetic quadrupole focusing.
 function r = tofirststage(r)
-    time = ((-90+r.phase)*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
+    time = ((-90+r.phases(1))*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
     r.pos = r.pos + r.vel*time;
 end
 
@@ -187,17 +194,30 @@ function r = stage(r)
         end
         r.numstage = r.numstage + 1;
     else
-        % Step until the synchronous molecule is past the required phase angle.
-        while r.f.phase(r.pos(1,3),r.numstage) < r.phase  && r.vel(1,3) > 0
+        % Step until the synchronous molecule is past the required
+        % phase angle. If a higher mode stage, go past the phase
+        % angle more than once.
+        count = r.modes(r.numstage);
+        side = -1;
+        while count > 0
             r = smallstep(r,r.smallt);
+            if r.vel(1,3) <= 0
+                error('synchronous molecule reflected')
+            end
+            sideN =  r.f.phase(r.pos(1,3),r.numstage) - ...
+                r.phases(r.numstage);
+            if side ~= sideN
+                count = count - 1;
+                side = sideN;
+            end
         end
-
         % Iterate forward/backward in time until synchronous molecule is right
         % on top of the correct phase angle.
         undershoot = 1;
         while abs(undershoot) > 1e-9 && r.vel(1,3) > 0
             % get the undershoot in terms of phase
-            undershoot = r.phase - r.f.phase(r.pos(1,3),r.numstage);
+            undershoot = r.phases(r.numstage) - ...
+                r.f.phase(r.pos(1,3),r.numstage);
 
             % translate to time ignoring acceleration
             undershoot = undershoot *r.f.zstagel/360/r.vel(1,3);

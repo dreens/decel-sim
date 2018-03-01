@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'collision_search_testphifix';
-    r.num = 1e3;
+    r.dname = 'collision_search_first_exp_acc';
+    r.num = 1e6;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
@@ -49,11 +49,12 @@ function rsf = simdecel()
     % decelerator timing variables
     r.deceltiming = 'phases';
     r.phases = {};
-    for i=0:8:72
-        r.phases{end+1} = [70*ones(1,i) ...
-            repmat([-70 -70 70 70],1,36) 70*ones(1,72-i) zeros(1,39)];
+    r.modes = {};
+    for i=10:10:100
+        n1 = 3*floor(i/3) + 3;
+        r.phases{end+1} = [-70*ones(1,i) zeros(1,n1-i) zeros(1,111-n1/3)];
+        r.modes{end+1} = [ones(1,n1) 3*ones(1,111-n1/3)];
     end
-    r.modes = [ones(1,216) 3*ones(1,39)];
     r.finalvz = 37; %{1000 810 500 200 100 50 37};
     r.phase = 0;%{0 10 20 30 30.39};
     
@@ -68,7 +69,7 @@ function rsf = simdecel()
     r.seed = 21112;
     
     %Unpack r into a struct of runs
-    rs = unpacker(r,'product');
+    rs = unpacker(r,'linear');
     
     %% Here we just loop through the struct of runs, and run each one.
     for i=1:length(rs)

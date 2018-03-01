@@ -1,14 +1,15 @@
 %% Plots results
 function resultsdecel(rs)
-    figure
+    figure('Position',[0,0,2000,2000])
     colors = get(gca,'ColorOrder');
     colors = [colors ; colors ; colors ; colors];
     for i=1:length(rs)
         r = rs(i);
         subplot(2,3,1); hold on
-        plot(r.molnum/r.molnum(1),'b-','DisplayName',['\phi=' num2str(r.phase)],'Color',colors(i,:));
+        n = min(find(r.phases==-70))-1;
+        plot(r.molnum/r.molnum(1),'b-','DisplayName',['st=' num2str(n)],'Color',colors(i,:));
         subplot(2,3,2); hold on
-        plot(r.vels,'b-','Color',colors(i,:));
+        plot(0:length(r.modes),[r.initvz r.vels],'b-','Color',colors(i,:));
         subplot(2,3,3); hold on
         plot(diff([0 r.times])*1e6,'b-','Color',colors(i,:));
         subplot(2,3,4); hold on
@@ -16,7 +17,8 @@ function resultsdecel(rs)
         subplot(2,3,5); hold on
         plot(r.pos(:,1)*1e3,r.vel(:,1),'b.','Color',colors(i,:),'MarkerSize',3);
         subplot(2,3,6); hold on
-        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',colors(i,:),'MarkerSize',3);
+        %plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',colors(i,:),'MarkerSize',3);
+        errorbar(n,r.numleft,sqrt(r.numleft),'bo','Color',colors(i,:),'MarkerSize',10);
     end
     subplot(2,3,1)
     xlabel('Stage Number','FontSize',12)
@@ -30,8 +32,8 @@ function resultsdecel(rs)
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
     ylabel('Velocity (m/s)','FontSize',12)
-    titlestring = sprintf('Phase Angle=%2.1f, Final V=%2.1f\n%s',...
-        rs(1).phase,rs(1).finalvz,'Synchronous Velocity');
+    titlestring = sprintf('Collision Hunt: Phi=%2.1f, Final V=%2.1f\n%s',...
+        max(rs(1).phases),rs(1).vel(1,3),'Synchronous Velocity');
     title(titlestring,'FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -58,9 +60,9 @@ function resultsdecel(rs)
     grid on
     
     subplot(2,3,6)
-    xlabel('Y Position (mm)','FontSize',12)
-    ylabel('Y Velocity (m/s)','FontSize',12)
-    title('Phase Space Y','FontSize',14)
+    xlabel('Initial Deceleration Stages','FontSize',12)
+    ylabel('Remaining Population','FontSize',12)
+    title('Phase Space Acceptance','FontSize',14)
     set(gca,'FontSize',12)
     grid on
     %legend('show')

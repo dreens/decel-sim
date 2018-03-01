@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'pmpm_ppmm_more';
-    r.num = 1e5;
+    r.dname = 'collision_search';
+    r.num = 1e6;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
@@ -113,7 +113,7 @@ function r = initdecel(r)
     % Choose the phase angle as a function of vfinal, vinitial, and stage
     % number.
     if strcmp(r.deceltiming,'finalvz')
-        energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/length(r.mode);
+        energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/length(r.modes);
         % changed the bounds for acceleration
         r.phase = fminbnd(@(phi) (r.f.renergy(phi)*r.voltage/12.5-energyper)^2,-90,90); 
         fprintf('Phase Angle: %2.3f\n',r.phase);
@@ -169,9 +169,9 @@ end
 % It just times itself and calls the step function.
 function r = run(r)
     r = tofirststage(r);
-    while r.numstage <= r.stages
+    while r.numstage <= length(r.modes)
         r = stage(r);
-        fprintf('step:%3d/%d,\t%d\n',r.numstage,r.stages,r.molnum(r.numstage))
+        fprintf('step:%3d/%d,\t%d\n',r.numstage,length(r.modes),r.molnum(r.numstage))
         r.numstage = r.numstage + 1;
     end
 end
@@ -199,13 +199,16 @@ function r = stage(r)
         % angle more than once.
         count = r.modes(r.numstage);
         side = -1;
+        if count > 1
+            %comment
+        end
         while count > 0
             r = smallstep(r,r.smallt);
             if r.vel(1,3) <= 0
                 error('synchronous molecule reflected')
             end
-            sideN =  r.f.phase(r.pos(1,3),r.numstage) - ...
-                r.phases(r.numstage);
+            sideN =  sign(r.f.phase(r.pos(1,3),r.numstage) - ...
+                r.phases(r.numstage));
             if side ~= sideN
                 count = count - 1;
                 side = sideN;

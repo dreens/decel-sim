@@ -84,8 +84,8 @@ function resultsdecel(rs)
     
     subplot(2,3,6)
     hold on
-    errorbar(10:10:100,maxes,sqrt(maxes),'bx','Color',colors(end-1,:),'MarkerSize',10)
-    errorbar(10:10:100,[rs.numleft],sqrt([rs.numleft]),'bo','Color',colors(2,:),'MarkerSize',10);
+    errorbar(0:9:72,maxes,sqrt(maxes),'bx','Color',colors(end-1,:),'MarkerSize',10)
+    errorbar(0:9:72,[rs.numleft],sqrt([rs.numleft]),'bo','Color',colors(2,:),'MarkerSize',10);
     xlabel('Initial Deceleration Stages','FontSize',12)
     ylabel('Remaining Population','FontSize',12)
     title('   Phase Space Acceptance','FontSize',14)

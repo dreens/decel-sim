@@ -19,12 +19,12 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'collision_search_type3_111A';
-    r.num = 1e6;
-    r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    r.spreadxy = 2e-3;
-    r.tempz = 200e-3;
-    r.spreadz = 5e-3;
+    r.dname = 'collision_search_type2_change_init';
+    r.num = 5e6;
+    r.tempxy = 1000e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.spreadxy = 4e-3;
+    r.tempz = 500e-3;
+    r.spreadz = 10e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
     r.guide = false;
@@ -33,12 +33,12 @@ function rsf = simdecel()
     
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
-    r.vdd = 2e-3;
+    r.vdd = 5e-2;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    r.decel =  'normal'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    r.decel =  'normalwide'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
     
     r.reloadfields = false;
     
@@ -49,11 +49,11 @@ function rsf = simdecel()
     % decelerator timing variables
     r.deceltiming = 'phases';
     r.phases = {};
-    r.modes = {};
-    for i=0:3:111
-        r.phases{end+1} = 70*[ones(1,i) zeros(1,74) ones(1,111-i)];
-        r.modes{end+1} =     [ones(1,i) 3*ones(1,74) ones(1,111-i)];
+    for i=0:8:72
+        r.phases{end+1} = [-70*ones(1,i) ...
+            repmat([70 70 -70 -70],1,36) -70*ones(1,72-i) zeros(1,39)];
     end
+    r.modes = [ones(1,216) 3*ones(1,39)];
     r.finalvz = 37; %{1000 810 500 200 100 50 37};
     r.phase = 0;%{0 10 20 30 30.39};
     
@@ -236,7 +236,7 @@ function r = stage(r)
         end
     end
     
-    r.pos(abs(r.pos(:,3)-r.pos(1,3))>7e-3,:)=nan;
+    r.pos(abs(r.pos(:,3)-r.pos(1,3))>15e-3,:)=nan;
     r.pos(r.vel(:,3)<0,:)=nan;
     r.lost    = isnan(sum(r.pos,2));
     r.pos     = r.pos(~r.lost,:);

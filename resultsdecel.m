@@ -7,10 +7,10 @@ function resultsdecel(rs)
     for i=1:length(rs)
         r = rs(i);
         subplot(2,3,1); hold on
-        n = sum(abs(rs(i).phases)==70);
+        n = 1;
         plot(r.molnum/r.molnum(1),'b-','DisplayName',['st=' num2str(n)],'Color',colors(i,:));
         subplot(2,3,2); hold on
-        plot(0:length(r.modes),[r.initvz r.vels],'b-','Color',colors(i,:));
+        plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',colors(i,:));
         subplot(2,3,3); hold on
         plot(diff([0 r.times])*1e6,'b-','Color',colors(i,:));
         subplot(2,3,4); hold on
@@ -34,7 +34,7 @@ function resultsdecel(rs)
     xlabel('Stage Number','FontSize',12)
     ylabel('Velocity (m/s)','FontSize',12)
     titlestring = sprintf('Collision Hunt: Phi=%2.1f for 0-100 stages\n%s',...
-        rs(1).phases(1),'Synchronous Velocity');
+        mode(abs(rs(1).endphases)),'Synchronous Velocity');
     title(titlestring,'FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -84,8 +84,8 @@ function resultsdecel(rs)
     
     subplot(2,3,6)
     hold on
-    errorbar(0:9:72,maxes,sqrt(maxes),'bx','Color',colors(end-1,:),'MarkerSize',10)
-    errorbar(0:9:72,[rs.numleft],sqrt([rs.numleft]),'bo','Color',colors(2,:),'MarkerSize',10);
+%    errorbar(0:9:72,maxes,sqrt(maxes),'bx','Color',colors(end-1,:),'MarkerSize',10)
+%    errorbar(0:9:72,[rs.numleft],sqrt([rs.numleft]),'bo','Color',colors(2,:),'MarkerSize',10);
     xlabel('Initial Deceleration Stages','FontSize',12)
     ylabel('Remaining Population','FontSize',12)
     title('   Phase Space Acceptance','FontSize',14)

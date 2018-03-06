@@ -29,7 +29,6 @@ function rsf = simdecel()
     r.dist = 'gaussian';
         
     % decelerator configuration variables
-    r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
     r.vdd = 2e-3;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
@@ -48,8 +47,9 @@ function rsf = simdecel()
     r.chargetype = repmat('ab',1,333);
     r.stages = floor((1:665)/2+1);
     r.rot180 = mod(floor((1:665)/4),2);
-    r.startphases = [0 repmat([-110 -70],1,332)];
-    r.endphases =   [70 repmat([-70 70],1,332)];
+    p = 60;
+    r.startphases = [0 repmat([-180+p, -p],1,332)];
+    r.endphases =   [p repmat([-p, p],1,332)];
     r.deceltiming = 'phases';
 
     % simulation timing variables
@@ -102,10 +102,10 @@ function r = initdecel(r)
         if exist(['Decels/' d '.mat'],'file') && ~r.reloadfields
             r.f.(labels{i}) = load(['Decels/' d '.mat']);
         elseif exist(['Decels/' d '.dat'],'file')
-            r = processfields(r);
-            r.f.(labels{i}) = load(['Decels/' r.decel '.mat']);
+            r = processfields(r,d);
+            r.f.(labels{i}) = load(['Decels/' d '.mat']);
         else
-            error(['File ''Decels/' r.decel '.dat'' not found']);
+            error(['File ''Decels/' d '.dat'' not found']);
         end
     end
 end
@@ -143,7 +143,7 @@ function r = initvars(r)
     r.rot = 0;
 
     % Store the molecule number each decel stage.
-    r.molnum = zeros(1,r.stages);
+    r.molnum = zeros(1,max(r.stages));
         
     % Timing
     r.time = 0;
@@ -156,7 +156,7 @@ function r = run(r)
     r = tofirststage(r);
     while r.numstage <= max(r.stages)
         r = stage(r);
-        fprintf('step:%3d/%d,\t%d\n',r.numstage,length(r.modes),r.molnum(r.numstage))
+        fprintf('step:%3d/%d,\t%d\n',r.numstage,max(r.stages),r.molnum(r.numstage))
         r.numstage = r.numstage + 1;
     end
 end
@@ -179,12 +179,12 @@ end
 % Propagates one decel stage. Removes lost molecules, checks number, etc. A
 % stage now includes variable numbers of sub-stages.
 function r = stage(r)
-    indices = find(stages==r.numstage);
+    indices = find(r.stages==r.numstage);
     for i=1:length(indices)
         ind = indices(i);
         c = r.chargetype(ind);
         r.charge = c;
-        r.rot = r.rot180(r.substage);
+        r.rot = r.rot180(ind);
         while r.f.(c).phase(r.pos(1,3),r.numstage) < r.endphases(ind)
             r = smallstep(r,r.smallt);
             if r.vel(1,3) <= 0
@@ -224,7 +224,7 @@ end
 % offset by half of a timestep.
 function r = smallstep(r,t)
     r.pos = r.pos + r.vel*t/2;
-    r.vel = r.vel + r.voltage/12.5*acc(r)*t;
+    r.vel = r.vel + acc(r)*t;
     r.pos = r.pos + r.vel*t/2;
             
     %update time.
@@ -236,15 +236,15 @@ function a = acc(r)
     % first rotate into the right frame:
     rad = pi/2*(mod(r.numstage,2) + 2*r.rot);
     c = cos(rad); s = sin(rad);
-    pos = [ r.pos(:,1)*c - r.pos(:,2)*s ;
-            r.pos(:,1)*s + r.pos(:,2)*c ; r.pos(:,3)];
+    pos = [ r.pos(:,1)*c - r.pos(:,2)*s , ...
+            r.pos(:,1)*s + r.pos(:,2)*c , r.pos(:,3)];
     
     %just look up the force from the tables of dvdr (v as in potential
     %energy capital V.)
     ax = r.f.(r.charge).dvdx(pos,r.numstage);
     ay = r.f.(r.charge).dvdy(pos,r.numstage);
     az = r.f.(r.charge).dvdz(pos,r.numstage);
-    a = [ax*c + ay*s ; -ax*s + ay*c ; az]/r.mOH;
+    a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
 end
     
 function rs = unpacker(r,type)
@@ -307,10 +307,10 @@ end
 % to even numbered stages, but rotated.
 % * Data points are given on a rectangular, uniform grid, although the
 % spacing of the three dimensions need not be identical.
-function r = processfields(r)
+function r = processfields(r,decel)
     
     % COMSOL files usually have 9 header lines.
-    data = importdata(['Decels/' r.decel '.dat'],' ',9);
+    data = importdata(['Decels/' decel '.dat'],' ',9);
     
     % data is a struct with data and text header. We ignore the header and
     % take out the data.
@@ -549,7 +549,7 @@ function r = processfields(r)
     vf = @(xyz,n) vfa(xyz(:,1),xyz(:,2),xyz(:,3),n);
     
     % Save in a file for loading and propagating during decel simulation.
-    save(['Decels/' r.decel '.mat'],'dvdx','dvdy','dvdz',...
+    save(['Decels/' decel '.mat'],'dvdx','dvdy','dvdz',...
         'vf','phase','zstagel','renergy','aenergy');
 
     %% Produce Output Figure for Debugging
@@ -560,7 +560,7 @@ function r = processfields(r)
     figure('position',[50,50,1100,1100])
     subplot(2,2,1)
     surf(cap(squeeze(dvdzm(:,1,:)),cc));
-    title(['Decelerator dvdz, X-Z plane, ' r.decel '.dat']);
+    title(['Decelerator dvdz, X-Z plane, ' decel '.dat']);
 
     % You might think the labels are backwards, but they're not. surf uses
     % the second index (the column of the matrix) as the x-axis and the
@@ -573,21 +573,21 @@ function r = processfields(r)
 
     subplot(2,2,2)
     surf(cap(squeeze(dvdzm(1,:,:)),cc));
-    title(['Decelerator dvdz, Y-Z plane, ' r.decel '.dat']); 
+    title(['Decelerator dvdz, Y-Z plane, ' decel '.dat']); 
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,3)
     surf(cap(squeeze(dvdxm(:,1,:)),cc));
-    title(['Decelerator dvdx, X-Z plane, ' r.decel '.dat']);
+    title(['Decelerator dvdx, X-Z plane, ' decel '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,4)
     surf(cap(squeeze(dvdym(1,:,:)),cc));
-    title(['Decelerator dvdy, Y-Z plane, ' r.decel '.dat']);
+    title(['Decelerator dvdy, Y-Z plane, ' decel '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])

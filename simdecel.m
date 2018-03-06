@@ -20,7 +20,7 @@ function rsf = simdecel()
     
     % variables for the initial distribution
     r.dname = 'compare_delayswitch_normal';
-    r.num = 1e5;
+    r.num = 1e2;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
@@ -49,6 +49,7 @@ function rsf = simdecel()
     r.rot180 = {mod(floor((1:665)/4),2), zeros(1,333)};
     p = 55;
     r.endphases =   {[p repmat([-p, p],1,332)], p*ones(1,333)};
+    r.finalvz = 100;
 
     % simulation timing variables
     r.smallt = 1e-7;
@@ -106,6 +107,21 @@ function r = initdecel(r)
             error(['File ''Decels/' d '.dat'' not found']);
         end
     end
+    
+    % Choose the phase angle as a function of vfinal, vinitial, and stage
+    % number.
+    if r.finalvz
+        energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
+        % changed the bounds for acceleration
+        c = labels{1};
+        r.phase = fminbnd(@(phi) (r.f.(c).renergy(phi)*max(r.stages)-r.f.(c).aenergy(phi-180)-energy)^2,-90,90); 
+        fprintf('Phase Angle: %2.3f\n',r.phase);
+        curphase = mode(abs(r.endphases));
+        r.endphases(r.endphases==curphase) = r.phase;
+        r.endphases(r.endphases==-curphase) = -r.phase;
+        r.endphases(r.endphases==curphase-180) = r.phase-180;
+    end
+
 end
 %% Initialize Molecules
 function r = initmols(r)
@@ -190,7 +206,7 @@ function r = stage(r)
             end
         end
         undershoot = 1;
-        while abs(undershoot) > 1e-9 && r.vel(1,3) > 0
+        while abs(undershoot) > 1e-11 && r.vel(1,3) > 0
             % get the undershoot in terms of phase
             undershoot = r.endphases(ind) - ...
                 r.f.(c).phase(r.pos(1,3),r.numstage);

@@ -19,18 +19,15 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'collision_search_type3_111A';
-    r.num = 1e6;
+    r.dname = 'delay_switch_testing';
+    r.num = 1e3;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
-    r.guide = false;
-    
-    r.voltage = 12.5; %num2cell(6.5:.5:12.5);
-    
+        
     % decelerator configuration variables
     r.stages = 333;%{100,125,150,175,200,225,250,275,300};      
     r.vdd = 2e-3;
@@ -38,25 +35,23 @@ function rsf = simdecel()
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    r.decel =  'normal'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    r.decels.a =  'normal'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    r.decels.b = 'singlerod';
     
     r.reloadfields = false;
     
     % Make sure are true except for guiding fields
-    r.fieldsymmetryXY = true;
+    r.fieldsymmetryXY = false;
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
+    r.chargetype = repmat('ab',1,333);
+    r.stages = floor((1:665)/2+1);
+    r.rot180 = mod(floor((1:665)/4),2);
+    r.startphases = [0 repmat([-110 -70],1,332)];
+    r.endphases =   [70 repmat([-70 70],1,332)];
     r.deceltiming = 'phases';
-    r.phases = {};
-    r.modes = {};
-    for i=0:3:111
-        r.phases{end+1} = 70*[ones(1,i) zeros(1,74) ones(1,111-i)];
-        r.modes{end+1} =     [ones(1,i) 3*ones(1,74) ones(1,111-i)];
-    end
-    r.finalvz = 37; %{1000 810 500 200 100 50 37};
-    r.phase = 0;%{0 10 20 30 30.39};
-    
+
     % simulation timing variables
     r.smallt = 1e-7;
     
@@ -101,23 +96,17 @@ end
 function r = initdecel(r)
     % Load the mat file, or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
-    if exist(['Decels/' r.decel '.mat'],'file') && ~r.reloadfields
-        r.f = load(['Decels/' r.decel '.mat']);
-    elseif exist(['Decels/' r.decel '.dat'],'file')
-        r = processfields(r);
-        r.f = load(['Decels/' r.decel '.mat']);
-    else
-        error(['File ''Decels/' r.decel '.dat'' not found']);
-    end
-    
-    % Choose the phase angle as a function of vfinal, vinitial, and stage
-    % number.
-    if strcmp(r.deceltiming,'finalvz')
-        energyper = .5*r.mOH*(r.initvz^2 - r.finalvz^2)/length(r.modes);
-        % changed the bounds for acceleration
-        r.phase = fminbnd(@(phi) (r.f.renergy(phi)*r.voltage/12.5-energyper)^2,-90,90); 
-        fprintf('Phase Angle: %2.3f\n',r.phase);
-        r.phases = r.phase*ones(1,length(r.mode));
+    labels = fields(r.decels);
+    for i=1:length(labels)
+        d = r.decels.(labels{i});
+        if exist(['Decels/' d '.mat'],'file') && ~r.reloadfields
+            r.f.(labels{i}) = load(['Decels/' d '.mat']);
+        elseif exist(['Decels/' d '.dat'],'file')
+            r = processfields(r);
+            r.f.(labels{i}) = load(['Decels/' r.decel '.mat']);
+        else
+            error(['File ''Decels/' r.decel '.dat'' not found']);
+        end
     end
 end
 %% Initialize Molecules
@@ -150,16 +139,12 @@ end
 function r = initvars(r)
     % Stage Number
     r.numstage = 1;
+    r.charge = r.chargetype(1);
+    r.rot = 0;
 
     % Store the molecule number each decel stage.
     r.molnum = zeros(1,r.stages);
-    
-    % Store the full phase space each stage.
-    %r.phasestage = zeros(r.num,6,r.stages);
-
-    % other variables used by different runs
-    %r.lost = false(r.num,1);
-    
+        
     % Timing
     r.time = 0;
 end
@@ -169,7 +154,7 @@ end
 % It just times itself and calls the step function.
 function r = run(r)
     r = tofirststage(r);
-    while r.numstage <= length(r.modes)
+    while r.numstage <= max(r.stages)
         r = stage(r);
         fprintf('step:%3d/%d,\t%d\n',r.numstage,length(r.modes),r.molnum(r.numstage))
         r.numstage = r.numstage + 1;
@@ -186,54 +171,39 @@ function r = tofirststage(r)
     % length with all others. This made phase angle calculations for a
     % given final velocity target easier. For collision hunting this is not
     % good. Instead:
-    time = (-90*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
+    time = (-90*r.f.(r.charge).zstagel/360-r.pos(1,3))/r.vel(1,3);
     r.pos = r.pos + r.vel*time;
 end
 
 %% The stage function.
-% Propagates one decel stage. Removes lost molecules, checks number, etc.
+% Propagates one decel stage. Removes lost molecules, checks number, etc. A
+% stage now includes variable numbers of sub-stages.
 function r = stage(r)
-    if r.guide
-        zt = r.pos(1,3);
-        while r.pos(1,3) < zt + r.f.zstagel
-            r = smallstep(r,r.smallt);
-        end
-        r.numstage = r.numstage + 1;
-    else
-        % Step until the synchronous molecule is past the required
-        % phase angle. If a higher mode stage, go past the phase
-        % angle more than once.
-        count = r.modes(r.numstage);
-        side = -1;
-        if count > 1
-            %comment
-        end
-        while count > 0
+    indices = find(stages==r.numstage);
+    for i=1:length(indices)
+        ind = indices(i);
+        c = r.chargetype(ind);
+        r.charge = c;
+        r.rot = r.rot180(r.substage);
+        while r.f.(c).phase(r.pos(1,3),r.numstage) < r.endphases(ind)
             r = smallstep(r,r.smallt);
             if r.vel(1,3) <= 0
                 error('synchronous molecule reflected')
             end
-            sideN =  sign(r.f.phase(r.pos(1,3),r.numstage) - ...
-                r.phases(r.numstage));
-            if side ~= sideN
-                count = count - 1;
-                side = sideN;
-            end
         end
-        % Iterate forward/backward in time until synchronous molecule is right
-        % on top of the correct phase angle.
         undershoot = 1;
         while abs(undershoot) > 1e-9 && r.vel(1,3) > 0
             % get the undershoot in terms of phase
-            undershoot = r.phases(r.numstage) - ...
-                r.f.phase(r.pos(1,3),r.numstage);
+            undershoot = r.endphases(ind) - ...
+                r.f.(c).phase(r.pos(1,3),r.numstage);
 
             % translate to time ignoring acceleration
-            undershoot = undershoot *r.f.zstagel/360/r.vel(1,3);
+            undershoot = undershoot *r.f.(c).zstagel/360/r.vel(1,3);
 
             % step the molecules according to this time
             r = smallstep(r,undershoot);
         end
+        
     end
     
     r.pos(abs(r.pos(:,3)-r.pos(1,3))>7e-3,:)=nan;
@@ -247,11 +217,6 @@ function r = stage(r)
     r.times(r.numstage) = r.time;
     r.molnum(r.numstage) = r.numleft;
     
-    if r.guide
-        r.vels(r.numstage-1) = r.vels(r.numstage);
-        r.times(r.numstage-1) = r.times(r.numstage);
-        r.molnum(r.numstage-1) = r.molnum(r.numstage);
-    end    
 end
 
 %% Small simulation step.
@@ -268,20 +233,18 @@ end
 
 %gets acceleration
 function a = acc(r)
+    % first rotate into the right frame:
+    rad = pi/2*(mod(r.numstage,2) + 2*r.rot);
+    c = cos(rad); s = sin(rad);
+    pos = [ r.pos(:,1)*c - r.pos(:,2)*s ;
+            r.pos(:,1)*s + r.pos(:,2)*c ; r.pos(:,3)];
     
     %just look up the force from the tables of dvdr (v as in potential
     %energy capital V.)
-    if mod(r.numstage,2)
-        ax = r.f.dvdx(r.pos,r.numstage);
-        ay = r.f.dvdy(r.pos,r.numstage);
-        az = r.f.dvdz(r.pos,r.numstage);
-        a = [ax ay az]/r.mOH;
-    else
-        ay = r.f.dvdx(r.pos(:,[2 1 3]),r.numstage);
-        ax = r.f.dvdy(r.pos(:,[2 1 3]),r.numstage);
-        az = r.f.dvdz(r.pos(:,[2 1 3]),r.numstage);
-        a = [ax ay az]/r.mOH;
-    end
+    ax = r.f.(r.charge).dvdx(pos,r.numstage);
+    ay = r.f.(r.charge).dvdy(pos,r.numstage);
+    az = r.f.(r.charge).dvdz(pos,r.numstage);
+    a = [ax*c + ay*s ; -ax*s + ay*c ; az]/r.mOH;
 end
     
 function rs = unpacker(r,type)

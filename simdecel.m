@@ -34,20 +34,20 @@ function rsf = simdecel()
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    r.decels.a =  'normal'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    r.decels.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
     r.decels.b = 'singlerod';
     
     r.reloadfields = false;
     
     % Make sure are true except for guiding fields
-    r.fieldsymmetryXY = false;
+    r.fieldsymmetryXY = true;
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
     r.chargetype = repmat('ab',1,333);
     r.stages = floor((1:665)/2+1);
     r.rot180 = mod(floor((1:665)/4),2);
-    p = 60;
+    p = 55;
     r.startphases = [0 repmat([-180+p, -p],1,332)];
     r.endphases =   [p repmat([-p, p],1,332)];
     r.deceltiming = 'phases';

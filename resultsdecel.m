@@ -3,7 +3,7 @@ function resultsdecel(rs)
     figure('Position',[0,0,2000,2000])
     colors = get(gca,'ColorOrder');
     colors = [colors ; (1-colors) ; colors ; colors];
-    colors = jet(length(rs));
+    %colors = jet(length(rs));
     for i=1:length(rs)
         r = rs(i);
         subplot(2,3,1); hold on
@@ -18,8 +18,7 @@ function resultsdecel(rs)
         subplot(2,3,5); hold on
         plot(r.pos(:,1)*1e3,r.vel(:,1),'b.','Color',colors(i,:),'MarkerSize',3);
         subplot(2,3,6); hold on
-        %plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',colors(i,:),'MarkerSize',3);
-        %errorbar(n,r.numleft,sqrt(r.numleft),'bo','Color',colors(i,:),'MarkerSize',10);
+        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',colors(i,:),'MarkerSize',3);
     end
     subplot(2,3,1)
     xlabel('Stage Number','FontSize',12)

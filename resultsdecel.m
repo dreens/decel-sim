@@ -7,16 +7,31 @@ function resultsdecel(rs)
     for i=1:length(rs)
         r = rs(i);
         subplot(2,3,1); hold on
-        n = 1;
-        plot(r.molnum/r.molnum(1),'b-','DisplayName',['st=' num2str(n)],'Color',colors(i,:));
+        plot(r.molnum/r.molnum(1),'b-','Color',colors(i,:));
+        
         subplot(2,3,2); hold on
         plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',colors(i,:));
+        
         subplot(2,3,3); hold on
         plot(diff([0 r.times])*1e6,'b-','Color',colors(i,:));
+        
         subplot(2,3,4); hold on
         plot(r.pos(:,3)*1e3,r.vel(:,3),'b.','Color',colors(i,:),'MarkerSize',3);
+        
         subplot(2,3,5); hold on
-        plot(r.pos(:,1)*1e3,r.vel(:,1),'b.','Color',colors(i,:),'MarkerSize',3);
+        diamL = 2.5e-3; 
+        distL = 8e-3 + r.pos(1,3);
+        tof = zeros(1,1000);
+        times = 1e-7:1e-7:1e-4;
+        for j=1:1000
+            t = times(j);
+            zsq = (r.pos(:,3)-distL + t*r.vel(:,3)).^2;
+            xsq = (r.pos(:,1)+t*r.vel(:,1)).^2;
+            ya = abs(r.pos(:,2)+t*r.vel(:,2));
+            tof(j) = sum( zsq + xsq < diamL^2/4 & ya < 2e-3);
+        end
+        plot(times*1e6,tof,'Color',colors(i,:))
+        
         subplot(2,3,6); hold on
         plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',colors(i,:),'MarkerSize',3);
     end
@@ -32,8 +47,8 @@ function resultsdecel(rs)
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
     ylabel('Velocity (m/s)','FontSize',12)
-    titlestring = sprintf('Collision Hunt: Phi=%2.1f for 0-100 stages\n%s',...
-        mode(abs(rs(1).endphases)),'Synchronous Velocity');
+    titlestring = sprintf('Delay-Mode v Normal Switching\nPhi=%2d, v=%3.1f',...
+        mode(abs(r.endphases)),r.vels(end));
     title(titlestring,'FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -52,42 +67,19 @@ function resultsdecel(rs)
     set(gca,'FontSize',12)
     grid on
 
-    
-    
-    
-    subplot (2,3,5)
-    diamL = 2.5e-3;
-    distL = 8e-3 + r.pos(1,3);
-    maxes = zeros(size(rs));
-    for j=1:length(rs)
-        r = rs(j);
-        tof = zeros(1,1000);
-        times = 1e-7:1e-7:1e-4;
-        for i=1:1000
-            t = times(i);
-            zsq = (r.pos(:,3)-distL + t*r.vel(:,3)).^2;
-            xsq = (r.pos(:,1)+t*r.vel(:,1)).^2;
-            ya = abs(r.pos(:,2)+t*r.vel(:,2));
-            tof(i) = sum( zsq + xsq < diamL^2/4 & ya < 2e-3);
-        end
-        plot(times*1e6,tof,'Color',colors(j,:))
-        maxes(j) = max(tof);
-    end
-    xlabel('Time \mus')
-    ylabel('Population (arb)')
-    title('Time of Flight')
+    subplot(2,3,5)
+    xlabel('Time after turn-off (\mus)','FontSize',12)
+    ylabel('Population in Laser','FontSize',12)
+    title('Time of Flight','FontSize',14)
+    set(gca,'FontSize',12)
     grid on
     
     
     
-    
     subplot(2,3,6)
-    hold on
-%    errorbar(0:9:72,maxes,sqrt(maxes),'bx','Color',colors(end-1,:),'MarkerSize',10)
-%    errorbar(0:9:72,[rs.numleft],sqrt([rs.numleft]),'bo','Color',colors(2,:),'MarkerSize',10);
-    xlabel('Initial Deceleration Stages','FontSize',12)
-    ylabel('Remaining Population','FontSize',12)
-    title('   Phase Space Acceptance','FontSize',14)
+    xlabel('Y Position (mm)','FontSize',12)
+    ylabel('Y Velocity (m/s)','FontSize',12)
+    title('Phase Space Y','FontSize',14)
     set(gca,'FontSize',12)
     grid on
     %legend('show')

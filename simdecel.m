@@ -66,7 +66,7 @@ function rsf = simdecel()
     rs = unpacker(r,'linear');
     
     %% Here we just loop through the struct of runs, and run each one.
-    for i=2:length(rs)
+    for i=1:length(rs)
         rng(rs(i).seed) %seed the random number generator
         fprintf('run:%3d/%d\n ',i,length(rs))
         rr = init(rs(i));
@@ -82,8 +82,8 @@ function rsf = simdecel()
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
    
-    disp(rsf(2).vels(end))
-    %resultsdecel(rsf)
+    %disp(rsf(1).vels(end))
+    resultsdecel(rsf)
     %resultsToF(rsf) 
 end
 

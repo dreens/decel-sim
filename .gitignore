@@ -10,9 +10,13 @@
 
 #EMACS Autosaves
 \#*#
+**~
 
 #Excel Autosaves
 ~$*.xls*
+
+#OSX Directory Stuff
+**.DS_Store
 
 #Cluster Directory. Note ignoring the whole thing saves lots of clutter.
 # Occasionally there may be files in it worth holding on to.

@@ -9,7 +9,7 @@ function rsf = simdecel()
 
     %% constants for general use
     r.k = 1.381e-23;
-    r.mOH = 17*1.6726e-27;
+    r.mOH = 2.82328e-26; % Accounts for Oxygen binding energy
     r.uOH = 9.27401e-24 * 1.4;
     r.h = 6.62607e-34;
     r.hb = r.h/(2*pi);
@@ -44,11 +44,12 @@ function rsf = simdecel()
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    r.chargetype = {repmat('ab',1,333), repmat('a',1,333)};
-    r.stages = {floor((1:665)/2+1), 1:333};
-    r.rot180 = {mod(floor((1:665)/4),2), zeros(1,333)};
     p = 55;
-    r.endphases =   {[p repmat([-p, p],1,332)], p*ones(1,333)};
+    n = 333;
+    r.chargetype = {repmat('ab',1,n), repmat('a',1,n)};
+    r.stages = {floor((1:(2*n-1))/2+1), 1:n};
+    r.rot180 = {mod(floor((1:(2*n-1))/4),2), zeros(1,n)};
+    r.endphases =   {[p repmat([-p, p],1,n-1)], p*ones(1,n)};
     r.finalvz = 100;
 
     % simulation timing variables
@@ -65,7 +66,7 @@ function rsf = simdecel()
     rs = unpacker(r,'linear');
     
     %% Here we just loop through the struct of runs, and run each one.
-    for i=1:length(rs)
+    for i=2:length(rs)
         rng(rs(i).seed) %seed the random number generator
         fprintf('run:%3d/%d\n ',i,length(rs))
         rr = init(rs(i));
@@ -81,8 +82,8 @@ function rsf = simdecel()
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
    
-    
-    resultsdecel(rsf)
+    disp(rsf(2).vels(end))
+    %resultsdecel(rsf)
     %resultsToF(rsf) 
 end
 
@@ -114,7 +115,7 @@ function r = initdecel(r)
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
         % changed the bounds for acceleration
         c = labels{1};
-        r.phase = fminbnd(@(phi) (r.f.(c).renergy(phi)*max(r.stages)-r.f.(c).aenergy(phi-180)-energy)^2,-90,90); 
+        r.phase = fminbnd(@(phi) (r.f.(c).renergy(phi)*max(r.stages)+r.f.(c).aenergy(-phi)-energy)^2,-90,90); 
         fprintf('Phase Angle: %2.3f\n',r.phase);
         curphase = mode(abs(r.endphases));
         r.endphases(r.endphases==curphase) = r.phase;
@@ -185,7 +186,7 @@ function r = tofirststage(r)
     % length with all others. This made phase angle calculations for a
     % given final velocity target easier. For collision hunting this is not
     % good. Instead:
-    time = (-90*r.f.(r.charge).zstagel/360-r.pos(1,3))/r.vel(1,3);
+    time = (-0*r.f.(r.charge).zstagel/360-r.pos(1,3))/r.vel(1,3);
     r.pos = r.pos + r.vel*time;
 end
 
@@ -323,6 +324,9 @@ end
 % spacing of the three dimensions need not be identical.
 function r = processfields(r,decel)
     
+    % Announcement
+    fprintf('%s\n','Processing Decelerator Fields from COMSOL...');
+
     % COMSOL files usually have 9 header lines.
     data = importdata(['Decels/' decel '.dat'],' ',9);
     

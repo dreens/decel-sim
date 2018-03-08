@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'delayswitch_address_vfinal';
-    r.num = 1e6;
+    r.dname = 'delayswitch_speed_panel';
+    r.num = 4e5;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
@@ -46,10 +46,11 @@ function rsf = simdecel()
     % decelerator timing variables
     p = 55;
     n = 333;
-    r.chargetype = {repmat('ab',1,n), repmat('a',1,n)};
-    r.stages = {floor((1:(2*n-1))/2+1), 1:n};
-    r.rot180 = {mod(floor((1:(2*n-1))/4),2), zeros(1,n)};
-    r.endphases =   {[p repmat([-p, p],1,n-1)], p*ones(1,n)};
+    r.chargetype = repmat({repmat('ab',1,n), repmat('a',1,n)},1,6);
+    r.stages = repmat({floor((1:(2*n-1))/2+1), 1:n},1,6);
+    r.rot180 = repmat({mod(floor((1:(2*n-1))/4),2), zeros(1,n)},1,6);
+    r.endphases =   repmat({[p repmat([-p, p],1,n-1)], p*ones(1,n)},1,6);
+    r.finalvz = {800 800 500 500 200 200 100 100 50 50 37 37};
 
     % simulation timing variables
     r.smallt = 1e-7;

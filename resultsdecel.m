@@ -4,13 +4,15 @@ function resultsdecel(rs)
     colors = get(gca,'ColorOrder');
     colors = [colors ; (1-colors)];
     lines = repmat({'-','--'},1,10);
-    %colors = jet(length(rs));
+    sname = repmat({'DSwitch','Normal'},1,6);
     for i=1:length(rs)
         r = rs(i);
-        c = colors(round(i/2+.25),:);
+        i2 = round(i/2+.25);
+        c = colors(i2,:);
         l = lines{i};
         subplot(2,3,1); hold on
-        plot(r.molnum/r.molnum(1),'Color',c,'LineStyle',l);
+        h = plot(r.molnum/r.molnum(1),'Color',c,'LineStyle',l);
+        h.DisplayName = sprintf('v=%2.1f, %s',r.vels(end),sname{i});
         
         subplot(2,3,2); hold on
         plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',c,'LineStyle',l);
@@ -19,25 +21,36 @@ function resultsdecel(rs)
         plot(diff([0 r.times])*1e6,'b-','Color',c,'LineStyle',l);
         
         subplot(2,3,4); hold on
-        plot(r.pos(:,3)*1e3,r.vel(:,3),'b.','Color',c,'MarkerSize',3);
+        xx = 10*mod(i+1,2);
+        plot(r.pos(:,3)*1e3+xx,r.vel(:,3),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
         diamL = 2.5e-3; 
         distL = 8e-3 + r.pos(1,3);
-        tof = zeros(1,1000);
-        times = 1e-7:1e-7:2e-4;
-        for j=1:2000
+        tof = zeros(1,3500);
+        times = (1e-7)*(1:length(tof));
+        for j=1:length(tof)
             t = times(j);
             zsq = (r.pos(:,3)-distL + t*r.vel(:,3)).^2;
             xsq = (r.pos(:,1)+t*r.vel(:,1)).^2;
             ya = abs(r.pos(:,2)+t*r.vel(:,2));
             tof(j) = sum( zsq + xsq < diamL^2/4 & ya < 2e-3);
         end
+        rs(i).tofpeak = max(tof);
+        rs(i).tofarea = trapz(times,tof);
         plot(times*1e6,tof,'Color',c,'LineStyle',l)
-        
-        subplot(2,3,6); hold on
-        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3);
     end
+    
+    subplot(2,3,6); hold on
+    nls = [rs.numleft];
+    tps = [rs.tofpeak];
+    tpa = [rs.tofarea];
+    plot(nls(1:2:end)./nls(2:2:end),'DisplayName','Total Ratio','Marker','x','LineStyle','-');
+    plot(tps(1:2:end)./tps(2:2:end),'DisplayName','Laser Ratio','Marker','o','LineStyle','-');
+    plot(tpa(1:2:end)./tpa(2:2:end),'DisplayName','Area Ratio','Marker','sq','LineStyle','-');
+    legend('show')
+    legend('Location','South')
+    
     subplot(2,3,1)
     xlabel('Stage Number','FontSize',12)
     ylabel('Population (arb)','FontSize',12)
@@ -45,13 +58,12 @@ function resultsdecel(rs)
     set(gca,'FontSize',12)
     set(gca,'YScale','log')
     grid on
-    legend('show')
+    %legend('show')
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
     ylabel('Velocity (m/s)','FontSize',12)
-    titlestring = sprintf('Delay-Mode v Normal Switching\nPhi=%2d, v=%3.1f',...
-        mode(abs(r.endphases)),r.vels(end));
+    titlestring = sprintf('Delay-Mode v Normal Switching\nVarious Speeds');
     title(titlestring,'FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -75,12 +87,14 @@ function resultsdecel(rs)
     ylabel('Population in Laser','FontSize',12)
     title('Time of Flight','FontSize',14)
     set(gca,'FontSize',12)
+    set(gca,'XScale','log')
+    xlim([4,350])
     grid on
         
     subplot(2,3,6)
-    xlabel('Y Position (mm)','FontSize',12)
-    ylabel('Y Velocity (m/s)','FontSize',12)
-    title('Phase Space Y','FontSize',14)
+    xlabel('Speed Numbers','FontSize',12)
+    ylabel('Population (arb)','FontSize',12)
+    title('Phase Space Totals','FontSize',14)
     set(gca,'FontSize',12)
     grid on
     %legend('show')

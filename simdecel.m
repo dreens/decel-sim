@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'compare_delayswitch_normal';
-    r.num = 1e2;
+    r.dname = 'delayswitch_address_vfinal';
+    r.num = 1e6;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
@@ -44,12 +44,12 @@ function rsf = simdecel()
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    r.chargetype = {repmat('ab',1,333), repmat('a',1,333)};
-    r.stages = {floor((1:665)/2+1), 1:333};
-    r.rot180 = {mod(floor((1:665)/4),2), zeros(1,333)};
+    r.chargetype = repmat({repmat('ab',1,333), repmat('a',1,333)},1,6);
+    r.stages = repmat({floor((1:665)/2+1), 1:333},1,6);
+    r.rot180 = repmat({mod(floor((1:665)/4),2), zeros(1,333)},1,6);
     p = 55;
-    r.endphases =   {[p repmat([-p, p],1,332)], p*ones(1,333)};
-    r.finalvz = 100;
+    r.endphases =   repmat({[p repmat([-p, p],1,332)], p*ones(1,333)},1,6);
+    r.finalvz = {800 800 500 500 200 200 100 100 50 50 37 37};
 
     % simulation timing variables
     r.smallt = 1e-7;
@@ -82,7 +82,7 @@ function rsf = simdecel()
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
    
     
-    resultsdecel(rsf)
+    %resultsdecel(rsf)
     %resultsToF(rsf) 
 end
 
@@ -114,7 +114,8 @@ function r = initdecel(r)
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
         % changed the bounds for acceleration
         c = labels{1};
-        r.phase = fminbnd(@(phi) (r.f.(c).renergy(phi)*max(r.stages)-r.f.(c).aenergy(phi-180)-energy)^2,-90,90); 
+        r.phase = fminbnd(@(phi) (r.f.(c).renergy(phi)*max(r.stages) + ...
+            r.f.(c).aenergy(-phi) - energy)^2,-90,90); 
         fprintf('Phase Angle: %2.3f\n',r.phase);
         curphase = mode(abs(r.endphases));
         r.endphases(r.endphases==curphase) = r.phase;
@@ -185,7 +186,7 @@ function r = tofirststage(r)
     % length with all others. This made phase angle calculations for a
     % given final velocity target easier. For collision hunting this is not
     % good. Instead:
-    time = (-90*r.f.(r.charge).zstagel/360-r.pos(1,3))/r.vel(1,3);
+    time = -r.pos(1,3)/r.vel(1,3);
     r.pos = r.pos + r.vel*time;
 end
 
@@ -323,6 +324,10 @@ end
 % spacing of the three dimensions need not be identical.
 function r = processfields(r,decel)
     
+    % Announce
+    fprintf('%s\n','Processing Decelerator Fields from COMSOL...');
+
+
     % COMSOL files usually have 9 header lines.
     data = importdata(['Decels/' decel '.dat'],' ',9);
     
@@ -487,7 +492,18 @@ function r = processfields(r,decel)
     dvdxm(~~mm)=nan;
     dvdym(~~mm)=nan;
     dvdzm(~~mm)=nan;
-
+    
+    %% Re-create Potential on Axis
+    % After the smoothing, the forcefields are a bit different than the
+    % original potential in terms of their integrated potential energy.
+    % This creates timing discrepancies if not addressed.
+    dvdzax = squeeze(dvdzm(1,1,:));
+    zax = squeeze(zz(1,1,:));
+    vax = zax;
+    vax(1) = 0;
+    for i=2:length(vax)
+        vax(i) = -trapz(zax(1:i),dvdzax(1:i));
+    end
     
     %% Create interpolants
     % These convenient datatypes can be evaluated directly as functions and
@@ -496,10 +512,15 @@ function r = processfields(r,decel)
     dvdyg  = griddedInterpolant(xx,yy,zz,dvdym,'linear','none');
     dvdzg  = griddedInterpolant(xx,yy,zz,dvdzm,'linear','none');
     vfg = griddedInterpolant(xx,yy,zz,vv);
+    vaxg = griddedInterpolant(zax,vax,'linear','none');
     % bf = griddedInterpolant(xx,yy,zz,bb);
     % ef = griddedInterpolant(xx,yy,zz,ee);
     % mf = griddedInterpolant(xx,yy,zz,mm);
     % tf = griddedInterpolant(xx,yy,zz,tt);
+    
+    
+
+    
     
     %% Create helpful lookup functions
     % Anonymous functions created here will be saved along with the
@@ -536,13 +557,13 @@ function r = processfields(r,decel)
     % This returns the energy removed per stage as a function of phase
     % angle. Its inverse enables quickly choosing the phase angle given a
     % final velocity. 
-    renergy = @(phi) vfg(0,0,(phi-90)/360 * zstagel) - ...
-        vfg(0,0,(-phi-90)/360 * zstagel);
+    renergy = @(phi) vaxg((phi-90)/360 * zstagel) - ...
+        vaxg((-phi-90)/360 * zstagel);
     
     % This is the potential energy at a given phase angle, measured
     % relative to the potential energy at phi=-90 degrees. One could
     % subtract this from itself reversed to get renergy above.
-    aenergy = @(phi) vfg(0,0,(phi-90)/360 * zstagel) - vfg(0,0,-zstagel/2);
+    aenergy = @(phi) vaxg((phi-90)/360 * zstagel) - vaxg(-zstagel/2);
 
     % These functions reference the gridded interpolants, but with the
     % coordinates appropriately wrapped.
@@ -562,6 +583,7 @@ function r = processfields(r,decel)
     dvdz = @(xyz,n) dvdza(xyz(:,1),xyz(:,2),xyz(:,3),n);
     vf = @(xyz,n) vfa(xyz(:,1),xyz(:,2),xyz(:,3),n);
     
+
     % Save in a file for loading and propagating during decel simulation.
     save(['Decels/' decel '.mat'],'dvdx','dvdy','dvdz',...
         'vf','phase','zstagel','renergy','aenergy');

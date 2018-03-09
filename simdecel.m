@@ -46,11 +46,12 @@ function rsf = simdecel()
     % decelerator timing variables
     p = 55;
     n = 333;
-    r.chargetype = repmat({repmat('ab',1,n), repmat('a',1,n)},1,6);
-    r.stages = repmat({floor((1:(2*n-1))/2+1), 1:n},1,6);
-    r.rot180 = repmat({mod(floor((1:(2*n-1))/4),2), zeros(1,n)},1,6);
-    r.endphases =   repmat({[p repmat([-p, p],1,n-1)], p*ones(1,n)},1,6);
-    r.finalvz = {800 800 500 500 200 200 100 100 50 50 37 37};
+    r.chargetype = {repmat('ab',1,n), repmat('abb',1,n)};
+    r.stages = {floor((1:(2*n-1))/2+1), [floor((1:(2*n-1))/2+1) n]};
+    rotation = mod(floor((1:(2*n-1))/4),2);
+    r.rot180 = {rotation, [rotation,1-rotation(end)]};
+    r.endphases =   {[p repmat([-p, p],1,n-1)], [p repmat([-p, p],1,n-1)]};
+    r.finalvz = {37 37 37};
 
     % simulation timing variables
     r.smallt = 1e-7;

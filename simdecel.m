@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'try_symmetrized_delays';
-    r.num = 4e4;
+    r.dname = 'try_ppgg';
+    r.num = 4e5;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
@@ -34,8 +34,11 @@ function rsf = simdecel()
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    r.decels.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
-    r.decels.b = 'singlerod';
+    d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    d.b = 'singlerod';
+    e = d; e.b = 'ppmm_2mm';
+    f = d; f.b = 'ppgg';
+    r.decels = {d,f,e};
     
     r.reloadfields = false;
     
@@ -46,11 +49,10 @@ function rsf = simdecel()
     % decelerator timing variables
     p = 55;
     n = 333;
-    r.chargetype = {repmat('ab',1,n), repmat('abb',1,n)};
-    r.stages = {floor((1:(2*n-1))/2+1), ceil((3:(3*n))/3)};
-    rotation = mod(floor((1:(2*n-1))/4),2);
-    r.rot180 = {rotation, repmat([0 0 1 0 0 1 0 1 0 0 1 0],1,ceil(n/4))};
-    r.endphases =   {[p repmat([-p, p],1,n-1)], [p repmat([-90, -p, p],1,n-1)]};
+    r.chargetype = repmat('ab',1,n);
+    r.stages = floor((1:(2*n-1))/2+1);
+    r.rot180 = mod(floor((1:(2*n-1))/4),2);
+    r.endphases = [p repmat([-p, p],1,n-1)];
     r.finalvz = 50;
 
     % simulation timing variables

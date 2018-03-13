@@ -2,12 +2,12 @@
 function resultsdecel(rs)
     figure('Position',[0,0,2000,2000])
     colors = get(gca,'ColorOrder');
-    colors = [colors ; (1-colors)];
-    lines = repmat({'-','--'},1,10);
+    colors = [colors([3 2 1 4 5 6 7],:) ; (1-colors)];
+    lines = repmat({'-','-'},1,10);
     sname = repmat({'DSwitch','Normal'},1,6);
     for i=1:length(rs)
         r = rs(i);
-        i2 = round(i/2+.25);
+        i2 = i;%round(i/2+.25);
         c = colors(i2,:);
         l = lines{i};
         subplot(2,3,1); hold on
@@ -18,16 +18,20 @@ function resultsdecel(rs)
         plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',c,'LineStyle',l);
         
         subplot(2,3,3); hold on
-        plot(diff([0 r.times])*1e6,'b-','Color',c,'LineStyle',l);
+        if i==4
+            r.pos = r.pos(1:round(r.numleft/2.5),:);
+            r.vel = r.vel(1:round(r.numleft/2.5),:);
+        end
+        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,4); hold on
-        xx = 10*mod(i+1,2);
+        xx = 0*10*mod(i-1,3);
         plot(r.pos(:,3)*1e3+xx,r.vel(:,3),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
         diamL = 2.5e-3; 
         distL = 8e-3 + r.pos(1,3);
-        tof = zeros(1,3500);
+        tof = zeros(1,4000);
         times = (1e-7)*(1:length(tof));
         for j=1:length(tof)
             t = times(j);
@@ -36,6 +40,9 @@ function resultsdecel(rs)
             ya = abs(r.pos(:,2)+t*r.vel(:,2));
             tof(j) = sum( zsq + xsq < diamL^2/4 & ya < 2e-3);
         end
+        if i==4
+            tof = round(tof/2.5);
+        end
         rs(i).tofpeak = max(tof);
         rs(i).tofarea = trapz(times,tof);
         plot(times*1e6,tof,'Color',c,'LineStyle',l)
@@ -43,11 +50,12 @@ function resultsdecel(rs)
     
     subplot(2,3,6); hold on
     nls = [rs.numleft];
+    nls(4) = nls(4)/2.5;
     tps = [rs.tofpeak];
     tpa = [rs.tofarea];
-    plot(nls(1:2:end)./nls(2:2:end),'DisplayName','Total Ratio','Marker','x','LineStyle','-');
-    plot(tps(1:2:end)./tps(2:2:end),'DisplayName','Laser Ratio','Marker','o','LineStyle','-');
-    plot(tpa(1:2:end)./tpa(2:2:end),'DisplayName','Area Ratio','Marker','sq','LineStyle','-');
+    plot(nls(4:-1:1),'DisplayName','Total','Marker','x','LineStyle','-');
+    plot(tps(4:-1:1),'DisplayName','Peak','Marker','o','LineStyle','-');
+    plot(tpa(4:-1:1)*1e4,'DisplayName','Area','Marker','sq','LineStyle','-');
     legend('show')
     legend('Location','South')
     
@@ -58,26 +66,27 @@ function resultsdecel(rs)
     set(gca,'FontSize',12)
     set(gca,'YScale','log')
     grid on
-    %legend('show')
+    legend('++--','++gg','+ggg','norm')
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
     ylabel('Velocity (m/s)','FontSize',12)
-    titlestring = sprintf('Delay-Mode v Normal Switching\nVarious Speeds');
+    titlestring = sprintf('Alternate Charging Strategies\nSlowing to 50 m/s');
     title(titlestring,'FontSize',14)
     set(gca,'FontSize',12)
     grid on
 
     subplot(2,3,3)
-    xlabel('Stage Number','FontSize',12)
-    ylabel('Time (\mus)','FontSize',12)
-    title('Stage Time','FontSize',14)
+    xlabel('Y Position (mm)','FontSize',12)
+    ylabel('Y Velocity (m/s)','FontSize',12)
+    title('Phase Space Y','FontSize',14)
     set(gca,'FontSize',12)
     grid on
 
     subplot(2,3,4)
     xlabel('Z Position (mm)','FontSize',12)
     ylabel('Z Velocity (m/s)','FontSize',12)
+    ylim([0 100])
     title('Phase Space Z','FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -87,13 +96,13 @@ function resultsdecel(rs)
     ylabel('Population in Laser','FontSize',12)
     title('Time of Flight','FontSize',14)
     set(gca,'FontSize',12)
-    set(gca,'XScale','log')
-    xlim([4,350])
+    %set(gca,'XScale','log')
+    xlim([50,350])
     grid on
         
     subplot(2,3,6)
-    xlabel('Speed Numbers','FontSize',12)
-    ylabel('Population (arb)','FontSize',12)
+    xlabel('Charging Type','FontSize',12)
+    ylabel('Molecules','FontSize',12)
     title('Phase Space Totals','FontSize',14)
     set(gca,'FontSize',12)
     grid on

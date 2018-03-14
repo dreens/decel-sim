@@ -19,13 +19,13 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'try_ppgg';
-    r.num = 4e5;
+    r.dname = 'ds_norm_v_stages';
+    r.num = 1e5;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
-    r.initvz = 820;
+    r.initvz = {475 475 670 670 820 820};
     r.dist = 'gaussian';
         
     % decelerator configuration variables
@@ -36,9 +36,7 @@ function rsf = simdecel()
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
     d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
     d.b = 'singlerod';
-    e = d; e.b = 'ppmm_2mm';
-    f = d; f.b = 'ppgg';
-    r.decels = {d,f,e};
+    r.decels = d;
     
     r.reloadfields = false;
     
@@ -47,12 +45,9 @@ function rsf = simdecel()
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    p = 55;
-    n = 333;
-    r.chargetype = repmat('ab',1,n);
-    r.stages = floor((1:(2*n-1))/2+1);
-    r.rot180 = mod(floor((1:(2*n-1))/4),2);
-    r.endphases = [p repmat([-p, p],1,n-1)];
+    r.phase = 55;
+    r.numstage = {111 111 222 222 333 333};
+    r.delaymode = {0 1 0 1 0 1};
     r.finalvz = 50;
 
     % simulation timing variables
@@ -86,7 +81,7 @@ function rsf = simdecel()
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
    
     %disp(rsf(1).vels(end))
-    %resultsdecel(rsf)
+    resultsdecel(rsf)
 end
 
 function r = init(r)
@@ -98,6 +93,7 @@ end
 function r = initdecel(r)
     % Load the mat file, or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
+
     labels = fields(r.decels);
     for i=1:length(labels)
         d = r.decels.(labels{i});
@@ -109,6 +105,20 @@ function r = initdecel(r)
         else
             error(['File ''Decels/' d '.dat'' not found']);
         end
+    end
+
+    p = r.phase;
+    n = r.numstage;
+    if r.delaymode
+        r.chargetype = repmat('ab',1,n);
+        r.stages = floor((1:(2*n-1))/2+1);
+        r.rot180 = mod(floor((1:(2*n-1))/4),2);
+        r.endphases = [p repmat([-p, p],1,n-1)];
+    else
+        r.chargetype = repmat('a',1,n);
+        r.stages = 1:n;
+        r.rot180 = zeros(1,n);
+        r.endphases = ones(1,n)*p;
     end
     
     % Choose the phase angle as a function of vfinal, vinitial, and stage

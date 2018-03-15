@@ -31,15 +31,15 @@ function resultsdecel(rs)
         
         subplot(2,3,3); hold on
         pos = r.pos; vel = r.vel;
-        pos(:,3) = (pos(:,3)-pos(1,3))/2;
+        pos(:,3) = (pos(:,3)-pos(1,3));
         vel(:,3) = vel(:,3) - vel(1,3);
         pos = pos/5e-4;
-        vel = vel/5;
+        vel = vel/3;
         r.PSN = pos(:,1).^2+vel(:,1).^2 < 1;
         r.PSN = r.PSN & (pos(:,2).^2+vel(:,2).^2 < 1);
         r.PSN = r.PSN & (pos(:,3).^2+vel(:,3).^2 < 1);
         r.PSN = sum(r.PSN);
-        vol = pi^3*0.5^2*1*5^3;
+        vol = pi^3*0.5^3*3^3;
         r.PSD = r.PSN / vol; % in [mm*m/s]^-3
         plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3,...
             'DisplayName',sprintf('PSD=%0.1e',r.PSD));
@@ -47,7 +47,7 @@ function resultsdecel(rs)
         subplot(2,3,4); hold on
         xx = 3*mod(i-1,2)-1.5;
         yy = 30*(i2-2);
-        plot((r.pos(:,3)-r.pos(1,3))*1e3+xx*0,r.vel(:,3)+yy-255,'b.','Color',c,'MarkerSize',3);
+        plot((r.pos(:,3)-r.pos(1,3))*1e3+xx*0,r.vel(:,3)+yy-r.vel(1,3),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
         diamL = 2.5e-3; 
@@ -120,7 +120,7 @@ function resultsdecel(rs)
     title('Time of Flight','FontSize',14)
     set(gca,'FontSize',12)
     %set(gca,'XScale','log')
-    xlim([10,50])
+    xlim([50,250])
     grid on
         
     subplot(2,3,6)

@@ -19,13 +19,13 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'adv_switching_compare';
+    r.dname = 'adv_switching_compare_50mps';
     r.num = 1e6;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
-    r.initvz = 500;
+    r.initvz = 433;
     r.dist = 'gaussian';
         
     % decelerator configuration variables
@@ -49,7 +49,7 @@ function rsf = simdecel()
     r.numstage = 111;
     r.delaymode = {0 1 0};
     r.triplemode = {1 0 0};
-    r.finalvz = {0 255 255};
+    r.finalvz = {0 50 50};
 
     % simulation timing variables
     r.smallt = 1e-7;

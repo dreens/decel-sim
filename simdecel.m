@@ -19,13 +19,13 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'ds_norm_v_stages';
-    r.num = 1e5;
+    r.dname = 'adv_switching_compare';
+    r.num = 1e6;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
-    r.initvz = {475 475 670 670 820 820};
+    r.initvz = 500;
     r.dist = 'gaussian';
         
     % decelerator configuration variables
@@ -46,9 +46,10 @@ function rsf = simdecel()
     
     % decelerator timing variables
     r.phase = 55;
-    r.numstage = {111 111 222 222 333 333};
-    r.delaymode = {0 1 0 1 0 1};
-    r.finalvz = 50;
+    r.numstage = 111;
+    r.delaymode = {0 1 0};
+    r.triplemode = {1 0 0};
+    r.finalvz = {0 255 255};
 
     % simulation timing variables
     r.smallt = 1e-7;
@@ -114,6 +115,11 @@ function r = initdecel(r)
         r.stages = floor((1:(2*n-1))/2+1);
         r.rot180 = mod(floor((1:(2*n-1))/4),2);
         r.endphases = [p repmat([-p, p],1,n-1)];
+    elseif r.triplemode
+        r.chargetype = repmat('a',1,3*n);
+        r.stages = 1:3*n;
+        r.rot180 = zeros(1,3*n);
+        r.endphases = repmat([56.5 -88 -245],1,n);
     else
         r.chargetype = repmat('a',1,n);
         r.stages = 1:n;

@@ -3,30 +3,51 @@ function resultsdecel(rs)
     figure('Position',[0,0,2000,2000])
     colors = get(gca,'ColorOrder');
     colors = [colors ; (1-colors)];
-    lines = repmat({'--','-'},1,10);
-    markers = repmat({'o','x'},1,10);
-    sname = repmat({'DSwitch','Normal'},1,6);
+    lines = repmat({'-','-'},1,10);
+    markers = repmat({'o','x','sq'},1,10);
+    sname = repmat({'Triple','DSwitch','Normal'},1,6);
     for i=1:length(rs)
         r = rs(i);
-        i2 = round(i/2+.25);
+        i2 = i;%round(i/2+.25);
         c = colors(i2,:);
         l = lines{i};
         m = markers{i};
         subplot(2,3,1); hold on
+        if r.triplemode
+            r.numstage = r.numstage/3;
+            r.molnum = r.molnum(1:3:end);
+        end
         h = plot(r.molnum/r.molnum(1),'Color',c,'LineStyle',l);
         h.DisplayName = sprintf('v=%2.1f, %s',r.vels(end),sname{i});
-        plot(r.numstage,r.molnum(end)/r.molnum(1),'Color',c,'Marker',m)
+        g = plot(r.numstage,r.molnum(end)/r.molnum(1),'Color',c,'Marker',m);
+        g.Annotation.LegendInformation.IconDisplayStyle = 'off';
         
         subplot(2,3,2); hold on
+        if r.triplemode
+            r.stages = 1:(length(r.stages)/3);
+            r.vels = r.vels(1:3:end);
+        end
         plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',c,'LineStyle',l);
         
         subplot(2,3,3); hold on
-        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3);
+        pos = r.pos; vel = r.vel;
+        pos(:,3) = (pos(:,3)-pos(1,3))/2;
+        vel(:,3) = vel(:,3) - vel(1,3);
+        pos = pos/5e-4;
+        vel = vel/5;
+        r.PSN = pos(:,1).^2+vel(:,1).^2 < 1;
+        r.PSN = r.PSN & (pos(:,2).^2+vel(:,2).^2 < 1);
+        r.PSN = r.PSN & (pos(:,3).^2+vel(:,3).^2 < 1);
+        r.PSN = sum(r.PSN);
+        vol = pi^3*0.5^2*1*5^3;
+        r.PSD = r.PSN / vol; % in [mm*m/s]^-3
+        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3,...
+            'DisplayName',sprintf('PSD=%0.1e',r.PSD));
         
         subplot(2,3,4); hold on
         xx = 3*mod(i-1,2)-1.5;
-        yy = 25*(i2-2);
-        plot((r.pos(:,3)-r.pos(1,3))*1e3+xx,r.vel(:,3)+yy-50,'b.','Color',c,'MarkerSize',3);
+        yy = 30*(i2-2);
+        plot((r.pos(:,3)-r.pos(1,3))*1e3+xx*0,r.vel(:,3)+yy-255,'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
         diamL = 2.5e-3; 
@@ -49,12 +70,12 @@ function resultsdecel(rs)
     nls = [rs.numleft];
     tps = [rs.tofpeak];
     tpa = [rs.tofarea];
-    xax = [rs(1:2:end).numstage];
-    plot(xax,nls(2:2:end)./nls(1:2:end),'DisplayName','Total Ratio','Marker','x','LineStyle','-');
-    plot(xax,tps(2:2:end)./tps(1:2:end),'DisplayName','Peak Ratio','Marker','o','LineStyle','-');
-    plot(xax,tpa(2:2:end)./tpa(1:2:end),'DisplayName','Area Ratio','Marker','sq','LineStyle','-');
+    xax = 1:length(rs);%[rs(1:2:end).numstage];
+    plot(xax,nls(1:1:end),'DisplayName','Total','Marker','x','LineStyle','-');
+    plot(xax,tps(1:1:end),'DisplayName','Peak','Marker','o','LineStyle','-');
+    plot(xax,tpa(1:1:end)*1e5,'DisplayName','0.1*Area [N*us]','Marker','sq','LineStyle','-');
     legend('show')
-    legend('Location','NorthWest')
+    legend('Location','South')
     
     subplot(2,3,1)
     xlabel('Stage Number','FontSize',12)
@@ -62,14 +83,15 @@ function resultsdecel(rs)
     title('Molecules Remaining','FontSize',14)
     set(gca,'FontSize',12)
     set(gca,'YScale','log')
+    legend('Advanced','Delay','Normal')
     grid on
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
     ylabel('Velocity (m/s)','FontSize',12)
     titlestring = sprintf('%s\n%s, Phi=%2.1f',...
-        'Delay Switching v Normal v Length',...
-        'Slowing to 50 m/s', rs(1).phase);
+        'Advanced v Delayed Switch Modes',...
+        'Slowing to 255 m/s in 111 stages', rs(1).phase);
     title(titlestring,'FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -80,6 +102,7 @@ function resultsdecel(rs)
     title('Phase Space Y','FontSize',14)
     set(gca,'FontSize',12)
     grid on
+    legend('show')
 
     subplot(2,3,4)
     xlabel('Z Position (mm)','FontSize',12)
@@ -89,6 +112,7 @@ function resultsdecel(rs)
     title('Phase Space Z','FontSize',14)
     set(gca,'FontSize',12)
     grid on
+    
 
     subplot(2,3,5)
     xlabel('Time after turn-off (\mus)','FontSize',12)
@@ -96,7 +120,7 @@ function resultsdecel(rs)
     title('Time of Flight','FontSize',14)
     set(gca,'FontSize',12)
     %set(gca,'XScale','log')
-    xlim([50,350])
+    xlim([10,50])
     grid on
         
     subplot(2,3,6)

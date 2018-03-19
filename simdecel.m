@@ -19,13 +19,13 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'adv_switching_compare_50mps';
+    r.dname = 'tune_delay_switching_phi2';
     r.num = 1e6;
     r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 2e-3;
     r.tempz = 200e-3;
     r.spreadz = 5e-3;
-    r.initvz = 433;
+    r.initvz = 600;
     r.dist = 'gaussian';
         
     % decelerator configuration variables
@@ -39,17 +39,24 @@ function rsf = simdecel()
     r.decels = d;
     
     r.reloadfields = false;
+    r.studyfields = true;
     
     % Make sure are true except for guiding fields
     r.fieldsymmetryXY = true;
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    r.phase = 55;
-    r.numstage = 111;
-    r.delaymode = {0 1 0};
-    r.triplemode = {1 0 0};
-    r.finalvz = {0 50 50};
+    p = 50;
+    r.phi2off = {-30 -20 -10 0 10 20 30};
+    n = 200;
+    r.chargetype = repmat('ab',1,n);
+    r.stages = floor((1:(2*n))/2+1);
+    r.rot180 = mod(floor((1:(2*n))/4),2);
+    r.endphases = {};
+    for i=-30:10:30
+        r.endphases{end+1} = repmat([p, -p+i],1,n);
+    end
+    r.finalvz = 50;
 
     % simulation timing variables
     r.smallt = 1e-7;
@@ -80,7 +87,7 @@ function rsf = simdecel()
     end
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
-   
+    
     %disp(rsf(1).vels(end))
     resultsdecel(rsf)
 end
@@ -108,24 +115,6 @@ function r = initdecel(r)
         end
     end
 
-    p = r.phase;
-    n = r.numstage;
-    if r.delaymode
-        r.chargetype = repmat('ab',1,n);
-        r.stages = floor((1:(2*n-1))/2+1);
-        r.rot180 = mod(floor((1:(2*n-1))/4),2);
-        r.endphases = [p repmat([-p, p],1,n-1)];
-    elseif r.triplemode
-        r.chargetype = repmat('a',1,3*n);
-        r.stages = 1:3*n;
-        r.rot180 = zeros(1,3*n);
-        r.endphases = repmat([56.5 -88 -245],1,n);
-    else
-        r.chargetype = repmat('a',1,n);
-        r.stages = 1:n;
-        r.rot180 = zeros(1,n);
-        r.endphases = ones(1,n)*p;
-    end
     
     % Choose the phase angle as a function of vfinal, vinitial, and stage
     % number.
@@ -133,13 +122,45 @@ function r = initdecel(r)
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
         % changed the bounds for acceleration
         c = labels{1};
-        r.phase = fminbnd(@(phi) (r.f.(c).renergy(phi)*max(r.stages) + ...
-            r.f.(c).aenergy(-phi) - energy)^2,-90,90); 
+        d = labels{2};
+        r.phase = fminbnd(@(phi) (r.f.(c).aenergy(phi)*(max(r.stages)-1) ...
+            + r.f.(d).aenergy(-phi+r.phi2off)*(max(r.stages)-1) ...
+            - r.f.(c).aenergy(-phi+r.phi2off)*(max(r.stages)-2) ...
+            - r.f.(d).aenergy(-phi)*(max(r.stages)-1) ...
+            - r.f.(c).aenergy(-90) - energy)^2,-90,90); 
         fprintf('Phase Angle: %2.3f\n',r.phase);
-        curphase = mode(abs(r.endphases));
-        r.endphases(r.endphases==curphase) = r.phase;
-        r.endphases(r.endphases==-curphase) = -r.phase;
-        r.endphases(r.endphases==curphase-180) = r.phase-180;
+        p1 = max(r.endphases);
+        p2 = min(r.endphases);
+        r.endphases(r.endphases==p1) = r.phase;
+        r.endphases(r.endphases==p2) = -r.phase+r.phi2off;
+    end
+    
+    if r.studyfields
+        zzz=(-10:.25:10)*1e-3;
+        fff = zeros(length(zzz),8);
+        for i=1:length(zzz)
+            xxx = -.5:.05:.5;
+            vvv{1} = r.f.b.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],1);
+            vvv{2} = r.f.b.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],2);
+            vvv{3} = r.f.b.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],1);
+            vvv{4} = r.f.b.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],2);
+            vvv{5} = r.f.a.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],1);
+            vvv{6} = r.f.a.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],2);
+            vvv{7} = r.f.a.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],1);
+            vvv{8} = r.f.a.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],2);
+            for j=1:8
+                [xData, yData] = prepareCurveData( xxx, vvv{j} );
+                ft = fittype( 'poly2' );
+                opts = fitoptions( 'Method', 'LinearLeastSquares' );
+                [fitr, ~] = fit( xData, yData, ft, opts );
+                fff(i,j)=2*fitr.p1/r.mOH;
+            end
+            
+        end
+        figure;plot(zzz,fff');
+        xlabel('Longitudinal Position')
+        ylabel('Transverse Frequency')
+        title('Transverse Behavior')
     end
 
 end

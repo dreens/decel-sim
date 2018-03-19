@@ -3,9 +3,10 @@ function resultsdecel(rs)
     figure('Position',[0,0,2000,2000])
     colors = get(gca,'ColorOrder');
     colors = [colors ; (1-colors)];
+    colors = jet(length(rs));
     lines = repmat({'-','-'},1,10);
     markers = repmat({'o','x','sq'},1,10);
-    sname = repmat({'Triple','DSwitch','Normal'},1,6);
+    sname = repmat({'-20','0','20','40'},1,6);
     for i=1:length(rs)
         r = rs(i);
         i2 = i;%round(i/2+.25);
@@ -13,20 +14,12 @@ function resultsdecel(rs)
         l = lines{i};
         m = markers{i};
         subplot(2,3,1); hold on
-        if r.triplemode
-            r.numstage = r.numstage/3;
-            r.molnum = r.molnum(1:3:end);
-        end
         h = plot(r.molnum/r.molnum(1),'Color',c,'LineStyle',l);
-        h.DisplayName = sprintf('v=%2.1f, %s',r.vels(end),sname{i});
+        h.DisplayName = sprintf('dPhi=%2d',r.phi2off);
         g = plot(r.numstage,r.molnum(end)/r.molnum(1),'Color',c,'Marker',m);
         g.Annotation.LegendInformation.IconDisplayStyle = 'off';
         
         subplot(2,3,2); hold on
-        if r.triplemode
-            r.stages = 1:(length(r.stages)/3);
-            r.vels = r.vels(1:3:end);
-        end
         plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',c,'LineStyle',l);
         
         subplot(2,3,3); hold on
@@ -46,7 +39,7 @@ function resultsdecel(rs)
         
         subplot(2,3,4); hold on
         xx = 3*mod(i-1,2)-1.5;
-        yy = 30*(i2-2);
+        yy = 30*(i-.5-length(rs)/2);
         plot((r.pos(:,3)-r.pos(1,3))*1e3+xx*0,r.vel(:,3)+yy-r.vel(1,3),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
@@ -70,7 +63,7 @@ function resultsdecel(rs)
     nls = [rs.numleft];
     tps = [rs.tofpeak];
     tpa = [rs.tofarea];
-    xax = 1:length(rs);%[rs(1:2:end).numstage];
+    xax = [rs.phi2off];
     plot(xax,nls(1:1:end),'DisplayName','Total','Marker','x','LineStyle','-');
     plot(xax,tps(1:1:end),'DisplayName','Peak','Marker','o','LineStyle','-');
     plot(xax,tpa(1:1:end)*1e5,'DisplayName','0.1*Area [N*us]','Marker','sq','LineStyle','-');
@@ -83,15 +76,15 @@ function resultsdecel(rs)
     title('Molecules Remaining','FontSize',14)
     set(gca,'FontSize',12)
     set(gca,'YScale','log')
-    legend('Advanced','Delay','Normal')
+    legend('show')
     grid on
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
     ylabel('Velocity (m/s)','FontSize',12)
-    titlestring = sprintf('%s\n%s, Phi=%2.1f',...
-        'Advanced v Delayed Switch Modes',...
-        'Slowing to 255 m/s in 111 stages', rs(1).phase);
+    titlestring = sprintf('Slowing to %d m/s in %d stages\n%s',...
+        rs(1).finalvz,max(rs(1).stages)-1,...
+        'Tweaking Delay Mode Second Phase');
     title(titlestring,'FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -124,9 +117,9 @@ function resultsdecel(rs)
     grid on
         
     subplot(2,3,6)
-    xlabel('Stage Number','FontSize',12)
+    xlabel('Phase 2 Offset (deg)','FontSize',12)
     ylabel('Molecules','FontSize',12)
-    title('Phase Space Totals','FontSize',14)
+    title('Number Totals','FontSize',14)
     set(gca,'FontSize',12)
     grid on
     %legend('show')

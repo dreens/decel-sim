@@ -5,8 +5,8 @@ function resultsdecel(rs)
     colors = [colors ; (1-colors)];
     colors = jet(length(rs));
     lines = repmat({'-','-'},1,10);
-    markers = repmat({'o','x','sq'},1,10);
-    sname = repmat({'-20','0','20','40'},1,6);
+    markers = repmat({'o','x','s','d','p'},1,10);
+    sname = repmat({'0','10','20','30','40'},1,6);
     for i=1:length(rs)
         r = rs(i);
         i2 = i;%round(i/2+.25);
@@ -14,7 +14,7 @@ function resultsdecel(rs)
         l = lines{i};
         m = markers{i};
         subplot(2,3,1); hold on
-        h = plot(r.molnum/r.molnum(1),'Color',c,'LineStyle',l);
+        h = plot(r.molnum/r.num,'Color',c,'LineStyle',l);
         h.DisplayName = sprintf('dPhi=%2d',r.phi2off);
         g = plot(r.numstage,r.molnum(end)/r.molnum(1),'Color',c,'Marker',m);
         g.Annotation.LegendInformation.IconDisplayStyle = 'off';

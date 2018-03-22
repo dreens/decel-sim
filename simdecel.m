@@ -19,13 +19,13 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'tune_delay_switching_phi2';
-    r.num = 1e6;
-    r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    r.spreadxy = 2e-3;
-    r.tempz = 200e-3;
-    r.spreadz = 5e-3;
-    r.initvz = 600;
+    r.dname = 'tune_phi2_alt_binit';
+    r.num = 2e5;
+    r.tempxy = 400e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.spreadxy = 3e-3;
+    r.tempz = 300e-3;
+    r.spreadz = 7e-3;
+    r.initvz = 820;
     r.dist = 'gaussian';
         
     % decelerator configuration variables
@@ -36,10 +36,14 @@ function rsf = simdecel()
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
     d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
     d.b = 'singlerod';
-    r.decels = d;
+    e.a = 'longdecel';
+    e.b = 'ppgg';
+    f.a = 'longdecel';
+    f.b = 'ppmm_2mm';
+    r.decels = {d d d d d e e e e e f f f f f};
     
     r.reloadfields = false;
-    r.studyfields = true;
+    r.studyfields = false;
     
     % Make sure are true except for guiding fields
     r.fieldsymmetryXY = true;
@@ -47,15 +51,17 @@ function rsf = simdecel()
     
     % decelerator timing variables
     p = 50;
-    r.phi2off = {-30 -20 -10 0 10 20 30};
-    n = 200;
+    r.phi2off = {0 10 20 30 40};
+    n = 333;
     r.chargetype = repmat('ab',1,n);
     r.stages = floor((1:(2*n))/2+1);
     r.rot180 = mod(floor((1:(2*n))/4),2);
     r.endphases = {};
-    for i=-30:10:30
+    for i=0:10:40
         r.endphases{end+1} = repmat([p, -p+i],1,n);
     end
+    r.phi2off = repmat(r.phi2off,1,3);
+    r.endphases = repmat(r.endphases,1,3);
     r.finalvz = 50;
 
     % simulation timing variables
@@ -78,6 +84,7 @@ function rsf = simdecel()
         rr = init(rs(i));
         rsf(i) = run(rr);
         rsf(i).f = 0; %clear the fields, massive data sink.
+        fprintf('speed:%3.1f\n',rsf(i).vels(end))
     end
     % Save the struct of runs, just in case the fitsim2data or results
     % functions have petty errors. Wouldn't want to lost everything.
@@ -261,7 +268,7 @@ function r = stage(r)
         
     end
     
-    r.pos(abs(r.pos(:,3)-r.pos(1,3))>7e-3,:)=nan;
+    r.pos(abs(r.pos(:,3)-r.pos(1,3))>10e-3,:)=nan;
     r.pos(r.vel(:,3)<0,:)=nan;
     r.lost    = isnan(sum(r.pos,2));
     r.pos     = r.pos(~r.lost,:);

@@ -38,12 +38,15 @@ vv = vv - vv(mZ,mX);
 m = max(vv)/2;
 h = figure('Position',[50 50 500 800]);
 contourf(xp*1e3,zp*1e3,1e3*vv/kB,0:10:800);
+caxis([0 500])
 g = colorbar;
 g.YLabel.String = 'Energy (mK)';
 g.YLabel.Rotation = 270;
 g.YLabel.Position = g.YLabel.Position + [1 0 0];
-xlabel('Transverse Position (mm)')
-ylabel('Longitudinal Position (mm)')
-title({'Moving Trap Depth',[' Phi=' num2str(phi)]})
+g.YLabel.FontSize = 12;
+xlabel('Transverse Position (mm)','FontSize',12)
+ylabel('Longitudinal Position (mm)','FontSize',12)
+title({'Moving Trap Depth',[' Phi=' num2str(phi)]},'FontSize',14)
+set(gca,'FontSize',12)
 
 end

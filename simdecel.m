@@ -143,31 +143,7 @@ function r = initdecel(r)
     end
     
     if r.studyfields
-        zzz=(-10:.25:10)*1e-3;
-        fff = zeros(length(zzz),8);
-        for i=1:length(zzz)
-            xxx = -.5:.05:.5;
-            vvv{1} = r.f.b.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],1);
-            vvv{2} = r.f.b.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],2);
-            vvv{3} = r.f.b.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],1);
-            vvv{4} = r.f.b.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],2);
-            vvv{5} = r.f.a.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],1);
-            vvv{6} = r.f.a.vf([1e-3*xxx' zeros(21,1) zzz(i)*ones(21,1)],2);
-            vvv{7} = r.f.a.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],1);
-            vvv{8} = r.f.a.vf([zeros(21,1) 1e-3*xxx' zzz(i)*ones(21,1)],2);
-            for j=1:8
-                [xData, yData] = prepareCurveData( xxx, vvv{j} );
-                ft = fittype( 'poly2' );
-                opts = fitoptions( 'Method', 'LinearLeastSquares' );
-                [fitr, ~] = fit( xData, yData, ft, opts );
-                fff(i,j)=2*fitr.p1/r.mOH;
-            end
-            
-        end
-        figure;plot(zzz,fff');
-        xlabel('Longitudinal Position')
-        ylabel('Transverse Frequency')
-        title('Transverse Behavior')
+
     end
 
 end

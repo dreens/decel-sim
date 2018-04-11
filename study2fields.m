@@ -1,3 +1,6 @@
+% Here I attempt to create the effective moving trap potential under
+% different alternate charging sequences of interest.
+
 function h = study2fields(d,e,phi)
 
 r = load(['Decels/' d '.mat']);

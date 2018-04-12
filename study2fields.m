@@ -19,6 +19,7 @@ ff(:) = r.vf([zeros(length(xx(:)),1) xx(:) zz(:)],2);
 gg(:) = r.vf([xx(:) zeros(length(xx(:)),1) zz(:)],2);
 hh(:) = s.vf([zeros(length(xx(:)),1) xx(:) zz(:)],2);
 ii(:) = s.vf([xx(:) zeros(length(xx(:)),1) zz(:)],2);
+
 zphi = (-2:.1:2)*1e-3;
 [xp,zp] = meshgrid(x,zphi);
 vv = zeros(length(zphi),length(x));
@@ -31,7 +32,11 @@ for i=1:length(zphi)
     [~, c] = min((zphi(i)+phiH-z).^2);
     vv(i,:) = (sum(ff(b:(c-1),:)) + sum(gg(b:(c-1),:)) + ...
         sum(hh(a:(b-1),:)) + sum(ii(a:(b-1),:)))/(c-a+1)/2;
+    
 end
+
+% Symmetrize for pggg
+vv = (vv + vv(:,end:-1:1))/2;
 
 % Now velocity compensation
 mZ = (length(zphi)+1)/2;

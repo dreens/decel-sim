@@ -1,4 +1,4 @@
-function plotTrapSlice(vvv,cut,selectPlot)
+function h = plotTrapSlice(vvv,cut,selectPlot)
 
 % These will be used to convert the energy to temperature units.
 mOH = 2.82328e-26;
@@ -36,10 +36,23 @@ if length(selectPlot)==2
     %title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiH-.01) ' deg']},'FontSize',14)
     set(gca,'FontSize',12)
 else
-    figure
-    isosurface(yp,xp,zp,vvv*1e3/kB,200)
-    
-    
-    
-    
+    f = figure('Position',[300 50 300 400]);
+    a = axes('Parent',f);
+    levels = [10,50,150,250];
+    colors = jet(length(levels));
+    for i=1:length(levels)
+        makepatch(levels(i),colors(i,:),97);
+    end
+    view(a,[15 15]);
+
+end
+
+function h = makepatch(t,c,cut)
+    h = patch(isosurface(yp(:,:,1:cut),xp(:,:,1:cut),zp(:,:,1:cut),vvv(:,:,1:cut)*1e3/kB,t));
+    h.FaceColor = c;
+    h.EdgeAlpha = 0;
+    h.FaceAlpha = 0.5;
+
+end
+
 end

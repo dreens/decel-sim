@@ -29,8 +29,8 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-15:.1:5)*1e-3;
-x = (-.9:.1:.9)*1e-3;
+z=(-15:.05:5)*1e-3;
+x = (-.9:.05:.9)*1e-3;
 [xx,zz] = meshgrid(x,z);
 
 % ff, gg, hh, ii will be large x-z grids giving the lab-fixed potential
@@ -58,7 +58,7 @@ end
 % Now we make a new z coordinate centered on the synchronous molecule. We
 % will fill the variable vv with effective potential energy relative to
 % this molecule.
-zphi = (-2:.1:2)*1e-3;
+zphi = (-2:.05:2)*1e-3;
 [xp,zp] = meshgrid(x,zphi);
 vv = zeros(length(zphi),length(x));
 
@@ -114,8 +114,8 @@ g.YLabel.FontSize = 12;
 xlabel('Transverse Position (mm)','FontSize',12)
 ylabel('Longitudinal Position (mm)','FontSize',12)
 %title({'Moving Trap Depth',[' Phi=' num2str(phiH-.01)]},'FontSize',14)
-title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiM+180+phiL-.02) ' deg']},'FontSize',14)
-%title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiH-.01) ' deg']},'FontSize',14)
+%title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiM+180+phiL-.02) ' deg']},'FontSize',14)
+title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiH-.01) ' deg']},'FontSize',14)
 set(gca,'FontSize',12)
 
 end

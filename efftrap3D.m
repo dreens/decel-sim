@@ -1,7 +1,7 @@
 % Here I attempt to create the effective moving trap potential under
 % different alternate charging sequences of interest.
 
-function h = efftrap3D(d,e,phiL,phiM,phiH)
+function vv = efftrap3D(d,e,phiL,phiM,phiH)
 
 % Shift phi a tiny bit to avoid strange problem that occurs if phi/90 is a
 % simple rational.
@@ -29,8 +29,8 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-15:.1:5)*1e-3;
-x = (-.9:.1:.9)*1e-3;
+z=(-15:.05:5)*1e-3;
+x = (-.95:.05:.95)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);
 
 % ff, gg, hh, ii will be large x-z grids giving the lab-fixed potential
@@ -58,7 +58,7 @@ end
 % Now we make a new z coordinate centered on the synchronous molecule. We
 % will fill the variable vv with effective potential energy relative to
 % this molecule.
-zphi = (-3:.1:3)*1e-3;
+zphi = (-3:.05:3)*1e-3;
 [xp,yp,zp] = ndgrid(x,x,zphi);
 vv = zeros(size(xp));
 
@@ -76,15 +76,15 @@ for i=1:length(zphi)
     [~, a] = min((zphi(i)+pL-z).^2);
     [~, b] = min((zphi(i)+pM-z).^2);
     [~, c] = min((zphi(i)+pH-z).^2);
-    vv(:,:,i) = (sum(ff(:,:,b:(c-1))) + sum(gg(:,:,b:(c-1))) + ...
-        sum(hh(:,:,a:(b-1))) + sum(ii(:,:,a:(b-1))))/(c-a+1)/2; %beware sensitivity on 
+    vv(:,:,i) = (sum(ff(:,:,b:(c-1)),3) + sum(gg(:,:,b:(c-1)),3) + ...
+        sum(hh(:,:,a:(b-1)),3) + sum(ii(:,:,a:(b-1)),3))/(c-a+1)/2; %beware sensitivity on 
     
 end
 
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
-vv = (vv + vv(:,end:-1:1))/2;
+% vv = (vv + vv(:,end:-1:1,:))/2;
 
 % Now velocity compensation. First get coordinates of what should be the
 % trap center.
@@ -94,28 +94,13 @@ mX = (length(x)+1)/2;
 % Find the slope of the potential energy at the "trap center". Now add a
 % fictitious force corresponding to acceleration enough so this slope is
 % zeroed.
-slope = (vv(mZ+1,mX)-vv(mZ-1,mX))/(zp(mZ+1,mX)-zp(mZ-1,mX));
+slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
 vv = vv - zp.*slope;
 
 % We can also get the acceleration implied by that slope.
 accel = slope/mOH;
 
 % Finally redefine zero energy.
-vv = vv - vv(mZ,mX);
-m = max(vv)/2;
-h = figure('Position',[50 50 500 800]);
-contourf(xp*1e3,zp*1e3,1e3*vv/kB,0:10:800);
-caxis([0 500])
-g = colorbar;
-g.YLabel.String = 'Energy (mK)';
-g.YLabel.Rotation = 270;
-g.YLabel.Position = g.YLabel.Position + [1 0 0];
-g.YLabel.FontSize = 12;
-xlabel('Transverse Position (mm)','FontSize',12)
-ylabel('Longitudinal Position (mm)','FontSize',12)
-%title({'Moving Trap Depth',[' Phi=' num2str(phiH-.01)]},'FontSize',14)
-title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiM+180+phiL-.02) ' deg']},'FontSize',14)
-%title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiH-.01) ' deg']},'FontSize',14)
-set(gca,'FontSize',12)
+vv = vv - vv(mX,mX,mZ);
 
 end

@@ -29,8 +29,8 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-15:.05:5)*1e-3;
-x = (-.95:.05:.95)*1e-3;
+z=(-15:.025:5)*1e-3;
+x = (-.975:.025:.975)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);
 
 % ff, gg, hh, ii will be large x-z grids giving the lab-fixed potential
@@ -58,7 +58,7 @@ end
 % Now we make a new z coordinate centered on the synchronous molecule. We
 % will fill the variable vv with effective potential energy relative to
 % this molecule.
-zphi = (-3:.05:3)*1e-3;
+zphi = (-3:.025:3)*1e-3;
 [xp,yp,zp] = ndgrid(x,x,zphi);
 vv = zeros(size(xp));
 

@@ -35,7 +35,7 @@ if length(selectPlot)==2
     %title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiM+180+phiL-.02) ' deg']},'FontSize',14)
     %title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiH-.01) ' deg']},'FontSize',14)
     set(gca,'FontSize',12)
-else
+elseif strcmp(selectPlot,'contours')
     f = figure('Position',[300 50 300 400]);
     a = axes('Parent',f);
     levels = [10,50,150,250];
@@ -44,14 +44,46 @@ else
         makepatch(levels(i),colors(i,:),97);
     end
     view(a,[15 15]);
+elseif strcmp(selectPlot,'contourArray')
+    
+    x = (-.975:.025:.975)*1e-3;
+    zphi = (-3:.025:3)*1e-3;
+    [zp,yp,xp] = ndgrid(zphi,x,x);
+    
 
+    
+    f = figure('Position',[10 10 1.5*690 1.5*380]);
+    a = axes('Parent',f);
+    vvvfam = vvv;
+    levels = [10,50,100,200];
+    colors = jet(length(levels));
+    for types=1:length(vvv)
+        vvv = vvvfam{types};
+        vvv = permute(vvv,[3 2 1]);
+        xp = xp + ones(size(yp))*2.5e-3;
+        for views = 1:length(levels)
+            zp = zp + ones(size(zp))*3.5e-3*views;
+            %yp = yp + ones(size(yp))*5e-4*views;
+            makepatch(levels(views),colors(views,:),193)
+            zp = zp - ones(size(zp))*3.5e-3*views;
+            %yp = yp - ones(size(yp))*5e-4*views;
+        end
+    end
+    xlim([-2e-3 2e-3])
+    view(a,[80 6]);
+    light('Position',[-10 -12 1]);
 end
 
 function h = makepatch(t,c,cut)
-    h = patch(isosurface(yp(:,:,1:cut),xp(:,:,1:cut),zp(:,:,1:cut),vvv(:,:,1:cut)*1e3/kB,t));
+    if ~strcmp(selectPlot,'contourArray')
+        h = patch(isosurface(yp(:,:,1:cut),xp(:,:,1:cut),zp(:,:,1:cut),vvv(:,:,1:cut)*1e3/kB,t));
+    else
+        h = patch(isosurface(yp(1:cut,:,:),zp(1:cut,:,:),xp(1:cut,:,:),vvv(1:cut,:,:)*1e3/kB,t));
+        isonormals(yp(1:cut,:,:),zp(1:cut,:,:),xp(1:cut,:,:),vvv(1:cut,:,:)*1e3/kB, h)
+    end
     h.FaceColor = c;
     h.EdgeAlpha = 0;
-    h.FaceAlpha = 0.5;
+    h.FaceAlpha = 0.99;
 
 end
 

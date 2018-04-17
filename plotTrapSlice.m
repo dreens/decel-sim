@@ -6,8 +6,8 @@ kB = 1.381e-23;
 
 accel = 0;
 
-x = (-.95:.05:.95)*1e-3;
-zphi = (-3:.05:3)*1e-3;
+x = (-.975:.025:.975)*1e-3;
+zphi = (-3:.025:3)*1e-3;
 [xp,yp,zp] = ndgrid(x,x,zphi);
 
 if strcmp(selectPlot,'yz')
@@ -52,29 +52,37 @@ elseif strcmp(selectPlot,'contourArray')
     
 
     
-    f = figure('Position',[10 10 1.5*690 1.5*380]);
+    f = figure('Position',[10 10 1116 570]);
     a = axes('Parent',f);
     vvvfam = vvv;
-    levels = [10,50,100,200];
+    levels = [10,55,100,200];
     colors = jet(length(levels));
+    colors = flipud(colors);
     for types=1:length(vvv)
         vvv = vvvfam{types};
         vvv = permute(vvv,[3 2 1]);
         xp = xp + ones(size(yp))*2.5e-3;
         for views = 1:length(levels)
-            zp = zp + ones(size(zp))*3.5e-3*views;
-            %yp = yp + ones(size(yp))*5e-4*views;
-            makepatch(levels(views),colors(views,:),193)
-            zp = zp - ones(size(zp))*3.5e-3*views;
-            %yp = yp - ones(size(yp))*5e-4*views;
+            zp = zp + ones(size(zp))*4.5e-3*views;
+            if types==3
+                cut = 213;
+            else
+                cut = 193;
+            end
+            makepatch(levels(views),colors(views,:),cut)
+            zp = zp - ones(size(zp))*4.5e-3*views;
         end
     end
     xlim([-2e-3 2e-3])
-    view(a,[80 6]);
-    light('Position',[-10 -12 1]);
+    view(a,[80.2 5.2]);
+    light('Position',[-5 5 -1]);
+    light('Position',[0 5 0]);
+    light('Position',[-5 -2 -5]);
+   % light('Position',[-5 -10 -1]);
 end
 
 function h = makepatch(t,c,cut)
+    cut = min(cut,max(size(xp)));
     if ~strcmp(selectPlot,'contourArray')
         h = patch(isosurface(yp(:,:,1:cut),xp(:,:,1:cut),zp(:,:,1:cut),vvv(:,:,1:cut)*1e3/kB,t));
     else
@@ -83,8 +91,11 @@ function h = makepatch(t,c,cut)
     end
     h.FaceColor = c;
     h.EdgeAlpha = 0;
-    h.FaceAlpha = 0.99;
-
+    h.FaceAlpha = 1;
+    h.AmbientStrength = 0.1;
+    h.DiffuseStrength = .5;
+    h.SpecularStrength = .25;
+    h.BackFaceLighting = 'unlit';
 end
 
 end

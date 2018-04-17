@@ -30,6 +30,11 @@ kB = 1.381e-23;
 % large because different chunks get integrated over to get the effective
 % moving trap.
 z=(-15:.025:5)*1e-3;
+
+if phiH-phiL>180
+    z=(-20:.025:5)*1e-3;
+end
+
 x = (-.975:.025:.975)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);
 

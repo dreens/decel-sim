@@ -19,12 +19,12 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'delayswitch_speed_panel';
-    r.num = 4e5;
-    r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    r.spreadxy = 2e-3;
-    r.tempz = 200e-3;
-    r.spreadz = 5e-3;
+    r.dname = 'delayswitch_speed_panel_broaden';
+    r.num = 1e6;
+    r.tempxy = 400e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.spreadxy = 3e-3;
+    r.tempz = 400e-3;
+    r.spreadz = 15e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
         

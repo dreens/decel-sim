@@ -1,6 +1,7 @@
 function resultsvexpt(rsf,data)
 
 figure; hold on
+line([-50 450],[0 0])
 scale = 1/50;
 colors = [...
     0.2081    0.1663    0.5292;
@@ -30,7 +31,7 @@ for i=1:length(rsf)
         l = '-';
     else
         l = '--';
-        tof = -tof;
+        tof = -2.5*tof;
     end
     shift = -(r.finalvz==800)*20 + (r.finalvz==37)*70;
     times = times(tof~=0);
@@ -40,12 +41,13 @@ end
 
 for i=1:length(data)
     d = data(i);
+    disp(['Max=' num2str(max(d.YData)) ', s=' num2str(d.speed) ', new=' num2str(d.new)])
     c = colors(d.speed==speeds,:);
     if d.new
         m = '.'; ms = 18;
     else
         m = 'o'; ms = 6;
-        d.YData = -d.YData;
+        d.YData = -2.5*d.YData;
     end
     shift = -(d.speed==800)*20 + (d.speed==37)*70;
     errorbar(d.XData+shift,d.YData,d.UData,'LineStyle','none','Color',c,'Marker',m,'MarkerSize',ms)

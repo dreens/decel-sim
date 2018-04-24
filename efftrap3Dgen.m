@@ -1,7 +1,7 @@
 % Here I modify efftrap3D to accept a more generalized list of charge
 % configurations and phase angles for switching between them. This could be
 % used to get effective traps for DongDong's advanced switching schemes or
-% for checking modes of VSF mode, etc.
+% for checking alternatives to VSF mode, etc.
 
 function vv = efftrap3Dgen(decels,phis,primes)
 
@@ -45,9 +45,9 @@ x = (-.975:.025:.975)*1e-3;
 lfgrids(1:length(decels)) = struct('vv',zeros(size(xx)));
 for i=1:length(lfgrids)
     if primes(i)
-        lfgrids(i).vv(:) = ds(i).vf([yy(:) -xx(:) zz(:)],2);
-    else
         lfgrids(i).vv(:) = ds(i).vf([xx(:) yy(:) zz(:)],2);
+    else
+        lfgrids(i).vv(:) = ds(i).vf([xx(:) yy(:) zz(:)],1);
     end
 end
 
@@ -65,22 +65,25 @@ vv = zeros(size(xp));
 % coordinates, different in start and end point but not length. All
 % assuming the z velocity is large relative to the stage spacing.
 for i=1:length(zphi)
+    ps = -2.5e-3 + phis/90*2.5e-3;
     pH = -2.5e-3 + phiH/90*2.5e-3;
     pM = -2.5e-3 + phiM/90*2.5e-3;
     pL = -2.5e-3 + phiL/90*2.5e-3;
-
-    [~, a] = min((zphi(i)+pL-z).^2);
-    [~, b] = min((zphi(i)+pM-z).^2);
-    [~, c] = min((zphi(i)+pH-z).^2);
-    vv(:,:,i) = (sum(ff(:,:,b:(c-1)),3) + sum(gg(:,:,b:(c-1)),3) + ...
-        sum(hh(:,:,a:(b-1)),3) + sum(ii(:,:,a:(b-1)),3))/(c-a+1)/2; %beware sensitivity on 
     
+    as = ps;
+    for j=1:length(phis)
+        [~, as(j)] = min((zphi(i)+ps(j)-z).^2);
+        if j>1
+            vv(:,:,i) = vv(:,:,i) + sum(lfgrids(j-1).vv(:,:,as(j-1):as(j)),3);
+        end
+    end
+    vv(:,:,i) = vv(:,:,i)/(as(end)-as(1));
 end
 
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
-vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
+% vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
 
 % Now velocity compensation. First get coordinates of what should be the
 % trap center.

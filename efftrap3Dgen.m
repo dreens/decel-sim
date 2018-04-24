@@ -1,26 +1,27 @@
-% Here I attempt to create the effective moving trap potential under
-% different alternate charging sequences of interest.
+% Here I modify efftrap3D to accept a more generalized list of charge
+% configurations and phase angles for switching between them. This could be
+% used to get effective traps for DongDong's advanced switching schemes or
+% for checking modes of VSF mode, etc.
 
-function vv = efftrap3D(d,e,phiL,phiM,phiH)
+function vv = efftrap3Dgen(decels,phis,primes)
+
+assert(length(decels)+1==length(phis),'You need one phase for each charge configuration plus an extra.');
+assert(length(primes)==length(decels),'Specify a prime for each charge config');
 
 % Shift phi a tiny bit to avoid strange problem that occurs if phi/90 is a
 % simple rational.
-phiL = phiL + .01;
-phiM = phiM + .01;
-phiH = phiH + .01;
+phis = phis + .01;
 
-% This allows this code to be used for a different case:
-if strcmp(d,'None')
-    d = e;
-    zero = true;
-else
-    zero = false;
-end
-
-% Load the two fields that will be combined in different phase angle ranges
+% Load the fields that will be combined in different phase angle ranges
 % to give the effective moving trap.
-r = load(['Decels/' d '.mat']);
-s = load(['Decels/' e '.mat']);
+ds(1:length(decels)) = struct();
+for i=1:length(decels)
+    if ~strcmp(decels(i),'None')
+        ds(i) = load(['Decels/' decels(i) '.mat']);
+    else
+        ds(i).vf = @(x,~) zeros(max(size(x)),1);
+    end
+end
 
 % These will be used to convert the energy to temperature units.
 mOH = 2.82328e-26;
@@ -38,26 +39,16 @@ end
 x = (-.975:.025:.975)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);
 
-% ff, gg, hh, ii will be large x-z grids giving the lab-fixed potential
-% energy over a few stages under the two different charge configurations
-% and under their two different possible translations. (e.g. rods 1/2
-% charged verses rods 3/4 charged)
-ff = zeros(size(xx));
-gg = zeros(size(xx));
-hh = zeros(size(xx));
-ii = zeros(size(xx));
-
-% Of course the separate possible translations are achieved by changing x
-% for y as appropriate.
-ff(:) = r.vf([yy(:) -xx(:) zz(:)],2);
-gg(:) = r.vf([xx(:) yy(:) zz(:)],2);
-hh(:) = s.vf([yy(:) -xx(:) zz(:)],2);
-ii(:) = s.vf([xx(:) yy(:) zz(:)],2);
-
-% Clear second fields
-if zero
-    ff = ff*0;
-    gg = gg*0;
+% lfgrids will contain large x-z grids giving the lab-fixed potential
+% energy over a few stages under the various charge configurations
+% specified.
+lfgrids(1:length(decels)) = struct('vv',zeros(size(xx)));
+for i=1:length(lfgrids)
+    if primes(i)
+        lfgrids(i).vv(:) = ds(i).vf([yy(:) -xx(:) zz(:)],2);
+    else
+        lfgrids(i).vv(:) = ds(i).vf([xx(:) yy(:) zz(:)],2);
+    end
 end
 
 % Now we make a new z coordinate centered on the synchronous molecule. We
@@ -89,7 +80,7 @@ end
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
-%vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
+vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
 
 % Now velocity compensation. First get coordinates of what should be the
 % trap center.
@@ -103,7 +94,7 @@ slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
 vv = vv - zp.*slope;
 
 % We can also get the acceleration implied by that slope.
-accel = slope/mOH
+accel = slope/mOH;
 
 % Finally redefine zero energy.
 vv = vv - vv(mX,mX,mZ);

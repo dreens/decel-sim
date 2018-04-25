@@ -23,7 +23,7 @@ end
 if length(selectPlot)==2
     h = figure('Position',[50 50 500 800]);
     contourf(xp*1e3,zp*1e3,1e3*vv/kB,0:10:800);
-    caxis([0 500])
+    caxis([0 500]);
     g = colorbar;
     g.YLabel.String = 'Energy (mK)';
     g.YLabel.Rotation = 270;
@@ -69,11 +69,11 @@ elseif strcmp(selectPlot,'contourArray')
             else
                 cut = 193;
             end
-            makepatch(levels(views),colors(views,:),cut)
+            makepatch(levels(views),colors(views,:),cut);
             zp = zp - ones(size(zp))*4.5e-3*views;
         end
     end
-    xlim([-2e-3 2e-3])
+    xlim([-2e-3 2e-3]);
     view(a,[80.2 5.2]);
     light('Position',[-5 5 -1]);
     light('Position',[0 5 0]);
@@ -87,7 +87,7 @@ function h = makepatch(t,c,cut)
         h = patch(isosurface(yp(:,:,1:cut),xp(:,:,1:cut),zp(:,:,1:cut),vvv(:,:,1:cut)*1e3/kB,t));
     else
         h = patch(isosurface(yp(1:cut,:,:),zp(1:cut,:,:),xp(1:cut,:,:),vvv(1:cut,:,:)*1e3/kB,t));
-        isonormals(yp(1:cut,:,:),zp(1:cut,:,:),xp(1:cut,:,:),vvv(1:cut,:,:)*1e3/kB, h)
+        isonormals(yp(1:cut,:,:),zp(1:cut,:,:),xp(1:cut,:,:),vvv(1:cut,:,:)*1e3/kB, h);
     end
     h.FaceColor = c;
     h.EdgeAlpha = 0;

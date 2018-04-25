@@ -89,7 +89,7 @@ end
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
-%vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
+vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
 
 % Now velocity compensation. First get coordinates of what should be the
 % trap center.

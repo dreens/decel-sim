@@ -16,10 +16,10 @@ phis = phis + .01;
 % to give the effective moving trap.
 ds(1:length(decels)) = struct();
 for i=1:length(decels)
-    if ~strcmp(decels(i),'None')
-        ds(i) = load(['Decels/' decels(i) '.mat']);
+    if ~strcmp(decels{i},'None')
+        ds(i).ff = load(['Decels/' decels{i} '.mat']);
     else
-        ds(i).vf = @(x,~) zeros(max(size(x)),1);
+        ds(i).ff.vf = @(x,~) zeros(max(size(x)),1);
     end
 end
 
@@ -30,11 +30,7 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-15:.025:5)*1e-3;
-
-if phiH-phiL>180
-    z=(-20:.025:5)*1e-3;
-end
+z=(-15:.025:10)*1e-3;
 
 x = (-.975:.025:.975)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);
@@ -45,9 +41,9 @@ x = (-.975:.025:.975)*1e-3;
 lfgrids(1:length(decels)) = struct('vv',zeros(size(xx)));
 for i=1:length(lfgrids)
     if primes(i)
-        lfgrids(i).vv(:) = ds(i).vf([xx(:) yy(:) zz(:)],2);
+        lfgrids(i).vv(:) = ds(i).ff.vf([xx(:) yy(:) zz(:)],2);
     else
-        lfgrids(i).vv(:) = ds(i).vf([xx(:) yy(:) zz(:)],1);
+        lfgrids(i).vv(:) = ds(i).ff.vf([yy(:) -xx(:) zz(:)],1);
     end
 end
 
@@ -66,13 +62,13 @@ vv = zeros(size(xp));
 % assuming the z velocity is large relative to the stage spacing.
 for i=1:length(zphi)
     ps = -2.5e-3 + phis/90*2.5e-3;
-    pH = -2.5e-3 + phiH/90*2.5e-3;
-    pM = -2.5e-3 + phiM/90*2.5e-3;
-    pL = -2.5e-3 + phiL/90*2.5e-3;
-    
+
     as = ps;
     for j=1:length(phis)
-        [~, as(j)] = min((zphi(i)+ps(j)-z).^2);
+        [c, as(j)] = min((zphi(i)+ps(j)-z).^2);
+        if c > (mode(diff(z))/2)^2
+            error('Add more z-points. angles out of range.')
+        end
         if j>1
             vv(:,:,i) = vv(:,:,i) + sum(lfgrids(j-1).vv(:,:,as(j-1):as(j)),3);
         end
@@ -97,7 +93,7 @@ slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
 vv = vv - zp.*slope;
 
 % We can also get the acceleration implied by that slope.
-accel = slope/mOH;
+accel = slope/mOH
 
 % Finally redefine zero energy.
 vv = vv - vv(mX,mX,mZ);

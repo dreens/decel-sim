@@ -19,11 +19,11 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'try_ppgg';
-    r.num = 4e5;
-    r.tempxy = 200e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    r.spreadxy = 2e-3;
-    r.tempz = 200e-3;
+    r.dname = 'VSF_alternates';
+    r.num = 5e5;
+    r.tempxy = 300e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.spreadxy = 3e-3;
+    r.tempz = 300e-3;
     r.spreadz = 5e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
@@ -35,10 +35,11 @@ function rsf = simdecel()
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
     d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
-    d.b = 'singlerod';
-    e = d; e.b = 'ppmm_2mm';
-    f = d; f.b = 'ppgg';
-    r.decels = {d,f,e};
+    d.b = 'ppgg';
+    d.c = 'pmpm_2mm_no-sym';
+    d.d = 'singlerod';
+    
+    r.decels = d;
     
     r.reloadfields = false;
     
@@ -49,11 +50,17 @@ function rsf = simdecel()
     % decelerator timing variables
     p = 55;
     n = 333;
-    r.chargetype = repmat('ab',1,n);
+    r.chargetype{1} = repmat('ab',1,n);
+    r.chargetype{2} = repmat('ad',1,n);
+    r.chargetype{3} = repmat('cb',1,n);
+    r.chargetype{4} = repmat('abcb',1,ceil(n/2));
     r.stages = floor((1:(2*n-1))/2+1);
     r.rot180 = mod(floor((1:(2*n-1))/4),2);
-    r.endphases = [p repmat([-p, p],1,n-1)];
-    r.finalvz = 50;
+    r.endphases{1} = repmat([45 -45],1,n);
+    r.endphases{2} = repmat([45 -45],1,n);
+    r.endphases{3} = repmat([71,-19],1,n);
+    r.endphases{4} = repmat([58,-20,58,-50],1,n);
+    r.finalvz = 0;
 
     % simulation timing variables
     r.smallt = 1e-7;
@@ -86,7 +93,7 @@ function rsf = simdecel()
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
    
     %disp(rsf(1).vels(end))
-    %resultsdecel(rsf)
+    resultsdecel(rsf)
 end
 
 function r = init(r)

@@ -1,6 +1,6 @@
 %% Plots results
 function resultsdecel(rs)
-    figure('Position',[0,0,2000,2000])
+    figure('Position',[0,0,1000,1000])
     colors = get(gca,'ColorOrder');
     colors = [colors([3 2 1 4 5 6 7],:) ; (1-colors)];
     lines = repmat({'-','-'},1,10);
@@ -66,7 +66,7 @@ function resultsdecel(rs)
     set(gca,'FontSize',12)
     set(gca,'YScale','log')
     grid on
-    legend('++--','++gg','+ggg','norm')
+    legend('VSF','SF','VSF2','VSF2.5')
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
@@ -86,7 +86,7 @@ function resultsdecel(rs)
     subplot(2,3,4)
     xlabel('Z Position (mm)','FontSize',12)
     ylabel('Z Velocity (m/s)','FontSize',12)
-    ylim([0 100])
+    %ylim([0 100])
     title('Phase Space Z','FontSize',14)
     set(gca,'FontSize',12)
     grid on

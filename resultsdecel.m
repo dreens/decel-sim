@@ -18,11 +18,7 @@ function resultsdecel(rs)
         plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',c,'LineStyle',l);
         
         subplot(2,3,3); hold on
-        if i==4
-            r.pos = r.pos(1:round(r.numleft/2.5),:);
-            r.vel = r.vel(1:round(r.numleft/2.5),:);
-        end
-        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3);
+        plot(r.pos(:,1)*1e3,r.vel(:,1),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,4); hold on
         xx = 0*10*mod(i-1,3);
@@ -39,9 +35,6 @@ function resultsdecel(rs)
             xsq = (r.pos(:,1)+t*r.vel(:,1)).^2;
             ya = abs(r.pos(:,2)+t*r.vel(:,2));
             tof(j) = sum( zsq + xsq < diamL^2/4 & ya < 2e-3);
-        end
-        if i==4
-            tof = round(tof/2.5);
         end
         rs(i).tofpeak = max(tof);
         rs(i).tofarea = trapz(times,tof);
@@ -97,7 +90,7 @@ function resultsdecel(rs)
     title('Time of Flight','FontSize',14)
     set(gca,'FontSize',12)
     %set(gca,'XScale','log')
-    xlim([50,350])
+    xlim([0,50])
     grid on
         
     subplot(2,3,6)

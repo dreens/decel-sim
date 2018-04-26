@@ -20,7 +20,7 @@ function rsf = simdecel()
     
     % variables for the initial distribution
     r.dname = 'VSF_alternates';
-    r.num = 5e5;
+    r.num = 5e3;
     r.tempxy = 300e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 3e-3;
     r.tempz = 300e-3;
@@ -53,13 +53,13 @@ function rsf = simdecel()
     r.chargetype{1} = repmat('ab',1,n);
     r.chargetype{2} = repmat('ad',1,n);
     r.chargetype{3} = repmat('cb',1,n);
-    r.chargetype{4} = repmat('abcb',1,ceil(n/2));
+    r.chargetype{4} = repmat('cbab',1,ceil(n/2));
     r.stages = floor((1:(2*n-1))/2+1);
     r.rot180 = mod(floor((1:(2*n-1))/4),2);
     r.endphases{1} = repmat([45 -45],1,n);
     r.endphases{2} = repmat([45 -45],1,n);
     r.endphases{3} = repmat([71,-19],1,n);
-    r.endphases{4} = repmat([58,-20,58,-50],1,n);
+    r.endphases{4} = repmat([58,-50,58,-20],1,n);
     r.finalvz = 0;
 
     % simulation timing variables

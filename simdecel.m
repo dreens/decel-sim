@@ -19,12 +19,12 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'tune_phi2_alt_binit';
-    r.num = 2e5;
-    r.tempxy = 400e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.dname = 'VSF_alternates';
+    r.num = 5e3;
+    r.tempxy = 300e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 3e-3;
     r.tempz = 300e-3;
-    r.spreadz = 7e-3;
+    r.spreadz = 5e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
         
@@ -35,12 +35,11 @@ function rsf = simdecel()
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
     d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
-    d.b = 'singlerod';
-    e.a = 'longdecel';
-    e.b = 'ppgg';
-    f.a = 'longdecel';
-    f.b = 'ppmm_2mm';
-    r.decels = {d d d d d e e e e e f f f f f};
+    d.b = 'ppgg';
+    d.c = 'pmpm_2mm_no-sym';
+    d.d = 'singlerod';
+    
+    r.decels = d;
     
     r.reloadfields = false;
     r.studyfields = false;
@@ -53,16 +52,17 @@ function rsf = simdecel()
     p = 50;
     r.phi2off = {0 10 20 30 40};
     n = 333;
-    r.chargetype = repmat('ab',1,n);
-    r.stages = floor((1:(2*n))/2+1);
-    r.rot180 = mod(floor((1:(2*n))/4),2);
-    r.endphases = {};
-    for i=0:10:40
-        r.endphases{end+1} = repmat([p, -p+i],1,n);
-    end
-    r.phi2off = repmat(r.phi2off,1,3);
-    r.endphases = repmat(r.endphases,1,3);
-    r.finalvz = 50;
+    r.chargetype{1} = repmat('ab',1,n);
+    r.chargetype{2} = repmat('ad',1,n);
+    r.chargetype{3} = repmat('cb',1,n);
+    r.chargetype{4} = repmat('cbab',1,ceil(n/2));
+    r.stages = floor((1:(2*n-1))/2+1);
+    r.rot180 = mod(floor((1:(2*n-1))/4),2);
+    r.endphases{1} = repmat([45 -45],1,n);
+    r.endphases{2} = repmat([45 -45],1,n);
+    r.endphases{3} = repmat([71,-19],1,n);
+    r.endphases{4} = repmat([58,-50,58,-20],1,n);
+    r.finalvz = 0;
 
     % simulation timing variables
     r.smallt = 1e-7;

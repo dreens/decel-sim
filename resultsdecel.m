@@ -1,6 +1,6 @@
 %% Plots results
 function resultsdecel(rs)
-    figure('Position',[0,0,2000,2000])
+    figure('Position',[0,0,1000,1000])
     colors = get(gca,'ColorOrder');
     colors = [colors ; (1-colors)];
     colors = jet(length(rs));
@@ -78,6 +78,7 @@ function resultsdecel(rs)
     set(gca,'YScale','log')
     legend('show')
     grid on
+    legend('VVSF2','SF','S=1')
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)
@@ -100,8 +101,8 @@ function resultsdecel(rs)
     subplot(2,3,4)
     xlabel('Z Position (mm)','FontSize',12)
     ylabel('Z Velocity (m/s)','FontSize',12)
-    ylim([-40 40])
-    xlim([-4 4])
+    %ylim([-40 40])
+    %xlim([-4 4])
     title('Phase Space Z','FontSize',14)
     set(gca,'FontSize',12)
     grid on
@@ -113,7 +114,7 @@ function resultsdecel(rs)
     title('Time of Flight','FontSize',14)
     set(gca,'FontSize',12)
     %set(gca,'XScale','log')
-    xlim([50,250])
+    xlim([0,50])
     grid on
         
     subplot(2,3,6)

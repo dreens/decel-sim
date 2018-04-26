@@ -64,7 +64,7 @@ elseif strcmp(selectPlot,'contourArray')
         xp = xp + ones(size(yp))*2.5e-3;
         for views = 1:length(levels)
             zp = zp + ones(size(zp))*4.5e-3*views;
-            if types==3
+            if types==30
                 cut = 213;
             else
                 cut = 193;
@@ -83,6 +83,9 @@ end
 
 function h = makepatch(t,c,cut)
     cut = min(cut,max(size(xp)));
+    if t<=100
+        cut = 171;
+    end
     if ~strcmp(selectPlot,'contourArray')
         h = patch(isosurface(yp(:,:,1:cut),xp(:,:,1:cut),zp(:,:,1:cut),vvv(:,:,1:cut)*1e3/kB,t));
     else

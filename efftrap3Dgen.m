@@ -70,7 +70,7 @@ for i=1:length(zphi)
             error('Add more z-points. angles out of range.')
         end
         if j>1
-            vv(:,:,i) = vv(:,:,i) + sum(lfgrids(j-1).vv(:,:,as(j-1):as(j)),3);
+            vv(:,:,i) = vv(:,:,i) + sum(lfgrids(j-1).vv(:,:,as(j-1):as(j)-1),3);
         end
     end
     vv(:,:,i) = vv(:,:,i)/(as(end)-as(1));

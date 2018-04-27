@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'VSF_alternates';
-    r.num = 5e3;
+    r.dname = 'VVSF2';
+    r.num = 5e5;
     r.tempxy = 300e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 3e-3;
     r.tempz = 300e-3;
@@ -38,11 +38,11 @@ function rsf = simdecel()
     d.b = 'ppgg';
     d.c = 'pmpm_2mm_no-sym';
     d.d = 'singlerod';
+    d.e = 'ppmm_2mm';
     
     r.decels = d;
     
     r.reloadfields = false;
-    r.studyfields = false;
     
     % Make sure are true except for guiding fields
     r.fieldsymmetryXY = true;
@@ -50,18 +50,20 @@ function rsf = simdecel()
     
     % decelerator timing variables
     p = 50;
-    r.phi2off = {0 10 20 30 40};
+    r.phi2off = 0;
     n = 333;
-    r.chargetype{1} = repmat('ab',1,n);
+    r.chargetype{1} = repmat('aa',1,n);
     r.chargetype{2} = repmat('ad',1,n);
-    r.chargetype{3} = repmat('cb',1,n);
-    r.chargetype{4} = repmat('cbab',1,ceil(n/2));
+    r.chargetype{3} = repmat('ab',1,n);
+    r.chargetype{4} = repmat('ae',1,n);
+    r.chargetype{5} = repmat('ce',1,n);
     r.stages = floor((1:(2*n-1))/2+1);
     r.rot180 = mod(floor((1:(2*n-1))/4),2);
     r.endphases{1} = repmat([45 -45],1,n);
     r.endphases{2} = repmat([45 -45],1,n);
-    r.endphases{3} = repmat([71,-19],1,n);
-    r.endphases{4} = repmat([58,-50,58,-20],1,n);
+    r.endphases{3} = repmat([45 -45],1,n);
+    r.endphases{4} = repmat([45 -45],1,n);
+    r.endphases{5} = repmat([60,-20],1,n);
     r.finalvz = 0;
 
     % simulation timing variables
@@ -142,10 +144,6 @@ function r = initdecel(r)
         r.endphases(r.endphases==p2) = -r.phase+r.phi2off;
     end
     
-    if r.studyfields
-
-    end
-
 end
 %% Initialize Molecules
 function r = initmols(r)

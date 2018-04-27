@@ -49,7 +49,7 @@ function rsf = simdecel()
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    p = 50;
+    p = 55;
     r.phi2off = 0;
     n = 333;
     r.chargetype{1} = repmat('aa',1,n);
@@ -59,11 +59,11 @@ function rsf = simdecel()
     r.chargetype{5} = repmat('ce',1,n);
     r.stages = floor((1:(2*n-1))/2+1);
     r.rot180 = mod(floor((1:(2*n-1))/4),2);
-    r.endphases{1} = repmat([45 -45],1,n);
-    r.endphases{2} = repmat([45 -45],1,n);
-    r.endphases{3} = repmat([45 -45],1,n);
-    r.endphases{4} = repmat([45 -45],1,n);
-    r.endphases{5} = repmat([60,-20],1,n);
+    r.endphases{1} = repmat([p -p],1,n);
+    r.endphases{2} = repmat([p -p],1,n);
+    r.endphases{3} = repmat([p -p],1,n);
+    r.endphases{4} = repmat([p -p],1,n);
+    r.endphases{5} = repmat([67.6,-20],1,n);
     r.finalvz = 0;
 
     % simulation timing variables

@@ -26,7 +26,7 @@ function resultsdecel(rs)
         
         subplot(2,3,5); hold on
         diamL = 2.5e-3; 
-        distL = 8e-3 + r.pos(1,3);
+        distL = 3e-3 + r.pos(1,3);
         tof = zeros(1,4000);
         times = (1e-7)*(1:length(tof));
         for j=1:length(tof)
@@ -38,17 +38,16 @@ function resultsdecel(rs)
         end
         rs(i).tofpeak = max(tof);
         rs(i).tofarea = trapz(times,tof);
-        plot(times*1e6,tof,'Color',c,'LineStyle',l)
+        plot(times(tof>0)*1e6,tof(tof>0),'Color',c,'LineStyle',l)
     end
     
     subplot(2,3,6); hold on
     nls = [rs.numleft];
-    nls(4) = nls(4)/2.5;
     tps = [rs.tofpeak];
     tpa = [rs.tofarea];
-    plot(nls(4:-1:1),'DisplayName','Total','Marker','x','LineStyle','-');
-    plot(tps(4:-1:1),'DisplayName','Peak','Marker','o','LineStyle','-');
-    plot(tpa(4:-1:1)*1e4,'DisplayName','Area','Marker','sq','LineStyle','-');
+    plot(nls(5:-1:1),'DisplayName','Total','Marker','x','LineStyle','-');
+    plot(tps(5:-1:1),'DisplayName','Peak','Marker','o','LineStyle','-');
+    plot(tpa(5:-1:1)*1e4,'DisplayName','Area','Marker','sq','LineStyle','-');
     legend('show')
     legend('Location','South')
     
@@ -90,7 +89,6 @@ function resultsdecel(rs)
     title('Time of Flight','FontSize',14)
     set(gca,'FontSize',12)
     %set(gca,'XScale','log')
-    xlim([0,50])
     grid on
         
     subplot(2,3,6)

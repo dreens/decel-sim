@@ -20,7 +20,7 @@ function rsf = simdecel()
     
     % variables for the initial distribution
     r.dname = 'VVSF2';
-    r.num = 5e5;
+    r.num = 5e1;
     r.tempxy = 300e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 3e-3;
     r.tempz = 300e-3;
@@ -49,7 +49,7 @@ function rsf = simdecel()
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    p = 55;
+    p = 56.817;
     r.phi2off = 0;
     n = 333;
     r.chargetype{1} = repmat('aa',1,n);
@@ -63,7 +63,7 @@ function rsf = simdecel()
     r.endphases{2} = repmat([p -p],1,n);
     r.endphases{3} = repmat([p -p],1,n);
     r.endphases{4} = repmat([p -p],1,n);
-    r.endphases{5} = repmat([67.6,-20],1,n);
+    r.endphases{5} = repmat([68.737,-20],1,n);
     r.finalvz = 0;
 
     % simulation timing variables

@@ -17,3 +17,8 @@ plotTrapSlice({outppmm,outppgg,outpggg,out},39,'contourArray');
 %% try generalized efftrap
 outmod = efftrap3Dgen({'ppgg','longdecel','ppgg','pmpm_2mm_no-sym'},[-132 -50 68 160 228],[1 1 0 0]);
 plotTrapSlice({outppmm2, outppmm, outppgg,outpggg},39,'contourArray');
+
+%% DC guiding.
+guide = efftrap3D('ppgg','ppgg',-180,0,180);
+guideppmm = efftrap3D('ppmm_2mm','ppmm_2mm',-180,0,180);
+plotTrapSlice(guideppmm,59,'xy')

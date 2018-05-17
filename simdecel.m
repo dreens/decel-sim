@@ -98,7 +98,7 @@ function rsf = simdecel()
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
     
     %disp(rsf(1).vels(end))
-    resultsdecel(rsf)
+    %resultsdecel(rsf)
 end
 
 function r = init(r)

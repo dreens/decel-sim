@@ -22,8 +22,11 @@
 %
 % Example 1: Fill a 3D-sphere.
 % p = spheredist(10000,3);
-% figure;
-% plot3(p(:,1),p(:,2),p(:,3),'k.')
+% figure;hold on
+% for i=1:10000
+%     c = uint8(sqrt(sum(p(i,:).^2))*255);
+%     plot3(p(i,1),p(i,2),p(i,3),'k.','Color',[c 0 0])
+% end
 %
 % Example 2: Project a 6D-sphere into 3D. Note the increased point density
 % near to the center of the observed 3D projection.

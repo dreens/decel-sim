@@ -29,24 +29,28 @@ figure; plot(p(:,1),p(:,2))
 
 
 %% Run odesolver for collection of related initial positions, velocities
-N = 50000;
+N = 1500;
 ri =  sqrt(rand(N,1))*0.5e-3;
 thi = rand(N,1)*2*pi;
 k = 1.3806e-23;
-T = 1.3;
-y0 = [ri.*cos(thi)+.5e-3 , ri.*sin(thi) , randn(N,2)*sqrt(k*T/m)];
+T = .05;
+y0 = [ri.*cos(thi), ri.*sin(thi) , randn(N,2)*sqrt(k*T/m)];
 %y0 = [rand(N,2)*2e-3-1e-3 , randn(N,2)*sqrt(k*T/m)];
 times = zeros(N,1);
+ke = zeros(N,1);
+pe = zeros(N,1);
+pp = zeros(N,4);
 for i=1:N
     fprintf('\b\b\b\b\b%5d',i)
     [t, p] = ode45(@(t,p) [p(3);p(4);dvdx(p(2),p(1))/m;dvdx(p(1),p(2))/m],...
         [0 2.05e-3],y0(i,:),escO);
     times(i) = t(end);
+    pp(i,:) = p(end,:);
 end
 %figure;hist(times,50)
 sum(times>.00025)
 sum(times==max(times))
-disp('\n')
+fprintf('\n')
 
 %% Results Readme
 % So far I have checked the escape dynamics for molecules loaded into the
@@ -79,5 +83,48 @@ times100 = repmat(times,1,1000);
 times100=times100(times100>2.5e-4 & times100<2e-3);
 hist(times100,[2.75e-4:5e-5:1.975e-3])
 
+%% Figure out how temperature is evolving.
+KE = sum(pp(:,[3 4]).^2,2)*m*.5;
+PE = interp2(xq,yq,guideq,pp(:,1),pp(:,2));
+NN = ~isnan(pp(:,4));
+T = mean(KE(NN))/k
+V = mean(PE(NN))/k
+E = T+V
 
+% Ti=.05K, 1mm circle, 28, 40, 68  mK (T,V,E)
+% Ti=0.3K, 1mm circle, 37, 56, 93  mK (T,V,E)
+% Ti=0.5K, 1mm circle, 39, 58, 97  mK (T,V,E)
+% Ti=1.0K, 1mm circle, 39, 60, 98  mK (T,V,E)
+% Ti=.05K, 2mm square, 55, 59, 114 mK (T,V,E)
+% Ti=0.3K, 2mm square, 59, 71, 130 mK (T,V,E)
+% Ti=0.5K, 2mm square, 61, 71, 132 mK (T,V,E)
+% Ti=1.0K, 2mm square, 58, 74, 132 mK (T,V,E)
+% Ti=.05K, 1mm circle offset, 41, 50, 90  mK (T,V,E)
+% Ti=0.3K, 1mm circle offset, 50, 62, 112 mK (T,V,E)
+% Ti=0.5K, 1mm circle offset, 51, 64, 115 mK (T,V,E)
+% Ti=1.0K, 1mm circle offset, 53, 64, 117 mK (T,V,E)
 
+%% Put the above results in a figure
+% First of all, for thermal equilibrium, we should have kT of thermal, 2kT
+% of potential. Not surprisingly, we don't find this, since there's no
+% mechanism for thermal equilibrium, we're just exchanging potential and
+% kinetic by orbiting in the trap.
+tp05 = [68 114 90];
+tp3 = [93 130 112];
+tp5 = [97 132 115];
+tp10 =[98 132 117];
+all = [tp05;tp3;tp5;tp10];
+all = all(:,[1 3 2]);
+x = [1 2 3];
+figure; hold on;
+colors = get(gca,'ColorOrder');
+bar(all')
+ll = legend('50 mK','300 mK','500 mK','1000 mK');
+set(ll,'Location','NorthWest');
+ylabel('Total Energy (mK)')
+xlabel('Initialization Strategy')
+set(gca,'XTickLabelMode','manual')
+set(gca,'XTickLabel',{'','1mm circle','','offset circle','','2mm square',''})
+set(gca,'FontSize',12);
+title('Temperature after Guiding, Different Initializations')
+grid on

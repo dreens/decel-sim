@@ -3,7 +3,7 @@ function results_1DPSD(rs)
     figure; hold on
     for i=1:length(rs)
         r = rs(i);
-        levels = 0.5:0.01:2;
+        levels = 0.2:0.01:2;
         numbers = zeros(size(levels));
         N = max(size(r.vel));
         for j=1:length(levels)

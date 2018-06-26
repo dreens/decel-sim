@@ -19,17 +19,17 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'FillPhaseSpace';
-    r.num = 1e7;
-    r.tempxy = 300e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    r.spreadxy = 3e-3;
-    r.tempz = 300e-3;
-    r.spreadz = 5e-3;
+    r.dname = 'FlatPhaseSpaceCenter4';
+    r.num = 5e6;
+    r.tempxy = .5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.spreadxy = 1e-3;
+    r.tempz = .5;
+    r.spreadz = 2e-3;
     r.initvz = 820;
-    r.dist = 'gaussian';
+    r.dist = 'sphere';
         
     % decelerator configuration variables
-    r.vdd = 2e-3;
+    r.vdd = 1e-3;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
@@ -49,21 +49,21 @@ function rsf = simdecel()
     r.fieldsymmetryZ = true;
     
     % decelerator timing variables
-    p = 55;
+    p = 45;
     r.phi2off = 0;
     n = 333;
     r.chargetype{1} = repmat('aa',1,n);
     r.chargetype{2} = repmat('ad',1,n);
     r.chargetype{3} = repmat('ab',1,n);
     r.chargetype{4} = repmat('ae',1,n);
-    r.chargetype{5} = repmat('ce',1,n);
+    %r.chargetype{5} = repmat('ce',1,n);
     r.stages = floor((1:(2*n-1))/2+1);
     r.rot180 = mod(floor((1:(2*n-1))/4),2);
     r.endphases{1} = repmat([p -p],1,n);
     r.endphases{2} = repmat([p -p],1,n);
     r.endphases{3} = repmat([p -p],1,n);
     r.endphases{4} = repmat([p -p],1,n);
-    r.endphases{5} = repmat([67.6,-20],1,n);
+    %r.endphases{5} = repmat([67.6,-20],1,n);
     r.finalvz = 0;
 
     % simulation timing variables
@@ -158,6 +158,11 @@ function r = initmols(r)
         r.vel = (rand(r.num,3)-.5)*sqrt(r.k/r.mOH);
         r.vel = r.vel.*sqrt(temps);
         r.pos = (rand(r.num,3)-.5).*spreads;
+    elseif strcmpi(r.dist,'sphere') || strcmpi(r.dist,'spherical')
+        ap = spheredist(r.num,6);
+        ap = ap.*[spreads sqrt(temps*r.k/r.mOH)]/2;
+        r.vel = ap(:,4:6);
+        r.pos = ap(:,1:3);
     else
         error(['Distribution type ''' lower(r.dist) ''' not recognized.'...
             ' Capitalization not important.'])

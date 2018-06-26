@@ -3,7 +3,7 @@
 % Decelerator Guiding potentials.
 
 % Get fine guiding grid
-%guide = efftrap3D('ppgg','ppgg',-180,0,180);
+guide = efftrap3D('ppgg','ppgg',-180,0,180);
 guide = mean(guide,3);
 x = -.975:.025:.975;
 x = x*1e-3;
@@ -29,29 +29,38 @@ figure; plot(p(:,1),p(:,2))
 
 
 %% Run odesolver for collection of related initial positions, velocities
-N = 1500;
+% added some loops to automatically get ratio of ratios and check a few
+% scalings of the force fields.
+allr = zeros(20,1);
+for r =0.1:0.1:2
+temps = [0.3 0.6];
+for tt = 1:2
+N = 200000;
 ri =  sqrt(rand(N,1))*0.5e-3;
 thi = rand(N,1)*2*pi;
 k = 1.3806e-23;
-T = .05;
+T = temps(tt);
 y0 = [ri.*cos(thi), ri.*sin(thi) , randn(N,2)*sqrt(k*T/m)];
 %y0 = [rand(N,2)*2e-3-1e-3 , randn(N,2)*sqrt(k*T/m)];
 times = zeros(N,1);
 ke = zeros(N,1);
 pe = zeros(N,1);
 pp = zeros(N,4);
+r = 0.333;
 for i=1:N
     fprintf('\b\b\b\b\b%5d',i)
-    [t, p] = ode45(@(t,p) [p(3);p(4);dvdx(p(2),p(1))/m;dvdx(p(1),p(2))/m],...
+    [t, p] = ode45(@(t,p) [p(3);p(4);r*dvdx(p(2),p(1))/m;r*dvdx(p(1),p(2))/m],...
         [0 2.05e-3],y0(i,:),escO);
     times(i) = t(end);
     pp(i,:) = p(end,:);
 end
 %figure;hist(times,50)
-sum(times>.00025)
-sum(times==max(times))
-fprintf('\n')
-
+s40(tt) = sum(times>.00025);
+s333(tt) = sum(times==max(times));
+end
+allr(10*r) = 100*(s40(2)*s333(1)/(s40(1)*s333(2))-1)
+fprintf('       \n')
+end
 %% Results Readme
 % So far I have checked the escape dynamics for molecules loaded into the
 % transverse trap created by DC guiding with +/-6.25 kV applied in a ++--

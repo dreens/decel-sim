@@ -46,9 +46,9 @@ times = zeros(N,1);
 ke = zeros(N,1);
 pe = zeros(N,1);
 pp = zeros(N,4);
-r = 0.333;
+%r = 0.333;
 for i=1:N
-    fprintf('\b\b\b\b\b%5d',i)
+    fprintf('\b\b\b\b\b\b\b%7d',i)
     [t, p] = ode45(@(t,p) [p(3);p(4);r*dvdx(p(2),p(1))/m;r*dvdx(p(1),p(2))/m],...
         [0 2.05e-3],y0(i,:),escO);
     times(i) = t(end);
@@ -58,9 +58,10 @@ end
 s40(tt) = sum(times>.00025);
 s333(tt) = sum(times==max(times));
 end
-allr(10*r) = 100*(s40(2)*s333(1)/(s40(1)*s333(2))-1)
+allr(round(10*r)) = 100*(s40(2)*s333(1)/(s40(1)*s333(2))-1);
 fprintf('       \n')
 end
+figure;plot((0.1:0.1:2)*6,allr,'*')
 %% Results Readme
 % So far I have checked the escape dynamics for molecules loaded into the
 % transverse trap created by DC guiding with +/-6.25 kV applied in a ++--

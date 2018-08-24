@@ -19,8 +19,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'FlatPhaseSpaceCenter4';
-    r.num = 5e6;
+    r.dname = 'DoLoadTrapAsStages';
+    r.num = 5e3;
     r.tempxy = .5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 1e-3;
     r.tempz = .5;
@@ -35,10 +35,12 @@ function rsf = simdecel()
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
     d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
-    d.b = 'ppgg';
-    d.c = 'pmpm_2mm_no-sym';
-    d.d = 'singlerod';
-    d.e = 'ppmm_2mm';
+    %d.b = 'ppgg';
+    %d.c = 'pmpm_2mm_no-sym';
+    %d.d = 'singlerod';
+    %d.e = 'ppmm_2mm';
+    %d.r = 'loadring';
+    %d.t = 'loadtricycle';
     
     r.decels = d;
     
@@ -53,16 +55,22 @@ function rsf = simdecel()
     r.phi2off = 0;
     n = 333;
     r.chargetype{1} = repmat('aa',1,n);
-    r.chargetype{2} = repmat('ad',1,n);
-    r.chargetype{3} = repmat('ab',1,n);
-    r.chargetype{4} = repmat('ae',1,n);
+    %r.chargetype{2} = repmat('ad',1,n);
+    %r.chargetype{3} = repmat('ab',1,n);
+    %r.chargetype{4} = repmat('ae',1,n);
     %r.chargetype{5} = repmat('ce',1,n);
-    r.stages = floor((1:(2*n-1))/2+1);
-    r.rot180 = mod(floor((1:(2*n-1))/4),2);
+    r.rot = [0 90 90 180 180 270 270 0];
+    r.rot = repmat(r.rot,1,83);
+    r.rot = [r.rot 0 90];
+    r.trans = [1 0 0 1];
+    r.trans = repmat(r.trans,1,166);
+    r.trans = [r.trans 1 0];
+    %r.stages = floor((1:(2*n-1))/2+1);
+    %r.rot180 = mod(floor((1:(2*n-1))/4),2);
     r.endphases{1} = repmat([p -p],1,n);
-    r.endphases{2} = repmat([p -p],1,n);
-    r.endphases{3} = repmat([p -p],1,n);
-    r.endphases{4} = repmat([p -p],1,n);
+    %r.endphases{2} = repmat([p -p],1,n);
+    %r.endphases{3} = repmat([p -p],1,n);
+    %r.endphases{4} = repmat([p -p],1,n);
     %r.endphases{5} = repmat([67.6,-20],1,n);
     r.finalvz = 0;
 
@@ -76,16 +84,22 @@ function rsf = simdecel()
     % random number seed
     r.seed = 21112;
     
+    
     %Unpack r into a struct of runs
     rs = unpacker(r,'linear');
+    
+    % See if global saves time
+    global r
     
     %% Here we just loop through the struct of runs, and run each one.
     for i=1:length(rs)
         rng(rs(i).seed) %seed the random number generator
         fprintf('run:%3d/%d\n ',i,length(rs))
-        rr = init(rs(i));
-        rsf(i) = run(rr);
-        rsf(i).f = 0; %clear the fields, massive data sink.
+        r = rs(i);
+        init();
+        run();
+        r.f = 0; %clear the fields, massive data sink.
+        rsf(i) = r;
         fprintf('speed:%3.1f\n',rsf(i).vels(end))
     end
     % Save the struct of runs, just in case the fitsim2data or results
@@ -101,13 +115,8 @@ function rsf = simdecel()
     %resultsdecel(rsf)
 end
 
-function r = init(r)
-    r = initdecel(r);
-    r = initmols(r);
-    r = initvars(r);
-end
-
-function r = initdecel(r)
+function init()
+    global r
     % Load the mat file, or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
 
@@ -117,7 +126,7 @@ function r = initdecel(r)
         if exist(['Decels/' d '.mat'],'file') && ~r.reloadfields
             r.f.(labels{i}) = load(['Decels/' d '.mat']);
         elseif exist(['Decels/' d '.dat'],'file')
-            r = processfields(r,d);
+            processfields('Decels',d);
             r.f.(labels{i}) = load(['Decels/' d '.mat']);
         else
             error(['File ''Decels/' d '.dat'' not found']);
@@ -144,9 +153,8 @@ function r = initdecel(r)
         r.endphases(r.endphases==p2) = -r.phase+r.phi2off;
     end
     
-end
-%% Initialize Molecules
-function r = initmols(r)
+
+    %% Initialize Molecules
     spreads = repmat([r.spreadxy r.spreadxy r.spreadz],r.num,1);
     temps = repmat([r.tempxy r.tempxy r.tempz],r.num,1);
     if strcmpi(r.dist,'gaussian') || strcmpi(r.dist,'normal')
@@ -175,77 +183,88 @@ function r = initmols(r)
     %Shift molecules in z, vz.
     r.vel(:,3) = r.vel(:,3) + r.initvz;
     r.pos(:,3) = r.pos(:,3) - r.vdd;
-end
 
-function r = initvars(r)
+    %% Initialize other variables
     % Stage Number
     r.numstage = 1;
+    r.numstages = length(r.chargetype);
     r.charge = r.chargetype(1);
-    r.rot = 0;
+    r.rot = r.rot * pi / 180;
 
     % Store the molecule number each decel stage.
-    r.molnum = zeros(1,max(r.stages));
+    r.molnum = zeros(1,r.numstages);
         
     % Timing
     r.time = 0;
+    
+    % Field Translations
+    r.istrans = false;
 end
 
 
 %% This function does a run.
 % It just times itself and calls the step function.
-function r = run(r)
-    r = tofirststage(r);
-    while r.numstage <= max(r.stages)
-        r = stage(r);
-        fprintf('step:%3d/%d,\t%d\n',r.numstage,max(r.stages),r.molnum(r.numstage))
+function run()
+    global r
+    
+    % Go to the first stage:
+    time = -r.pos(1,3)/r.vel(1,3);
+    r.pos = r.pos + r.vel*time;    
+
+    while r.numstage <= r.numstages
+        stage();
+        fprintf('step:%3d/%d,\t%d\n',r.numstage,r.numstages,r.molnum(r.numstage))
         r.numstage = r.numstage + 1;
     end
 end
-    
-%% Propagate Molecules to first stage
-% Eventually this could be modified to include hexapole focusing or maybe
-% magnetic quadrupole focusing.
-function r = tofirststage(r)
-    %time = ((-90+r.phases(1))*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
-    % I used to artificially change the decelerator start time according to
-    % the phase angle to make sure that even the first stage was equal
-    % length with all others. This made phase angle calculations for a
-    % given final velocity target easier. For collision hunting this is not
-    % good. Instead:
-    time = -r.pos(1,3)/r.vel(1,3);
-    r.pos = r.pos + r.vel*time;
+
+
+%% Translator
+function checktrans()
+global r
+    if xor(r.istrans,r.trans(r.numstage))
+        c = r.chargetype(r.numstage);
+        if r.istrans
+            r.pos(:,3) = r.pos(:,3) - r.f.(c).zstagel/2;
+        else
+            r.pos(:,3) = r.pos(:,3) + r.f.(c).zstagel/2;
+        end
+        r.istrans = ~r.istrans;
+    end
 end
 
 %% The stage function.
 % Propagates one decel stage. Removes lost molecules, checks number, etc. A
 % stage now includes variable numbers of sub-stages.
-function r = stage(r)
-    indices = find(r.stages==r.numstage);
-    for i=1:length(indices)
-        ind = indices(i);
-        c = r.chargetype(ind);
-        r.charge = c;
-        r.rot = r.rot180(ind);
-        while r.f.(c).phase(r.pos(1,3),r.numstage) < r.endphases(ind)
-            r = smallstep(r,r.smallt);
-            if r.vel(1,3) <= 0
-                error('synchronous molecule reflected')
-            end
-        end
-        undershoot = 1;
-        while abs(undershoot) > 1e-11 && r.vel(1,3) > 0
-            % get the undershoot in terms of phase
-            undershoot = r.endphases(ind) - ...
-                r.f.(c).phase(r.pos(1,3),r.numstage);
+function stage()
+    global r
 
-            % translate to time ignoring acceleration
-            undershoot = undershoot *r.f.(c).zstagel/360/r.vel(1,3);
-
-            % step the molecules according to this time
-            r = smallstep(r,undershoot);
-        end
+    c = r.chargetype(r.numstage);
+    r.charge = c;    
+    
+    % Handle 'translations' of the potentials by artifically futzing with
+    % the z coordinates.
+    checktrans()
         
+    while r.f.(c).phase(r.pos(1,3)) < r.endphases(r.numstage)
+        smallstep(r.smallt);
+        if r.vel(1,3) <= 0
+            error('synchronous molecule reflected')
+        end
     end
+    undershoot = 1;
+    while abs(undershoot) > 1e-11 && r.vel(1,3) > 0
+        % get the undershoot in terms of phase
+        undershoot = r.endphases(r.numstage) - ...
+            r.f.(c).phase(r.pos(1,3));
+
+        % translate to time ignoring acceleration
+        undershoot = undershoot *r.f.(c).zstagel/360/r.vel(1,3);
+
+        % step the molecules according to this time
+        smallstep(undershoot);
+    end
+
     
     r.pos(abs(r.pos(:,3)-r.pos(1,3))>10e-3,:)=nan;
     r.pos(r.vel(:,3)<0,:)=nan;
@@ -263,9 +282,10 @@ end
 %% Small simulation step.
 % Updates velocity based on acceleration and position based on velocity,
 % offset by half of a timestep.
-function r = smallstep(r,t)
+function smallstep(t)
+    global r
     r.pos = r.pos + r.vel*t/2;
-    r.vel = r.vel + acc(r)*t;
+    r.vel = r.vel + acc()*t;
     r.pos = r.pos + r.vel*t/2;
             
     %update time.
@@ -273,18 +293,19 @@ function r = smallstep(r,t)
 end
 
 %gets acceleration
-function a = acc(r)
+function a = acc()
+    global r
     % first rotate into the right frame:
-    rad = pi/2*(mod(r.numstage,2) + 2*r.rot);
+    rad = r.rot(r.numstage);
     c = cos(rad); s = sin(rad);
     pos = [ r.pos(:,1)*c - r.pos(:,2)*s , ...
             r.pos(:,1)*s + r.pos(:,2)*c , r.pos(:,3)];
     
     %just look up the force from the tables of dvdr (v as in potential
     %energy capital V.)
-    ax = r.f.(r.charge).dvdx(pos,r.numstage);
-    ay = r.f.(r.charge).dvdy(pos,r.numstage);
-    az = r.f.(r.charge).dvdz(pos,r.numstage);
+    ax = r.f.(r.charge).dvdx(pos);
+    ay = r.f.(r.charge).dvdy(pos);
+    az = r.f.(r.charge).dvdz(pos);
     a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
 end
     
@@ -348,13 +369,18 @@ end
 % to even numbered stages, but rotated.
 % * Data points are given on a rectangular, uniform grid, although the
 % spacing of the three dimensions need not be identical.
-function r = processfields(r,decel)
+function processfields(ftype,fileN)
+    global r
     
     % Announcement
     fprintf('%s\n','Processing Decelerator Fields from COMSOL...');
+    
+    % Make sure ftype is valid
+    assert(~~exist(ftype,'dir'),['Call to processfields should specify',...
+        ' an ftype of ''Decels'', ''Loads'', or ''Traps'''])
 
     % COMSOL files usually have 9 header lines.
-    data = importdata(['Decels/' decel '.dat'],' ',9);
+    data = importdata([ftype '/' fileN '.dat'],' ',9);
     
     % data is a struct with data and text header. We ignore the header and
     % take out the data.
@@ -432,6 +458,7 @@ function r = processfields(r,decel)
     % for each single-letter variable in varname, create a new variable
     % given by a double-letter, which is a 3D matrix of size fullsize, and
     % fill it by indexing into it with the locs linear index column.
+    bb=0; ee=0; tt=0; mm=0; xx=0; yy=0; zz=0;
     for varname={'b','e','t','m','x','y','z'}
         eval([varname{1} varname{1} '=zeros(fullsize);']);
         eval([varname{1} varname{1} '(locs) = ' varname{1} ';']);
@@ -561,7 +588,12 @@ function r = processfields(r,decel)
     % will be run with at a phase angle close to +90 degrees, and thus
     % during a single stage most well-decelerated molecules won't wrap
     % their phase angles as returned by this lookup.
-    phase = @(z,n) mod(z/zstagel+n/2,1)*360 - 270;
+    function p = getphase(z)%,n)
+        ii = z/zstagel;%+n/2;
+        p = (ii - fix(ii))*360 - 270;
+    end
+    phase = @getphase;
+    %phase = @(z,n) mod(z/zstagel+n/2,1)*360-270;
     
     % wrap returns a z-coordinate within the force lookup table given a
     % general z-coordinate and the stage parity. It achieves this in two
@@ -571,12 +603,31 @@ function r = processfields(r,decel)
     % side lookup indicates whether this symmetry is exploited so the
     % z-forces can be inverted, since molecules in the -270 to -90 range
     % are accelerated, not decelerated.
-    wrapc = @(z,n) (phase(z,n)-90)/360 * zstagel;
-    wrap = @(z,n) abs(wrapc(z,n)+zstagel/2)-zstagel/2;
-    side = @(z,n) (wrapc(z,n) > -zstagel/2)*2 - 1;
+    %wrapc = @(z,n) (phase(z,n)-90)/360 * zstagel;
+    wrapc = @(z) (phase(z)-90)/360 * zstagel;
+    %wrap = @(z,n) abs(wrapc(z,n)+zstagel/2)-zstagel/2;
+    %side = @(z,n) (wrapc(z,n) > -zstagel/2)*2 - 1;
+    
+    % let's write a better wrap for shorter runtimes:
+    function w = wrapf(z)%,n)
+        ii = z/zstagel;%+n/2;
+        jj = ii - fix(ii);
+        w = (abs(jj-0.5)-0.5);
+        w = w*zstagel;
+    end
+    %wrap = @(z,n) abs( mod(z+zstagel2*n,zstagel)-zstagel2)-zstagel2;
+    wrap = @wrapf;
+    function s = sidef(z)%,n)
+        ii = z/zstagel;%+n/2;
+        jj = ii - fix(ii);
+        s = (jj > 0.5)*2 - 1;
+    end
+    %side = @(z,n) (mod(z+n*zstagel2,zstagel) > zstagel2)*2 - 1;
+    side = @sidef;
+    
     if ~r.fieldsymmetryZ
         wrap = wrapc;
-        side = @(z,n) 1;
+        side = @(z) 1;
     end
     
     % This returns the energy removed per stage as a function of phase
@@ -593,24 +644,24 @@ function r = processfields(r,decel)
     % These functions reference the gridded interpolants, but with the
     % coordinates appropriately wrapped.
     if r.fieldsymmetryXY
-        dvdxa = @(x,y,z,n) dvdxg(abs(x),abs(y),wrap(z,n)).*sign(x);
-        dvdya = @(x,y,z,n) dvdyg(abs(x),abs(y),wrap(z,n)).*sign(y);
-        dvdza = @(x,y,z,n) dvdzg(abs(x),abs(y),wrap(z,n)).*side(z,n);
-        vfa = @(x,y,z,n) vfg(abs(x),abs(y),wrap(z,n));
+        dvdxa = @(x,y,z) dvdxg(abs(x),abs(y),wrap(z)).*sign(x);
+        dvdya = @(x,y,z) dvdyg(abs(x),abs(y),wrap(z)).*sign(y);
+        dvdza = @(x,y,z) dvdzg(abs(x),abs(y),wrap(z)).*side(z);
+        vfa = @(x,y,z) vfg(abs(x),abs(y),wrap(z));
     else
-        dvdxa = @(x,y,z,n) dvdxg(x,y,wrap(z,n));
-        dvdya = @(x,y,z,n) dvdyg(x,y,wrap(z,n));
-        dvdza = @(x,y,z,n) dvdzg(x,y,wrap(z,n)).*side(z,n);
-        vfa = @(x,y,z,n) vfg(x,y,wrap(z,n));
+        dvdxa = @(x,y,z) dvdxg(x,y,wrap(z));
+        dvdya = @(x,y,z) dvdyg(x,y,wrap(z));
+        dvdza = @(x,y,z) dvdzg(x,y,wrap(z)).*side(z);
+        vfa = @(x,y,z) vfg(x,y,wrap(z));
     end
-    dvdx = @(xyz,n) dvdxa(xyz(:,1),xyz(:,2),xyz(:,3),n);
-    dvdy = @(xyz,n) dvdya(xyz(:,1),xyz(:,2),xyz(:,3),n);
-    dvdz = @(xyz,n) dvdza(xyz(:,1),xyz(:,2),xyz(:,3),n);
-    vf = @(xyz,n) vfa(xyz(:,1),xyz(:,2),xyz(:,3),n);
+    dvdx = @(xyz) dvdxa(xyz(:,1),xyz(:,2),xyz(:,3));
+    dvdy = @(xyz) dvdya(xyz(:,1),xyz(:,2),xyz(:,3));
+    dvdz = @(xyz) dvdza(xyz(:,1),xyz(:,2),xyz(:,3));
+    vf = @(xyz) vfa(xyz(:,1),xyz(:,2),xyz(:,3));
     
 
     % Save in a file for loading and propagating during decel simulation.
-    save(['Decels/' decel '.mat'],'dvdx','dvdy','dvdz',...
+    save(['Decels/' fileN '.mat'],'dvdx','dvdy','dvdz',...
         'vf','phase','zstagel','renergy','aenergy');
 
     %% Produce Output Figure for Debugging
@@ -621,7 +672,7 @@ function r = processfields(r,decel)
     figure('position',[50,50,1100,1100])
     subplot(2,2,1)
     surf(cap(squeeze(dvdzm(:,1,:)),cc));
-    title(['Decelerator dvdz, X-Z plane, ' decel '.dat']);
+    title(['Decelerator dvdz, X-Z plane, ' fileN '.dat']);
 
     % You might think the labels are backwards, but they're not. surf uses
     % the second index (the column of the matrix) as the x-axis and the
@@ -634,21 +685,21 @@ function r = processfields(r,decel)
 
     subplot(2,2,2)
     surf(cap(squeeze(dvdzm(1,:,:)),cc));
-    title(['Decelerator dvdz, Y-Z plane, ' decel '.dat']); 
+    title(['Decelerator dvdz, Y-Z plane, ' fileN '.dat']); 
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,3)
     surf(cap(squeeze(dvdxm(:,1,:)),cc));
-    title(['Decelerator dvdx, X-Z plane, ' decel '.dat']);
+    title(['Decelerator dvdx, X-Z plane, ' fileN '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,4)
     surf(cap(squeeze(dvdym(1,:,:)),cc));
-    title(['Decelerator dvdy, Y-Z plane, ' decel '.dat']);
+    title(['Decelerator dvdy, Y-Z plane, ' fileN '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])

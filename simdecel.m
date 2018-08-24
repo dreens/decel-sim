@@ -36,11 +36,11 @@ function rsf = simdecel()
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
     d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
     %d.b = 'ppgg';
-    %d.c = 'pmpm_2mm_no-sym';
+    %d.c = {'pmpm_2mm_no-sym','noXY'};
     %d.d = 'singlerod';
     %d.e = 'ppmm_2mm';
-    %d.r = 'loadring';
-    %d.t = 'loadtricycle';
+    %d.l = {'loadring','load'};
+    %d.t = {'ringtrap','trap'};
     
     r.decels = d;
     
@@ -54,20 +54,20 @@ function rsf = simdecel()
     p = 45;
     r.phi2off = 0;
     n = 333;
-    r.chargetype{1} = repmat('aa',1,n);
+    r.chargetype{1} = [repmat('aa',1,n) 'lt'];
     %r.chargetype{2} = repmat('ad',1,n);
     %r.chargetype{3} = repmat('ab',1,n);
     %r.chargetype{4} = repmat('ae',1,n);
     %r.chargetype{5} = repmat('ce',1,n);
     r.rot = [0 90 90 180 180 270 270 0];
     r.rot = repmat(r.rot,1,83);
-    r.rot = [r.rot 0 90];
+    r.rot = [r.rot 0 90 0 0];
     r.trans = [1 0 0 1];
     r.trans = repmat(r.trans,1,166);
-    r.trans = [r.trans 1 0];
+    r.trans = [r.trans 1 0 0 0];
     %r.stages = floor((1:(2*n-1))/2+1);
     %r.rot180 = mod(floor((1:(2*n-1))/4),2);
-    r.endphases{1} = repmat([p -p],1,n);
+    r.endphases{1} = [repmat([p -p],1,n) 0 0];
     %r.endphases{2} = repmat([p -p],1,n);
     %r.endphases{3} = repmat([p -p],1,n);
     %r.endphases{4} = repmat([p -p],1,n);
@@ -117,26 +117,31 @@ end
 
 function init()
     global r
-    % Load the mat file, or generate it from a COMSOL .dat file if it
+    % Load the mat file, 
+    
+    or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
 
     labels = fields(r.decels);
     for i=1:length(labels)
         d = r.decels.(labels{i});
-        if exist(['Decels/' d '.mat'],'file') && ~r.reloadfields
-            r.f.(labels{i}) = load(['Decels/' d '.mat']);
-        elseif exist(['Decels/' d '.dat'],'file')
-            processfields('Decels',d);
-            r.f.(labels{i}) = load(['Decels/' d '.mat']);
-        else
-            error(['File ''Decels/' d '.dat'' not found']);
+        dd = d;
+        if iscell(dd)
+            dd = d{1};
         end
+        if ~exist(['Decels/' dd '.mat'],'file') || r.reloadfields
+            if exist(['Decels/' dd '.dat'],'file')
+                processfields('Decels',d);
+            else
+                error(['File ''Decels/' d '.dat'' not found']);
+            end
+        end
+        r.f.(labels{i}) = load(['Decels/' dd '.mat']);
     end
-
     
     % Choose the phase angle as a function of vfinal, vinitial, and stage
     % number.
-    if r.finalvz
+    if r.finalvz 
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
         % changed the bounds for acceleration
         c = labels{1};
@@ -374,6 +379,21 @@ function processfields(ftype,fileN)
     
     % Announcement
     fprintf('%s\n','Processing Decelerator Fields from COMSOL...');
+    
+    % Get Instructions from fileN object
+    if iscell(fileN)
+        fileN = fileN{1};
+        switch(fileN{2})
+            case 'noXY'
+                r.fieldsymmetryXY = false;
+            case 'noZ'
+                r.fieldsymmetryZ = false;
+            case 'load'
+                % do something about how phase, coordinates are defined
+            case 'trap'
+                % do something about how phase, coordinates are defined
+        end
+    end
     
     % Make sure ftype is valid
     assert(~~exist(ftype,'dir'),['Call to processfields should specify',...

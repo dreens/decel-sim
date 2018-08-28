@@ -12,12 +12,12 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    ri.dname = 'DoLoadTrapOptimize';
-    ri.num = 5e2;
-    ri.tempxy = .5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    ri.spreadxy = 1e-3;
-    ri.tempz = .5;
-    ri.spreadz = 2e-3;
+    ri.dname = 'DoLoadTrapOptimizeWide';
+    ri.num = 5e3;
+    ri.tempxy = 1.5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    ri.spreadxy = 2e-3;
+    ri.tempz = 1.5;
+    ri.spreadz = 3e-3;
     ri.initvz = 820;
     ri.dist = 'sphere';
         
@@ -32,15 +32,15 @@ function rsf = simdecel()
     %d.c = {'pmpm_2mm_no-sym','noXY'};
     %d.d = 'singlerod';
     %d.e = 'ppmm_2mm';
-    d.l = {'tricycleload','load'};
-    d.t = {'tricycletrap','trap',6.63e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    d.l = {'tricycleload25broad','load'};
+    d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
     
     ri.decels = d;
     
     ri.reloadfields = false;
         
     % decelerator timing variables
-    ri.phase = {56.65, 56.7, 56.75};
+    ri.phase = {56.35 56.4 56.45 56.5 56.55, 56.6};
     ri.phi2off = 0;
     n = 333;
     ri.chargetype{1} = [repmat('aa',1,n) 'lt'];
@@ -56,11 +56,12 @@ function rsf = simdecel()
     ri.trans = [ri.trans 1 0 0 0];
     %ri.stages = floor((1:(2*n-1))/2+1);
     %ri.rot180 = mod(floor((1:(2*n-1))/4),2);
-    ri.endphases{1} = [repmat([inf -inf],1,n) 300 400];
-    ri.endphases{2} = [repmat([inf -inf],1,n) 310 400];
-    ri.endphases{3} = [repmat([inf -inf],1,n) 320 400];
+    ri.endphases{1} = [repmat([inf -inf],1,n) 250 400];
+    ri.endphases{1} = [repmat([inf -inf],1,n) 270 400];
+    ri.endphases{2} = [repmat([inf -inf],1,n) 290 400];
+    ri.endphases{3} = [repmat([inf -inf],1,n) 310 400];
     ri.endphases{4} = [repmat([inf -inf],1,n) 330 400];
-    ri.endphases{5} = [repmat([inf -inf],1,n) 340 400];
+    ri.endphases{4} = [repmat([inf -inf],1,n) 350 400];
     %ri.endphases{2} = repmat([p -p],1,n);
     %ri.endphases{3} = repmat([p -p],1,n);
     %ri.endphases{4} = repmat([p -p],1,n);

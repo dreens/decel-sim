@@ -14,7 +14,7 @@ function resultsOptLoad(rs)
         l(i) = rs(i).endphases(end-1);
     end
     l = sort(unique(l));
-    l = l(l<40);
+    l = l(l<25);
     l = l(l~=5e-3);
     [pp ll] = meshgrid(p,l);
     rr = reshape([rs.numleft],length(p),length(l))';
@@ -30,7 +30,7 @@ function resultsOptLoad(rs)
     bar3(l,rr)
     set(gca,'XTickLabel',p)
     %set(gca,'XTickLabel',p)
-    title('Optimize Speed and Loading On-Time, Cryocycle VSF')
+    title('Optimize Speed and Loading On-Time, Cryocycle VSF 90')
     xlabel('Slowing Phase Angle (deg)')
     ylabel('Loading Speed (m/s)')
     zlabel('Final Population')
@@ -40,7 +40,7 @@ function resultsOptLoad(rs)
     bar3(l,1e3*tt)
     set(gca,'XTickLabel',p)
     %set(gca,'XTickLabel',p)
-    title('Optimize Loading for Temperature, Cryocycle VSF')
+    title('Optimize Loading for Temperature, Cryocycle VSF 90')
     xlabel('Slowing Phase Angle (deg)')
     ylabel('Loading Speed (m/s)')
     zlabel('Temperature (mK)')

@@ -12,7 +12,7 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    ri.dname = 'DoLoadTrapOptimizeCryoVSFbig';
+    ri.dname = 'CheckLoadingOrientation';
     ri.num = 3e4;
     ri.tempxy = 2; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2.5e-3;
@@ -20,11 +20,13 @@ function rsf = simdecel()
     ri.spreadz = 5e-3;
     ri.initvz = 820;
     ri.dist = 'sphere';
-    ri.continue = true;
-    phaserange = 50:2:80;
+    ri.continue = false;
+    phaserange = 50;
+    %phaserange = 50:2:80; 
+    iii=1;
     ri.contname = cell(1,length(phaserange));
     for n=phaserange
-        ri.contname{n/2-24} = sprintf('BVSF56p%d',n);
+        ri.contname{iii} = sprintf('BVSF56p%d',n); iii = iii + 1;
     end
         
     % decelerator configuration variables
@@ -33,7 +35,7 @@ function rsf = simdecel()
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    %d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
     %d.b = 'ppgg';
     %d.c = {'pmpm_2mm_no-sym','noXY'};
     %d.d = 'singlerod';
@@ -50,32 +52,32 @@ function rsf = simdecel()
     ri.reloadfields = false;
         
     % decelerator timing variables
-    ri.phase = 50;%num2cell(56.5:.02:56.8);
+    ri.phase = 56.68;%num2cell(56.5:.02:56.8);
     ri.phi2off = 0;
     n = 333;
     ri.chargetype{1} = 'lt';
-    %ri.chargetype{1} = repmat('aa',1,n);
+    ri.chargetype{1} = [repmat('aa',1,n) 'l'];
     %ri.chargetype{2} = repmat('ad',1,n);
     %ri.chargetype{3} = repmat('ab',1,n);
     %ri.chargetype{4} = repmat('ae',1,n);
     %ri.chargetype{5} = repmat('ce',1,n);
     ri.rot = [0 90 90 180 180 270 270 0];
     ri.rot = repmat(ri.rot,1,83);
-    ri.rot = [ri.rot 0 90 0 0];
-    ri.rot = [0 0];
+    ri.rot = [ri.rot 0 90 0];
+    %ri.rot = [90 90];
     ri.trans = [1 0 0 1];
     ri.trans = repmat(ri.trans,1,166);
-    ri.trans = [ri.trans 1 0 0 0];
-    ri.trans = [0 0];
+    ri.trans = [ri.trans 1 0 1];
+    %ri.trans = [0 0];
     %ri.stages = floor((1:(2*n-1))/2+1);
     %ri.rot180 = mod(floor((1:(2*n-1))/4),2);
-    %ri.endphases = repmat([inf -inf],1,n);
+    ri.endphases = [repmat([inf -inf],1,n) 6];
     %{
     ri.endphases{1} = [repmat([inf -inf],1,n) 6 5e-3];
     ri.endphases{2} = [repmat([inf -inf],1,n) 3 5e-3];
     ri.endphases{3} = [repmat([inf -inf],1,n) 0 5e-3];
     ri.endphases{4} = [repmat([inf -inf],1,n) -3 5e-3];
-    %}
+    %
     ri.endphases{1} = [18 5e-3];
     ri.endphases{2} = [15 5e-3];
     ri.endphases{3} = [12 5e-3];
@@ -87,8 +89,8 @@ function rsf = simdecel()
     ri.endphases{9} = [-6 5e-3];
     ri.endphases{10} = [-9 5e-3];
     %}
-    %ri.calctype = [repmat('pp',1,n)];
-    ri.calctype = 'vt';
+    ri.calctype = [repmat('pp',1,n) 'v'];
+    %ri.calctype = 'vt';
     %ri.endphases{2} = repmat([p -p],1,n);
     %ri.endphases{3} = repmat([p -p],1,n);
     %ri.endphases{4} = repmat([p -p],1,n);
@@ -96,7 +98,7 @@ function rsf = simdecel()
     ri.finalvz = 0;
 
     % simulation timing variables
-    ri.smallt = 1e-6;
+    ri.smallt = 1e-7;
     ri.reflectEnd = false;
     
     % laser beam variables
@@ -241,6 +243,10 @@ function init()
     
     % Field Translations
     r.istrans = false;
+    
+    % Track Geometry
+    r.xx = zeros(30000,1);
+    r.smallnum = 1;
 end
 
 
@@ -289,7 +295,11 @@ function gone = stage()
 
     c = r.chargetype(r.numstage);
     r.charge = c;    
-    
+
+    % Handle 'translations' of the potentials by artifically futzing with
+    % the z coordinates.
+    checktrans()
+        
     % Make sure the synch molecule is "in" the fields. If not assume
     % loading and redefine z-coordinates
     z = r.pos(1,3);
@@ -297,11 +307,8 @@ function gone = stage()
         finalz = mod(z,10e-3)-10e-3;
         trans = z - finalz;
         r.pos(:,3) = r.pos(:,3) - trans;
-    else
-        % Handle 'translations' of the potentials by artifically futzing with
-        % the z coordinates.
-        checktrans()
     end
+
     
     warned = false;
     while ~done()
@@ -375,17 +382,29 @@ function smallstep(t)
             
     %update time.
     r.time = r.time + t;
+    
+    %update big geometry trackers
+    
 end
 
 %gets acceleration
 function a = acc()
     global r
+
+    % mess around to check geometry
+    r.pos(2,:) = r.pos(1,:);
+    r.pos(3,:) = r.pos(1,:);
+    r.pos(2,1) = 1.9e-3;
+    r.pos(3,2) = 1.9e-3;
+
+    
     % first rotate into the right frame:
     rad = r.rot(r.numstage);
     c = cos(rad); s = sin(rad);
     x = r.pos(:,1)*c - r.pos(:,2)*s;
     y = r.pos(:,1)*s + r.pos(:,2)*c;
     z = r.pos(:,3);
+  
     
     %just look up the force from the tables of dvdr (v as in potential
     %energy capital V.)
@@ -393,6 +412,13 @@ function a = acc()
     ay = r.f.(r.charge).dvdy(x,y,z);
     az = r.f.(r.charge).dvdz(x,y,z);
     a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
+    
+    r.xx(r.smallnum) = any(isnan(a(2,:)));
+    r.yy(r.smallnum) = any(isnan(a(3,:)));
+    r.smallnum = r.smallnum + 1;   
+    
+    a(2:3,:) = 0;
+    
 end
 
 %% Load in from COMSOL

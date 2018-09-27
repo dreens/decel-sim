@@ -1,19 +1,19 @@
 %% Creating Partials
 
 cd ~/Documents/MATLAB/decel-sim/Partials/
-load('seriousPartials.mat')
+load('endBetweenLast4X.mat')
 
-for i=1:48
+for i=1:16
     r = rsf(i);
     first = '';
-    switch(fix((i-1)/16))
-        case 0
-            first = 'Bnorm';
-        case 1
-            first = 'BSF';
-        case 2
-            first = 'BVSF';
+    if r.numleft < 1200
+        first = 'W0S1';
+    elseif r.numleft < 5000
+        first = 'W0SF';
+    else
+        first = 'W0VSF';
     end
+    first = 'W0XSF';
     p = r.phase;
     second = sprintf('%dp%2d',fix(p),round(100*(p-fix(p))));
     second = strrep(second,' ','0');

@@ -12,21 +12,20 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    ri.dname = 'CheckLoadingOrientation';
-    ri.num = 3e4;
-    ri.tempxy = 2; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    ri.spreadxy = 2.5e-3;
-    ri.tempz = 2;
+    ri.dname = 'Cryo12Testing';
+    ri.num = 1e5;
+    ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    ri.spreadxy = 2e-3;
+    ri.tempz = 1;
     ri.spreadz = 5e-3;
     ri.initvz = 820;
-    ri.dist = 'sphere';
-    ri.continue = false;
-    phaserange = 50;
-    %phaserange = 50:2:80; 
-    iii=1;
+    ri.dist = 'flat';
+    ri.continue = true;
+    phaserange = 54:2:84; iii=1;
     ri.contname = cell(1,length(phaserange));
+    ri.contfillstub = 'VSF';% {'S1','SF','VSF'};
     for n=phaserange
-        ri.contname{iii} = sprintf('BVSF56p%d',n); iii = iii + 1;
+        ri.contname{iii} = sprintf('W0%%s56p%d',n); iii = iii + 1;
     end
         
     % decelerator configuration variables
@@ -35,49 +34,77 @@ function rsf = simdecel()
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    %d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
     %d.b = 'ppgg';
     %d.c = {'pmpm_2mm_no-sym','noXY'};
     %d.d = 'singlerod';
     %d.e = 'ppmm_2mm';
-    %d.l = {'tricycleload25broad','load'};
-    %d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %d.m = {'ringloadbroad','load'};
-    %d.u = {'ringtrapbroad','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    d.l = {'tricycleload13broad','load'};
+    d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{1} = d;
+    d.l = {'tricycleload25broad','load'};
+    d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{2} = d;
+    d.l = {'ringloadbroad','load'};
+    d.t = {'ringtrapbroad','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{3} = d;
     d.l = {'cryoloadbroad','load'};
-    d.t = {'cryotrapbroad','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    d.t = {'cryotrapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    ri.decels{1} = d;
+    d.l = {'cryo2loadbroad','load'};
+    d.t = {'cryo2trapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    ri.decels{2} = d;
+    d.l = {'clover1load','load'};
+    d.t = {'clover1trap','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{1} = d;
+    d.l = {'clover2load','load'};
+    d.t = {'clover2trap','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{2} = d;
+    d.l = {'clover3load','load'};
+    d.t = {'clover2trap','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels = d;
+    d.l = {'ringloadbroadCLV','load'};
+    d.t = {'mattclover','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels = d;
     
-    ri.decels = d;
+    %ri.decels = d;
+    
+    %ri.decels{1} = struct('a','longdecel','b','longdecel');
+    %ri.decels{2} = struct('a','longdecel','b','singlerod');
+    %ri.decels{3} = struct('a','longdecel','b','ppgg');
     
     ri.reloadfields = false;
         
     % decelerator timing variables
-    ri.phase = 56.68;%num2cell(56.5:.02:56.8);
+    ri.phase = 50;%num2cell(56.54:.02:56.84);
     ri.phi2off = 0;
     n = 333;
     ri.chargetype{1} = 'lt';
-    ri.chargetype{1} = [repmat('aa',1,n) 'l'];
+    %ri.chargetype{2} = 'su';
+    %ri.chargetype{3} = 'nv';
+    %ri.chargetype{1} = repmat('aa',1,n);
     %ri.chargetype{2} = repmat('ad',1,n);
     %ri.chargetype{3} = repmat('ab',1,n);
+    %ri.chargetype = repmat('ab',1,n);
     %ri.chargetype{4} = repmat('ae',1,n);
     %ri.chargetype{5} = repmat('ce',1,n);
     ri.rot = [0 90 90 180 180 270 270 0];
     ri.rot = repmat(ri.rot,1,83);
-    ri.rot = [ri.rot 0 90 0];
-    %ri.rot = [90 90];
+    ri.rot = [ri.rot 0 90 0 0];
+    ri.rot = [0 0];
     ri.trans = [1 0 0 1];
     ri.trans = repmat(ri.trans,1,166);
-    ri.trans = [ri.trans 1 0 1];
-    %ri.trans = [0 0];
+    ri.trans = [ri.trans 1 0 0 0];
+    ri.trans = [0 0];
     %ri.stages = floor((1:(2*n-1))/2+1);
     %ri.rot180 = mod(floor((1:(2*n-1))/4),2);
-    ri.endphases = [repmat([inf -inf],1,n) 6];
+    %ri.endphases = repmat([inf -inf],1,n);
     %{
     ri.endphases{1} = [repmat([inf -inf],1,n) 6 5e-3];
     ri.endphases{2} = [repmat([inf -inf],1,n) 3 5e-3];
     ri.endphases{3} = [repmat([inf -inf],1,n) 0 5e-3];
     ri.endphases{4} = [repmat([inf -inf],1,n) -3 5e-3];
-    %
+    %}
     ri.endphases{1} = [18 5e-3];
     ri.endphases{2} = [15 5e-3];
     ri.endphases{3} = [12 5e-3];
@@ -89,16 +116,16 @@ function rsf = simdecel()
     ri.endphases{9} = [-6 5e-3];
     ri.endphases{10} = [-9 5e-3];
     %}
-    ri.calctype = [repmat('pp',1,n) 'v'];
-    %ri.calctype = 'vt';
-    %ri.endphases{2} = repmat([p -p],1,n);
+    ri.calctype = [repmat('pp',1,n)];
+    ri.calctype = 'vt';
+    %ri.endphases{1} = [repmat([inf -inf],1,n-1) inf -90];
     %ri.endphases{3} = repmat([p -p],1,n);
     %ri.endphases{4} = repmat([p -p],1,n);
     %ri.endphases{5} = repmat([67.6,-20],1,n);
     ri.finalvz = 0;
 
     % simulation timing variables
-    ri.smallt = 1e-7;
+    ri.smallt = 1e-6;
     ri.reflectEnd = false;
     
     % laser beam variables
@@ -135,7 +162,7 @@ function rsf = simdecel()
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
     
-    %save('Partials/seriousPartials.mat','rsf')
+    save('Partials/endBetweenLast4.mat','rsf')
     
     %disp(rsf(1).vels(end))
     %resultsdecel(rsf)
@@ -221,7 +248,8 @@ function init()
         r.vel(:,3) = r.vel(:,3) + r.initvz;
         r.pos(:,3) = r.pos(:,3) - r.vdd;
     else
-        rsl = load(['Partials/' r.contname]);
+        name = sprintf(r.contname,r.contfillstub);
+        rsl = load(['Partials/' name]);
         r.vel = rsl.r.vel;
         r.pos = rsl.r.pos;
     end
@@ -280,9 +308,9 @@ global r
     if xor(r.istrans,r.trans(r.numstage))
         c = r.chargetype(r.numstage);
         if r.istrans
-            r.pos(:,3) = r.pos(:,3) - r.f.(c).zstagel/2;
+            r.pos(:,3) = r.pos(:,3) - 5e-3;%r.f.(c).zstagel/2;
         else
-            r.pos(:,3) = r.pos(:,3) + r.f.(c).zstagel/2;
+            r.pos(:,3) = r.pos(:,3) + 5e-3;%r.f.(c).zstagel/2;
         end
         r.istrans = ~r.istrans;
     end
@@ -307,6 +335,11 @@ function gone = stage()
         finalz = mod(z,10e-3)-10e-3;
         trans = z - finalz;
         r.pos(:,3) = r.pos(:,3) - trans;
+        if isnan(r.f.(c).dvdz(0,0,z))
+            % alignment of loading with decel depends on how the last pin
+            % pair is used.
+            r.pos(:,3) = r.pos(:,3) + 10e-3;
+        end
     end
 
     
@@ -321,8 +354,10 @@ function gone = stage()
                 warned = true;
             end
         elseif isnan(r.vel(1,3))
-            fprintf('synchronous molecule lost\n')
-            r.pos(:,:) = nan;
+            if ~strcmp(r.calctype(r.numstage),'t') % don't end sim if a timed stage (e.g. trapping)
+                r.pos(:,:) = nan;
+                fprintf('synchronous molecule lost\n')
+            end
         end
     end
     
@@ -330,12 +365,13 @@ function gone = stage()
         switch r.calctype(r.numstage)
             case 'p'
                 b = r.f.(c).phase(r.pos(1,3)) >= r.endphases(r.numstage);
+                b = b || isnan(r.vel(1,3));
             case 'v'
                 b = r.vel(1,3) <= r.endphases(r.numstage);
+                b = b || isnan(r.vel(1,3));
             case 't'
                 b = r.time >= r.endphases(r.numstage);
         end
-        b = b || isnan(r.vel(1,3));
     end
     
     if strcmp(r.calctype(r.numstage),'p')
@@ -382,9 +418,6 @@ function smallstep(t)
             
     %update time.
     r.time = r.time + t;
-    
-    %update big geometry trackers
-    
 end
 
 %gets acceleration
@@ -392,10 +425,10 @@ function a = acc()
     global r
 
     % mess around to check geometry
-    r.pos(2,:) = r.pos(1,:);
-    r.pos(3,:) = r.pos(1,:);
-    r.pos(2,1) = 1.9e-3;
-    r.pos(3,2) = 1.9e-3;
+    %r.pos(2,:) = r.pos(1,:);
+    %r.pos(3,:) = r.pos(1,:);
+    %r.pos(2,1) = 1.9e-3;
+    %r.pos(3,2) = 1.9e-3;
 
     
     % first rotate into the right frame:
@@ -413,11 +446,10 @@ function a = acc()
     az = r.f.(r.charge).dvdz(x,y,z);
     a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
     
-    r.xx(r.smallnum) = any(isnan(a(2,:)));
-    r.yy(r.smallnum) = any(isnan(a(3,:)));
-    r.smallnum = r.smallnum + 1;   
-    
-    a(2:3,:) = 0;
+    %r.xx(r.smallnum) = any(isnan(a(2,:)));
+    %r.yy(r.smallnum) = any(isnan(a(3,:)));
+    %r.smallnum = r.smallnum + 1;   
+    %a(2:3,:) = 0;
     
 end
 
@@ -577,7 +609,7 @@ function processfields(varargin)
         case 'noXY'
             fieldsymmetryXY = false;
         otherwise
-            fieldsymmetryXY = true;
+            fieldsymmetryXY = true; % right now this is broken, set by hand
     end
     
     % get symmetric derivative kernels so we can differentiate the

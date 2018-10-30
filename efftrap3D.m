@@ -6,8 +6,8 @@ function vv = efftrap3D(d,e,phiL,phiM,phiH)
 % Shift phi a tiny bit to avoid strange problem that occurs if phi/90 is a
 % simple rational.
 phiL = phiL + .01;
-phiM = phiM + .01;
-phiH = phiH + .01;
+phiM = phiM+ .01;
+phiH = phiH+ .01;
 
 % This allows this code to be used for a different case:
 if strcmp(d,'None')
@@ -85,7 +85,12 @@ for i=1:length(zphi)
         sum(hh(:,:,a:(b-1)),3) + sum(ii(:,:,a:(b-1)),3))/(c-a+1)/2; %beware sensitivity on 
     
 end
-
+    pH = -2.5e-3 + phiH/90*2.5e-3;
+    pM = -2.5e-3 + phiM/90*2.5e-3;
+    [~, bb] = min((z-pM).^2);
+    [~, cc] = min((z-pH).^2);
+slope2=(ff(40,40,cc)-ff(40,40,bb))/(5e-3+1e-8);
+acel2=slope2/mOH
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
@@ -96,12 +101,18 @@ vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
 mZ = (length(zphi)+1)/2;
 mX = (length(x)+1)/2;
 
+% pHh = -2.5e-3 + phiH/90*2.5e-3;
+%  [~, mZ] = min((zphi-pHh).^2);
+% mZ
+
+
+
 % Find the slope of the potential energy at the "trap center". Now add a
 % fictitious force corresponding to acceleration enough so this slope is
 % zeroed.
 slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
-vv = vv - zp.*slope;
-
+vv = vv - zp.*slope2;
+   % vv = vv - (zp-2.5e-3).*slope;
 % We can also get the acceleration implied by that slope.
 accel = slope/mOH
 

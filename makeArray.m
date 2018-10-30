@@ -1,12 +1,12 @@
-phi = 55;
+phi = 60;
 out = efftrap3D('longdecel','longdecel',phi-180,-phi,phi);
 outpggg = efftrap3D('longdecel','singlerod',phi-180,-phi,phi);
 outppgg = efftrap3D('longdecel','ppgg',phi-180,-phi,phi);
 outppmm = efftrap3D('longdecel','ppmm_2mm',phi-180,-phi,phi);
 %outpmpm = efftrap3D('pmpm_2mm_no-sym','ppgg',-109,-19,71);
 outppmm2 = efftrap3D('pmpm_2mm_no-sym','ppmm_2mm',-112.5,-20,67.5);
-%plotTrapSlice({outppgg,outpggg,out},0,'contourArray')
-
+plotTrapSlice({outppgg,outpggg,out},0,'contourArray')
+%plotTrapSlice({guide},0,'contourArray')
 %%
 
 outs3 = efftrap3D('longdecel','longdecel',phi-540,-phi,phi);
@@ -30,7 +30,13 @@ plotTrapSlice(guideppmm,59,'xy')
 
 %% Trap Strength
 phi = 55;
-outppgg = efftrap3D('longdecel','ppgg',phi-180,-phi,phi);
+outppgg1 = efftrap3D('longdecel','singlerod',phi-180,-phi,phi);
+out = efftrap3D('longdecel','longdecel',phi-180,-phi,phi);
+
+
+%% VSF Bunching
+outvsfb10 = efftrap3D('None','ppgg',-125,-35,55);
+
 %%
 plotTrapSlice(outppgg,0,'1D')
 hold on
@@ -41,3 +47,11 @@ plot(x,v/2,'DisplayName','1T/cm')
 plot(x,v,'DisplayName','2T/cm')
 legend('show')
 xlim([-2e-3 2e-3])
+%%
+plotTrapSlice({outvsfb10,outvsfb,outppgg1,out},0,'contourArray')
+%%
+phi=0;
+outmod = efftrap3Dgen({'longdecel','ppgg','longdecel','longdecel','ppgg','longdecel'},[-180,-162,-18,0,18,162,180],[0 0 0 1 1 1 ]);
+
+plotTrapSlice({outmod},0,'contourArray')
+

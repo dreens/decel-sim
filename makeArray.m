@@ -27,3 +27,17 @@ plotTrapSlice({outppmm2, outppmm, outppgg,outpggg},39,'contourArray');
 guide = efftrap3D('ppgg','ppgg',-180,0,180);
 guideppmm = efftrap3D('ppmm_2mm','ppmm_2mm',-180,0,180);
 plotTrapSlice(guideppmm,59,'xy')
+
+%% Trap Strength
+phi = 55;
+outppgg = efftrap3D('longdecel','ppgg',phi-180,-phi,phi);
+%%
+plotTrapSlice(outppgg,0,'1D')
+hold on
+x = (-2:.01:2) *1e-3;
+v = 200 * abs(x);
+v = 1e3 * v * 1.4 * 9e-24 / 1.38e-23;
+plot(x,v/2,'DisplayName','1T/cm')
+plot(x,v,'DisplayName','2T/cm')
+legend('show')
+xlim([-2e-3 2e-3])

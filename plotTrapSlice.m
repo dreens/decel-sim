@@ -1,3 +1,6 @@
+% Select Plot can select a 2D contour if in the form of a 2 digit string
+% such as 'xy'. It can also be 'contourArray' or 'contours'. More rectnly,
+% 1D options were implemented under '1D'.
 function h = plotTrapSlice(vvv,cut,selectPlot)
 
 % These will be used to convert the energy to temperature units.
@@ -20,7 +23,7 @@ elseif strcmp(selectPlot,'xy')
     vv = squeeze(vvv(:,:,cut));
 end
 
-if length(selectPlot)==2
+if length(selectPlot)==2 && ~strcmp(selectPlot,'1D')
     h = figure('Position',[50 50 500 800]);
     contourf(xp*1e3,zp*1e3,1e3*vv/kB,0:10:800);
     caxis([0 500]);
@@ -35,6 +38,24 @@ if length(selectPlot)==2
     %title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiM+180+phiL-.02) ' deg']},'FontSize',14)
     %title({'Moving Trap Depth',[' a = ' num2str(round(accel/1000)) ' km/s/s, p = ' num2str(phiH-.01) ' deg']},'FontSize',14)
     set(gca,'FontSize',12)
+elseif strcmp(selectPlot,'1D')
+    h = figure('Position',[50 50 800 800]);
+    cx = (length(x)+1)/2;
+    cz = (length(zphi)+1)/2;
+    v = 1e3*vvv/kB;
+    plot(x,squeeze(v(:,cx,cz)),'b','DisplayName','x-axis')
+    hold on
+    vv = x;
+    for i=1:length(x)
+        vv(i) = v(i,i,cz);
+    end
+    plot(x*sqrt(2),vv,'k--','DisplayName','w-axis')
+    grid on
+    plot(zphi,squeeze(v(cx,cx,:)),'r','DisplayName','z-axis')
+    xlabel('Position on Axis through Center (mm)')
+    ylabel('Energy (mK)')
+    title('Effective Trap Potential along Axes')
+    
 elseif strcmp(selectPlot,'contours')
     f = figure('Position',[300 50 300 400]);
     a = axes('Parent',f);

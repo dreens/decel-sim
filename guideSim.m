@@ -50,7 +50,7 @@ pp = zeros(N,4);
 r = rs(j);
 fprintf('\n     ');
 for i=1:N
-    fprintf('\b\b\b\b\b%5d',i)
+    fprintf('\b\b\b\b\b\b\b%7d',i)
     [t, p] = ode45(@(t,p) [p(3);p(4);r*dvdx(p(2),p(1))/m;r*dvdx(p(1),p(2))/m],...
         [0 2.05e-3],y0(i,:),escO);
     times(i) = t(end);

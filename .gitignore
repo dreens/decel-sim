@@ -26,3 +26,6 @@ Cluster/
 #The autosave feature predates version control, and should be unnecessary
 # moving forward. It will still be useful while working locally.
 autosaves/
+
+#Fields Directory. No need to save generated .mat files, as this can occur in a few minutes time at a given location
+Fields/*.mat

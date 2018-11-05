@@ -1,91 +1,156 @@
 function rsf = simdecel()
 %MATLAB Simulation of OH experiment
-%   I had a classdef version of this before but it was brutally slow.
-%   turns out the slowness wasn't due to it being a class, but I'm going to
-%   stick with this struct implementation nonetheless. See simrun.m for the
-%   legacy classdef version
-
-    %cd('~/Documents/MATLAB')
-
     %% constants for general use
-    r.k = 1.381e-23;
-    r.mOH = 2.82328e-26; % Accounts for Oxygen binding energy
-    r.uOH = 9.27401e-24 * 1.4;
-    r.h = 6.62607e-34;
-    r.hb = r.h/(2*pi);
+    ri.k = 1.381e-23;
+    ri.mOH = 2.82328e-26; % Accounts for Oxygen binding energy
+    ri.uOH = 9.27401e-24 * 1.4;
+    ri.h = 6.62607e-34;
+    ri.hb = ri.h/(2*pi);
     
     %% initialization of a run
     % Like the fortran sim, these can be put in braces to indicate several
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'FlatPhaseSpaceCenter4';
-    r.num = 5e6;
-    r.tempxy = .5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
-    r.spreadxy = 1e-3;
-    r.tempz = .5;
-    r.spreadz = 2e-3;
-    r.initvz = 820;
-    r.dist = 'sphere';
+    ri.dname = 'Cryo12Testing';
+    ri.num = 1e5;
+    ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    ri.spreadxy = 2e-3;
+    ri.tempz = 1;
+    ri.spreadz = 5e-3;
+    ri.initvz = 820;
+    ri.dist = 'flat';
+    ri.continue = true;
+    phaserange = 54:2:84; iii=1;
+    ri.contname = cell(1,length(phaserange));
+    ri.contfillstub = 'VSF';% {'S1','SF','VSF'};
+    for n=phaserange
+        ri.contname{iii} = sprintf('W0%%s56p%d',n); iii = iii + 1;
+    end
         
     % decelerator configuration variables
-    r.vdd = 1e-3;
+    ri.vdd = 1e-3;
     
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
-    d.b = 'ppgg';
-    d.c = 'pmpm_2mm_no-sym';
-    d.d = 'singlerod';
-    d.e = 'ppmm_2mm';
+    %d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
+    %d.b = 'ppgg';
+    %d.c = {'pmpm_2mm_no-sym','noXY'};
+    %d.d = 'singlerod';
+    %d.e = 'ppmm_2mm';
+    d.l = {'tricycleload13broad','load'};
+    d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{1} = d;
+    d.l = {'tricycleload25broad','load'};
+    d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{2} = d;
+    d.l = {'ringloadbroad','load'};
+    d.t = {'ringtrapbroad','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{3} = d;
+    d.l = {'cryoloadbroad','load'};
+    d.t = {'cryotrapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    ri.decels{1} = d;
+    d.l = {'cryo2loadbroad','load'};
+    d.t = {'cryo2trapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    ri.decels{2} = d;
+    d.l = {'clover1load','load'};
+    d.t = {'clover1trap','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{1} = d;
+    d.l = {'clover2load','load'};
+    d.t = {'clover2trap','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{2} = d;
+    d.l = {'clover3load','load'};
+    d.t = {'clover2trap','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels = d;
+    d.l = {'ringloadbroadCLV','load'};
+    d.t = {'mattclover','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels = d;
     
-    r.decels = d;
+    %ri.decels = d;
     
-    r.reloadfields = false;
+    %ri.decels{1} = struct('a','longdecel','b','longdecel');
+    %ri.decels{2} = struct('a','longdecel','b','singlerod');
+    %ri.decels{3} = struct('a','longdecel','b','ppgg');
     
-    % Make sure are true except for guiding fields
-    r.fieldsymmetryXY = true;
-    r.fieldsymmetryZ = true;
-    
+    ri.reloadfields = false;
+        
     % decelerator timing variables
-    p = 45;
-    r.phi2off = 0;
+    ri.phase = 50;%num2cell(56.54:.02:56.84);
+    ri.phi2off = 0;
     n = 333;
-    r.chargetype{1} = repmat('aa',1,n);
-    r.chargetype{2} = repmat('ad',1,n);
-    r.chargetype{3} = repmat('ab',1,n);
-    r.chargetype{4} = repmat('ae',1,n);
-    %r.chargetype{5} = repmat('ce',1,n);
-    r.stages = floor((1:(2*n-1))/2+1);
-    r.rot180 = mod(floor((1:(2*n-1))/4),2);
-    r.endphases{1} = repmat([p -p],1,n);
-    r.endphases{2} = repmat([p -p],1,n);
-    r.endphases{3} = repmat([p -p],1,n);
-    r.endphases{4} = repmat([p -p],1,n);
-    %r.endphases{5} = repmat([67.6,-20],1,n);
-    r.finalvz = 0;
+    ri.chargetype{1} = 'lt';
+    %ri.chargetype{2} = 'su';
+    %ri.chargetype{3} = 'nv';
+    %ri.chargetype{1} = repmat('aa',1,n);
+    %ri.chargetype{2} = repmat('ad',1,n);
+    %ri.chargetype{3} = repmat('ab',1,n);
+    %ri.chargetype = repmat('ab',1,n);
+    %ri.chargetype{4} = repmat('ae',1,n);
+    %ri.chargetype{5} = repmat('ce',1,n);
+    ri.rot = [0 90 90 180 180 270 270 0];
+    ri.rot = repmat(ri.rot,1,83);
+    ri.rot = [ri.rot 0 90 0 0];
+    ri.rot = [0 0];
+    ri.trans = [1 0 0 1];
+    ri.trans = repmat(ri.trans,1,166);
+    ri.trans = [ri.trans 1 0 0 0];
+    ri.trans = [0 0];
+    %ri.stages = floor((1:(2*n-1))/2+1);
+    %ri.rot180 = mod(floor((1:(2*n-1))/4),2);
+    %ri.endphases = repmat([inf -inf],1,n);
+    %{
+    ri.endphases{1} = [repmat([inf -inf],1,n) 6 5e-3];
+    ri.endphases{2} = [repmat([inf -inf],1,n) 3 5e-3];
+    ri.endphases{3} = [repmat([inf -inf],1,n) 0 5e-3];
+    ri.endphases{4} = [repmat([inf -inf],1,n) -3 5e-3];
+    %}
+    ri.endphases{1} = [18 5e-3];
+    ri.endphases{2} = [15 5e-3];
+    ri.endphases{3} = [12 5e-3];
+    ri.endphases{4} = [9  5e-3];
+    ri.endphases{5} = [6  5e-3];
+    ri.endphases{6} = [3  5e-3];
+    ri.endphases{7} = [0  5e-3];
+    ri.endphases{8} = [-3 5e-3];
+    ri.endphases{9} = [-6 5e-3];
+    ri.endphases{10} = [-9 5e-3];
+    %}
+    ri.calctype = [repmat('pp',1,n)];
+    ri.calctype = 'vt';
+    %ri.endphases{1} = [repmat([inf -inf],1,n-1) inf -90];
+    %ri.endphases{3} = repmat([p -p],1,n);
+    %ri.endphases{4} = repmat([p -p],1,n);
+    %ri.endphases{5} = repmat([67.6,-20],1,n);
+    ri.finalvz = 0;
 
     % simulation timing variables
-    r.smallt = 1e-7;
+    ri.smallt = 1e-6;
+    ri.reflectEnd = false;
     
     % laser beam variables
-    r.lasertype = 'disk';
-    r.LBD = 2.5e-3;
+    ri.lasertype = 'disk';
+    ri.LBD = 2.5e-3;
     
     % random number seed
-    r.seed = 21112;
+    ri.seed = 21112;
     
     %Unpack r into a struct of runs
-    rs = unpacker(r,'linear');
+    rs = unpacker(ri,'product');
+    
+    % Making r global doesn't save time, but its silly passing it back and
+    % forth all the time.
+    global r 
     
     %% Here we just loop through the struct of runs, and run each one.
     for i=1:length(rs)
         rng(rs(i).seed) %seed the random number generator
         fprintf('run:%3d/%d\n ',i,length(rs))
-        rr = init(rs(i));
-        rsf(i) = run(rr);
-        rsf(i).f = 0; %clear the fields, massive data sink.
+        r = rs(i);
+        init();
+        run();
+        r.f = 0; %clear the fields, massive data sink.
+        rsf(i) = r;
         fprintf('speed:%3.1f\n',rsf(i).vels(end))
     end
     % Save the struct of runs, just in case the fitsim2data or results
@@ -97,37 +162,44 @@ function rsf = simdecel()
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
     
+    save('Partials/endBetweenLast4.mat','rsf')
+    
     %disp(rsf(1).vels(end))
     %resultsdecel(rsf)
 end
 
-function r = init(r)
-    r = initdecel(r);
-    r = initmols(r);
-    r = initvars(r);
-end
-
-function r = initdecel(r)
+function init()
+    global r
     % Load the mat file, or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
 
     labels = fields(r.decels);
     for i=1:length(labels)
         d = r.decels.(labels{i});
-        if exist(['Decels/' d '.mat'],'file') && ~r.reloadfields
-            r.f.(labels{i}) = load(['Decels/' d '.mat']);
-        elseif exist(['Decels/' d '.dat'],'file')
-            r = processfields(r,d);
-            r.f.(labels{i}) = load(['Decels/' d '.mat']);
+        if iscell(d)
+            dname = d{1};
         else
-            error(['File ''Decels/' d '.dat'' not found']);
+            dname = d;
+            d = {d};
         end
+        if ~exist(['Fields/' dname '.mat'],'file') || r.reloadfields
+            if exist(['Fields/' dname '.dat'],'file')
+                processfields(d{:});
+            else
+                error(['File ''Fields/' dname '.dat'' not found']);
+            end
+        end
+        r.f.(labels{i}) = load(['Fields/' dname '.mat']);
     end
-
+    
+    % Insert phase wherever 'inf' flag is found:
+    fprintf('%s%.2f\n','Phase: ',r.phase)
+    r.endphases(r.endphases==inf) = r.phase;
+    r.endphases(r.endphases==-inf) = -r.phase;
     
     % Choose the phase angle as a function of vfinal, vinitial, and stage
     % number.
-    if r.finalvz
+    if r.finalvz 
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
         % changed the bounds for acceleration
         c = labels{1};
@@ -144,128 +216,204 @@ function r = initdecel(r)
         r.endphases(r.endphases==p2) = -r.phase+r.phi2off;
     end
     
-end
-%% Initialize Molecules
-function r = initmols(r)
-    spreads = repmat([r.spreadxy r.spreadxy r.spreadz],r.num,1);
-    temps = repmat([r.tempxy r.tempxy r.tempz],r.num,1);
-    if strcmpi(r.dist,'gaussian') || strcmpi(r.dist,'normal')
-        r.vel = randn(r.num,3)*sqrt(r.k/r.mOH);
-        r.vel = r.vel.*sqrt(temps);
-        r.pos = randn(r.num,3)/sqrt(8*log(2));
-        r.pos = r.pos.*spreads;
-    elseif strcmpi(r.dist,'homogeneous') || strcmpi(r.dist,'flat')
-        r.vel = (rand(r.num,3)-.5)*sqrt(r.k/r.mOH);
-        r.vel = r.vel.*sqrt(temps);
-        r.pos = (rand(r.num,3)-.5).*spreads;
-    elseif strcmpi(r.dist,'sphere') || strcmpi(r.dist,'spherical')
-        ap = spheredist(r.num,6);
-        ap = ap.*[spreads sqrt(temps*r.k/r.mOH)]/2;
-        r.vel = ap(:,4:6);
-        r.pos = ap(:,1:3);
+
+    %% Initialize Molecules
+    if ~r.continue
+        spreads = repmat([r.spreadxy r.spreadxy r.spreadz],r.num,1);
+        temps = repmat([r.tempxy r.tempxy r.tempz],r.num,1);
+        if strcmpi(r.dist,'gaussian') || strcmpi(r.dist,'normal')
+            r.vel = randn(r.num,3)*sqrt(r.k/r.mOH);
+            r.vel = r.vel.*sqrt(temps);
+            r.pos = randn(r.num,3)/sqrt(8*log(2));
+            r.pos = r.pos.*spreads;
+        elseif strcmpi(r.dist,'homogeneous') || strcmpi(r.dist,'flat')
+            r.vel = (rand(r.num,3)-.5)*sqrt(r.k/r.mOH);
+            r.vel = r.vel.*sqrt(temps);
+            r.pos = (rand(r.num,3)-.5).*spreads;
+        elseif strcmpi(r.dist,'sphere') || strcmpi(r.dist,'spherical')
+            ap = spheredist(r.num,6);
+            ap = ap.*[spreads sqrt(temps*r.k/r.mOH)]/2;
+            r.vel = ap(:,4:6);
+            r.pos = ap(:,1:3);
+        else
+            error(['Distribution type ''' lower(r.dist) ''' not recognized.'...
+                ' Capitalization not important.'])
+        end
+
+        %First molecule always 'perfect' for timing
+        r.vel(1,:) = [0 0 0];
+        r.pos(1,:) = [0 0 0];
+
+        %Shift molecules in z, vz.
+        r.vel(:,3) = r.vel(:,3) + r.initvz;
+        r.pos(:,3) = r.pos(:,3) - r.vdd;
     else
-        error(['Distribution type ''' lower(r.dist) ''' not recognized.'...
-            ' Capitalization not important.'])
+        name = sprintf(r.contname,r.contfillstub);
+        rsl = load(['Partials/' name]);
+        r.vel = rsl.r.vel;
+        r.pos = rsl.r.pos;
     end
 
-    %First molecule always 'perfect' for timing
-    r.vel(1,:) = [0 0 0];
-    r.pos(1,:) = [0 0 0];
-    
-    %Shift molecules in z, vz.
-    r.vel(:,3) = r.vel(:,3) + r.initvz;
-    r.pos(:,3) = r.pos(:,3) - r.vdd;
-end
-
-function r = initvars(r)
+    %% Initialize other variables
     % Stage Number
     r.numstage = 1;
+    r.numstages = length(r.chargetype);
     r.charge = r.chargetype(1);
-    r.rot = 0;
+    r.rot = r.rot * pi / 180;
 
-    % Store the molecule number each decel stage.
-    r.molnum = zeros(1,max(r.stages));
+    % Store variables each decel stage.
+    r.molnum = zeros(1,r.numstages);
+    %r.vels = zeros(1,r.numstages);
+    %r.times = zeros(1,r.numstages);
         
     % Timing
     r.time = 0;
+    
+    % Field Translations
+    r.istrans = false;
+    
+    % Track Geometry
+    r.xx = zeros(30000,1);
+    r.smallnum = 1;
 end
 
 
 %% This function does a run.
 % It just times itself and calls the step function.
-function r = run(r)
-    r = tofirststage(r);
-    while r.numstage <= max(r.stages)
-        r = stage(r);
-        fprintf('step:%3d/%d,\t%d\n',r.numstage,max(r.stages),r.molnum(r.numstage))
+function run()
+    global r
+    
+    % Go to the first stage:
+    if ~r.continue
+        time = -r.pos(1,3)/r.vel(1,3);
+        r.pos = r.pos + r.vel*time;    
+    end
+
+    while r.numstage <= r.numstages
+        if stage()
+            fprintf('all gone.\n')
+            break
+        end
+        if ~mod(r.numstage,10) || r.numstages - r.numstage < 10
+            fprintf('step:%3d/%d,\tN:%d\tv:%.0f\n',r.numstage,r.numstages,r.molnum(r.numstage),r.vel(1,3))
+        end
         r.numstage = r.numstage + 1;
     end
 end
-    
-%% Propagate Molecules to first stage
-% Eventually this could be modified to include hexapole focusing or maybe
-% magnetic quadrupole focusing.
-function r = tofirststage(r)
-    %time = ((-90+r.phases(1))*r.f.zstagel/360-r.pos(1,3))/r.vel(1,3);
-    % I used to artificially change the decelerator start time according to
-    % the phase angle to make sure that even the first stage was equal
-    % length with all others. This made phase angle calculations for a
-    % given final velocity target easier. For collision hunting this is not
-    % good. Instead:
-    time = -r.pos(1,3)/r.vel(1,3);
-    r.pos = r.pos + r.vel*time;
+
+
+%% Translator
+function checktrans()
+global r
+    if xor(r.istrans,r.trans(r.numstage))
+        c = r.chargetype(r.numstage);
+        if r.istrans
+            r.pos(:,3) = r.pos(:,3) - 5e-3;%r.f.(c).zstagel/2;
+        else
+            r.pos(:,3) = r.pos(:,3) + 5e-3;%r.f.(c).zstagel/2;
+        end
+        r.istrans = ~r.istrans;
+    end
 end
 
 %% The stage function.
-% Propagates one decel stage. Removes lost molecules, checks number, etc. A
-% stage now includes variable numbers of sub-stages.
-function r = stage(r)
-    indices = find(r.stages==r.numstage);
-    for i=1:length(indices)
-        ind = indices(i);
-        c = r.chargetype(ind);
-        r.charge = c;
-        r.rot = r.rot180(ind);
-        while r.f.(c).phase(r.pos(1,3),r.numstage) < r.endphases(ind)
-            r = smallstep(r,r.smallt);
-            if r.vel(1,3) <= 0
+% Propagates one decel stage. Removes lost molecules, checks number, etc.
+function gone = stage()
+    global r
+
+    c = r.chargetype(r.numstage);
+    r.charge = c;    
+
+    % Handle 'translations' of the potentials by artifically futzing with
+    % the z coordinates.
+    checktrans()
+        
+    % Make sure the synch molecule is "in" the fields. If not assume
+    % loading and redefine z-coordinates
+    z = r.pos(1,3);
+    if isnan(r.f.(c).dvdz(0,0,z))
+        finalz = mod(z,10e-3)-10e-3;
+        trans = z - finalz;
+        r.pos(:,3) = r.pos(:,3) - trans;
+        if isnan(r.f.(c).dvdz(0,0,z))
+            % alignment of loading with decel depends on how the last pin
+            % pair is used.
+            r.pos(:,3) = r.pos(:,3) + 10e-3;
+        end
+    end
+
+    
+    warned = false;
+    while ~done()
+        smallstep(r.smallt);
+        if r.vel(1,3) <= 0
+            if r.reflectEnd
                 error('synchronous molecule reflected')
+            elseif ~warned
+                fprintf('synchronous molecule reflected\n')
+                warned = true;
+            end
+        elseif isnan(r.vel(1,3))
+            if ~strcmp(r.calctype(r.numstage),'t') % don't end sim if a timed stage (e.g. trapping)
+                r.pos(:,:) = nan;
+                fprintf('synchronous molecule lost\n')
             end
         end
+    end
+    
+    function b = done()
+        switch r.calctype(r.numstage)
+            case 'p'
+                b = r.f.(c).phase(r.pos(1,3)) >= r.endphases(r.numstage);
+                b = b || isnan(r.vel(1,3));
+            case 'v'
+                b = r.vel(1,3) <= r.endphases(r.numstage);
+                b = b || isnan(r.vel(1,3));
+            case 't'
+                b = r.time >= r.endphases(r.numstage);
+        end
+    end
+    
+    if strcmp(r.calctype(r.numstage),'p')
         undershoot = 1;
         while abs(undershoot) > 1e-11 && r.vel(1,3) > 0
             % get the undershoot in terms of phase
-            undershoot = r.endphases(ind) - ...
-                r.f.(c).phase(r.pos(1,3),r.numstage);
+            undershoot = r.endphases(r.numstage) - ...
+                r.f.(c).phase(r.pos(1,3));
 
             % translate to time ignoring acceleration
             undershoot = undershoot *r.f.(c).zstagel/360/r.vel(1,3);
 
             % step the molecules according to this time
-            r = smallstep(r,undershoot);
+            smallstep(undershoot);
         end
-        
     end
     
     r.pos(abs(r.pos(:,3)-r.pos(1,3))>10e-3,:)=nan;
-    r.pos(r.vel(:,3)<0,:)=nan;
+    %r.pos(r.vel(:,3)<0,:)=nan;
     r.lost    = isnan(sum(r.pos,2));
     r.pos     = r.pos(~r.lost,:);
     r.vel     = r.vel(~r.lost,:);
     r.numleft = size(r.pos,1);
     
-    r.vels(r.numstage) = r.vel(1,3);
     r.times(r.numstage) = r.time;
     r.molnum(r.numstage) = r.numleft;
+    gone = ~r.numleft;
+    if ~gone
+        r.vels(r.numstage) = r.vel(1,3);
+    else
+        r.vels(r.numstage) = nan;
+    end
     
 end
 
 %% Small simulation step.
 % Updates velocity based on acceleration and position based on velocity,
 % offset by half of a timestep.
-function r = smallstep(r,t)
+function smallstep(t)
+    global r
     r.pos = r.pos + r.vel*t/2;
-    r.vel = r.vel + acc(r)*t;
+    r.vel = r.vel + acc()*t;
     r.pos = r.pos + r.vel*t/2;
             
     %update time.
@@ -273,66 +421,36 @@ function r = smallstep(r,t)
 end
 
 %gets acceleration
-function a = acc(r)
+function a = acc()
+    global r
+
+    % mess around to check geometry
+    %r.pos(2,:) = r.pos(1,:);
+    %r.pos(3,:) = r.pos(1,:);
+    %r.pos(2,1) = 1.9e-3;
+    %r.pos(3,2) = 1.9e-3;
+
+    
     % first rotate into the right frame:
-    rad = pi/2*(mod(r.numstage,2) + 2*r.rot);
+    rad = r.rot(r.numstage);
     c = cos(rad); s = sin(rad);
-    pos = [ r.pos(:,1)*c - r.pos(:,2)*s , ...
-            r.pos(:,1)*s + r.pos(:,2)*c , r.pos(:,3)];
+    x = r.pos(:,1)*c - r.pos(:,2)*s;
+    y = r.pos(:,1)*s + r.pos(:,2)*c;
+    z = r.pos(:,3);
+  
     
     %just look up the force from the tables of dvdr (v as in potential
     %energy capital V.)
-    ax = r.f.(r.charge).dvdx(pos,r.numstage);
-    ay = r.f.(r.charge).dvdy(pos,r.numstage);
-    az = r.f.(r.charge).dvdz(pos,r.numstage);
+    ax = r.f.(r.charge).dvdx(x,y,z);
+    ay = r.f.(r.charge).dvdy(x,y,z);
+    az = r.f.(r.charge).dvdz(x,y,z);
     a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
-end
     
-function rs = unpacker(r,type)
-    switch(type)
-        case 'linear'
-            fs = fields(r);
-            l = 1;
-            for i=1:length(fs)
-                if iscell(r.(fs{i}))
-                    l = length(r.(fs{i}));
-                    break;
-                end
-            end
-            
-            rs = repmat(r,1,l);
-            
-            for i=1:length(fs)
-                for j=1:l
-                    tf = r.(fs{i});
-                    if iscell(tf)
-                        rs(j).(fs{i}) = tf{j};
-                    else
-                        rs(j).(fs{i}) = tf;
-                    end
-                end
-            end
-        case 'product'
-            fs = fields(r);
-            for i=1:length(fs)
-                if ~iscell(r.(fs{i}))
-                    r.(fs{i}) = {r.(fs{i})};
-                    if i==1
-                        continue
-                    end
-                end
-                these = r.(fs{i});
-                len = length(these);
-                height = length(r.(fs{i-1}));
-                for j=1:i-1
-                    r.(fs{j}) = repmat(r.(fs{j}),1,len);
-                end
-                r.(fs{i}) = reshape(repmat(these,height,1),1,len*height);
-            end
-            structargs = [fs struct2cell(r)];
-            structargs = structargs';
-            rs = struct(structargs{:});
-    end
+    %r.xx(r.smallnum) = any(isnan(a(2,:)));
+    %r.yy(r.smallnum) = any(isnan(a(3,:)));
+    %r.smallnum = r.smallnum + 1;   
+    %a(2:3,:) = 0;
+    
 end
 
 %% Load in from COMSOL
@@ -348,13 +466,21 @@ end
 % to even numbered stages, but rotated.
 % * Data points are given on a rectangular, uniform grid, although the
 % spacing of the three dimensions need not be identical.
-function r = processfields(r,decel)
+function processfields(varargin)
     
-    % Announcement
-    fprintf('%s\n','Processing Decelerator Fields from COMSOL...');
+    % Get Instructions from varargin
+    fileN = varargin{1};
+    if nargin>1
+        directions = varargin{2};
+    else
+        directions = 'none';
+    end
 
+    % Announcement
+    fprintf('Processing %s Fields from COMSOL...\n',fileN);
+    
     % COMSOL files usually have 9 header lines.
-    data = importdata(['Decels/' decel '.dat'],' ',9);
+    data = importdata(['Fields/' fileN '.dat'],' ',9);
     
     % data is a struct with data and text header. We ignore the header and
     % take out the data.
@@ -379,11 +505,19 @@ function r = processfields(r,decel)
     m = all(:,4);
     e = all(:,5);   %units of V/m
     
+    % depracated mask convention error.
+    if strcmp(fileN,'tricycleload') || strcmp(fileN,'tricycletrap')
+        m = ~m;
+    end
+    
     % not all decels will have b-field information.
     if size(all,2)>5
         b = all(:,6);   %units of T
         t = all(:,7);   %radians
-        t(isnan(t))=0;
+        t(isnan(t))=0;  
+        b(isnan(b))=0;  % b, e, m shouldn't have nans unless there are some mesh errors.
+        e(isnan(e))=0;
+        m(isnan(m))=0;
         t(imag(t)~=0)=0;
     else
         b = zeros(size(e));
@@ -400,27 +534,43 @@ function r = processfields(r,decel)
     ysp = uniquetol(diff(ys));
     zsp = uniquetol(diff(zs));
     
-    % z is assumed to run from $-90^\circ$ to $+90^\circ$, but no
-    % assumptions are made about its actual coordinate range in COMSOL.
-    % Thus it is shifted so that $+90^\circ$ phase is at zero.
-    z = z - zs(end);
-    zs = zs - zs(end);
-    zstagel = -2*zs(1);
+    % shift z coordinates depending on type of fields
+    switch(directions)
+        case 'load'
+            z = z - zs(1) - 5e-3; % start fields at -5e-3 like last stage.
+            zs = sort(uniquetol(z,1e-6,'DataScale',1));
+            zstagel = zs(end);
+        case 'trap'
+            % here the coordinates need to be specified. h gives the
+            % distance from the center of the last pin pair in m to the
+            % beginning of the trapping fields.
+            if nargin > 2
+                h = varargin{3};
+            else
+                h = 0; 
+            end
+            z = z - zs(1) + h;
+            zs = sort(uniquetol(z,1e-6,'DataScale',1));
+            zstagel = zs(end);
+        otherwise % i.e. deceleration
+            % z is assumed to run from $-90^\circ$ to $+90^\circ$, but no
+            % assumptions are made about its actual coordinate range in COMSOL.
+            % Thus it is shifted so that $+90^\circ$ phase is at zero.
+            z = z - zs(end);
+            zs = zs - zs(end);
+            zstagel = -2*zs(1);            
+    end
+
     
     % create lookup functions that tell you 'n' for a given x value such
     % that x is the nth x value.
     x2i = @(xx) arrayfun(@(x) find(x==xs),xx);
     y2i = @(yy) arrayfun(@(y) find(y==ys),yy);
-    z2i = @(zz) arrayfun(@(z) find(z==zs),zz);
+    z2i = @(zz) arrayfun(@(z) find(abs(z-zs)<1e-6),zz);
     
-    % check for datapoint uniformity, and x,y starting from zero
-    if length(xsp)+length(ysp)+length(zsp) > 3
-        error('Non-uniform Datapoint Spacing');
-    elseif abs(xs(1)) > 1e-6 && r.fieldsymmetryXY
-        error('X data doesn''t begin at zero')
-    elseif abs(ys(1)) > 1e-6 && r.fieldsymmetryXY
-        error('Y data doesn''t begin at zero')
-    end
+    % check for datapoint uniformity
+    assert(length(xsp)+length(ysp)+length(zsp) == 3,...
+        'Non-uniform Datapoint Spacing');
     
     % the size of the 3D data matrices to be filled
     fullsize = [length(xs) length(ys) length(zs)];
@@ -432,6 +582,7 @@ function r = processfields(r,decel)
     % for each single-letter variable in varname, create a new variable
     % given by a double-letter, which is a 3D matrix of size fullsize, and
     % fill it by indexing into it with the locs linear index column.
+    bb=0; ee=0; tt=0; mm=0; xx=0; yy=0; zz=0;
     for varname={'b','e','t','m','x','y','z'}
         eval([varname{1} varname{1} '=zeros(fullsize);']);
         eval([varname{1} varname{1} '(locs) = ' varname{1} ';']);
@@ -454,6 +605,12 @@ function r = processfields(r,decel)
     % vv = smooth3(vv,'gaussian',7,3);
     
     %% Take derivatives to get force fields
+    switch(directions)
+        case 'noXY'
+            fieldsymmetryXY = false;
+        otherwise
+            fieldsymmetryXY = true; % right now this is broken, set by hand
+    end
     
     % get symmetric derivative kernels so we can differentiate the
     % potential matrix via convolution
@@ -479,7 +636,7 @@ function r = processfields(r,decel)
     dvdxu(mmx)=0;
     dvdyu(mmy)=0;
     dvdzu(mmz)=0;
-    if r.fieldsymmetryXY
+    if fieldsymmetryXY
         dvdxu(1,:,:)=0; 
         dvdyu(:,1,:)=0; 
         dvdxu(end,:,:)=dvdxu(end-1,:,:);
@@ -502,11 +659,13 @@ function r = processfields(r,decel)
     % zero the x,y force along their respective lines of symmetry. This
     % should already be the case but convolution based derivatives can
     % behave strangely near borders due to zero padding assumptions.
-    if r.fieldsymmetryXY
+    if fieldsymmetryXY
         dvdxm(1,:,:)=0;
         dvdym(:,1,:)=0;
     end
-    if r.fieldsymmetryZ
+    
+    % zero the z force along reflection symmetry in the decelerator:
+    if ~strcmp(directions,'load') && ~strcmp(directions,'trap')
         dvdzm(:,:,[1 end])=0;
     end
     
@@ -561,7 +720,16 @@ function r = processfields(r,decel)
     % will be run with at a phase angle close to +90 degrees, and thus
     % during a single stage most well-decelerated molecules won't wrap
     % their phase angles as returned by this lookup.
-    phase = @(z,n) mod(z/zstagel+n/2,1)*360 - 270;
+    function p = getphase(z)
+        ii = z/zstagel;
+        p = (ii - fix(ii))*360 - 270;
+    end
+    phase = @getphase;
+    
+    % If loading or trapping, no wrapping.
+    if strcmp(directions,'load') || strcmp(directions,'trap')
+        phase = @(z) z/zstagel*360;
+    end
     
     % wrap returns a z-coordinate within the force lookup table given a
     % general z-coordinate and the stage parity. It achieves this in two
@@ -571,13 +739,27 @@ function r = processfields(r,decel)
     % side lookup indicates whether this symmetry is exploited so the
     % z-forces can be inverted, since molecules in the -270 to -90 range
     % are accelerated, not decelerated.
-    wrapc = @(z,n) (phase(z,n)-90)/360 * zstagel;
-    wrap = @(z,n) abs(wrapc(z,n)+zstagel/2)-zstagel/2;
-    side = @(z,n) (wrapc(z,n) > -zstagel/2)*2 - 1;
-    if ~r.fieldsymmetryZ
-        wrap = wrapc;
-        side = @(z,n) 1;
+    %wrapc = @(z,n) (phase(z,n)-90)/360 * zstagel;
+    %wrapc = @(z) (phase(z)-90)/360 * zstagel;
+    %wrap = @(z,n) abs(wrapc(z,n)+zstagel/2)-zstagel/2;
+    %side = @(z,n) (wrapc(z,n) > -zstagel/2)*2 - 1;
+    
+    % let's write a better wrap for shorter runtimes:
+    function w = wrapf(z)%,n)
+        ii = z/zstagel;%+n/2;
+        jj = ii - fix(ii);
+        w = (abs(jj-0.5)-0.5);
+        w = w*zstagel;
     end
+    %wrap = @(z,n) abs( mod(z+zstagel2*n,zstagel)-zstagel2)-zstagel2;
+    wrap = @wrapf;
+    function s = sidef(z)%,n)
+        ii = z/zstagel;%+n/2;
+        jj = ii - fix(ii);
+        s = (jj > 0.5)*2 - 1;
+    end
+    %side = @(z,n) (mod(z+n*zstagel2,zstagel) > zstagel2)*2 - 1;
+    side = @sidef;
     
     % This returns the energy removed per stage as a function of phase
     % angle. Its inverse enables quickly choosing the phase angle given a
@@ -592,25 +774,26 @@ function r = processfields(r,decel)
 
     % These functions reference the gridded interpolants, but with the
     % coordinates appropriately wrapped.
-    if r.fieldsymmetryXY
-        dvdxa = @(x,y,z,n) dvdxg(abs(x),abs(y),wrap(z,n)).*sign(x);
-        dvdya = @(x,y,z,n) dvdyg(abs(x),abs(y),wrap(z,n)).*sign(y);
-        dvdza = @(x,y,z,n) dvdzg(abs(x),abs(y),wrap(z,n)).*side(z,n);
-        vfa = @(x,y,z,n) vfg(abs(x),abs(y),wrap(z,n));
+    if fieldsymmetryXY
+        dvdx = @(x,y,z) dvdxg(abs(x),abs(y),wrap(z)).*sign(x);
+        dvdy = @(x,y,z) dvdyg(abs(x),abs(y),wrap(z)).*sign(y);
+        dvdz = @(x,y,z) dvdzg(abs(x),abs(y),wrap(z)).*side(z);
+        vf = @(x,y,z) vfg(abs(x),abs(y),wrap(z));
     else
-        dvdxa = @(x,y,z,n) dvdxg(x,y,wrap(z,n));
-        dvdya = @(x,y,z,n) dvdyg(x,y,wrap(z,n));
-        dvdza = @(x,y,z,n) dvdzg(x,y,wrap(z,n)).*side(z,n);
-        vfa = @(x,y,z,n) vfg(x,y,wrap(z,n));
+        dvdx = @(x,y,z) dvdxg(x,y,wrap(z));
+        dvdy = @(x,y,z) dvdyg(x,y,wrap(z));
+        dvdz = @(x,y,z) dvdzg(x,y,wrap(z)).*side(z);
+        vf = @(x,y,z) vfg(x,y,wrap(z));
     end
-    dvdx = @(xyz,n) dvdxa(xyz(:,1),xyz(:,2),xyz(:,3),n);
-    dvdy = @(xyz,n) dvdya(xyz(:,1),xyz(:,2),xyz(:,3),n);
-    dvdz = @(xyz,n) dvdza(xyz(:,1),xyz(:,2),xyz(:,3),n);
-    vf = @(xyz,n) vfa(xyz(:,1),xyz(:,2),xyz(:,3),n);
-    
+    if strcmp(directions,'load') || strcmp(directions,'trap')
+        dvdx = @(x,y,z) dvdxg(abs(x),abs(y),z).*sign(x);
+        dvdy = @(x,y,z) dvdyg(abs(x),abs(y),z).*sign(y);
+        dvdz = @(x,y,z) dvdzg(abs(x),abs(y),z);
+        vf = @(x,y,z) vfg(abs(x),abs(y),z);
+    end    
 
     % Save in a file for loading and propagating during decel simulation.
-    save(['Decels/' decel '.mat'],'dvdx','dvdy','dvdz',...
+    save(['Fields/' fileN '.mat'],'dvdx','dvdy','dvdz',...
         'vf','phase','zstagel','renergy','aenergy');
 
     %% Produce Output Figure for Debugging
@@ -618,10 +801,17 @@ function r = processfields(r,decel)
     % output, data input processing. 
     cc = 4e-20;
     
+    titleLabel = 'Decelerator ';
+    if strcmp(directions,'load')
+        titleLabel = 'Loading ';
+    elseif strcmp(directions,'trap')
+        titleLabel = 'Traping ';
+    end
+    
     figure('position',[50,50,1100,1100])
     subplot(2,2,1)
     surf(cap(squeeze(dvdzm(:,1,:)),cc));
-    title(['Decelerator dvdz, X-Z plane, ' decel '.dat']);
+    title([titleLabel 'dvdz, X-Z plane, ' fileN '.dat']);
 
     % You might think the labels are backwards, but they're not. surf uses
     % the second index (the column of the matrix) as the x-axis and the
@@ -634,49 +824,44 @@ function r = processfields(r,decel)
 
     subplot(2,2,2)
     surf(cap(squeeze(dvdzm(1,:,:)),cc));
-    title(['Decelerator dvdz, Y-Z plane, ' decel '.dat']); 
+    title([titleLabel 'dvdz, Y-Z plane, ' fileN '.dat']); 
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,3)
     surf(cap(squeeze(dvdxm(:,1,:)),cc));
-    title(['Decelerator dvdx, X-Z plane, ' decel '.dat']);
+    title([titleLabel 'dvdx, X-Z plane, ' fileN '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,4)
     surf(cap(squeeze(dvdym(1,:,:)),cc));
-    title(['Decelerator dvdy, Y-Z plane, ' decel '.dat']);
+    title([titleLabel 'dvdy, Y-Z plane, ' fileN '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
-    %{
     figure('position',[100,200,400,400])
-    plot(abs(zs),vf([zeros(length(zs),2) zs(:)],1))
-    title(['Decel Potential along Z-axis, ' r.trapname '.dat'])
+    plot(abs(zs),vf(zeros(length(zs),1),zeros(length(zs),1),zs(:)))
+    title([titleLabel 'Potential along Z-axis, ' fileN '.dat'])
     xlabel('Z axis')
     ylabel('Potential Energy (J)')
-    %}
-end
-
-function x = cap(x,varargin)
-    if length(varargin)==1
-        c = varargin{1};
-        x(x>c) = c;
-        x(x<-c) = -c;
-    else
-        [cl, ch] = varargin{:};
-        x(x>ch) = ch;
-        x(x<cl) = cl;
+    
+    % convenient subfunction for plotting capped surfaces
+    function x = cap(x,varargin)
+        if length(varargin)==1
+            c = varargin{1};
+            x(x>c) = c;
+            x(x<-c) = -c;
+        else
+            [cl, ch] = varargin{:};
+            x(x>ch) = ch;
+            x(x<cl) = cl;
+        end
     end
 end
-
-
-
-
 
 
 

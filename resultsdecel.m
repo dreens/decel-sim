@@ -15,7 +15,7 @@ function resultsdecel(rs)
         h.DisplayName = sprintf('v=%2.1f, %s',r.vels(end),sname{i});
         
         subplot(2,3,2); hold on
-        plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',c,'LineStyle',l);
+        plot([r.initvz r.vels],'b-','Color',c,'LineStyle',l);
         
         subplot(2,3,3); hold on
         plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3);
@@ -45,9 +45,9 @@ function resultsdecel(rs)
     nls = [rs.numleft];
     tps = [rs.tofpeak];
     tpa = [rs.tofarea];
-    plot(nls(5:-1:1),'DisplayName','Total','Marker','x','LineStyle','-');
-    plot(tps(5:-1:1),'DisplayName','Peak','Marker','o','LineStyle','-');
-    plot(tpa(5:-1:1)*1e4,'DisplayName','Area','Marker','sq','LineStyle','-');
+    plot(nls(3:-1:1),'DisplayName','Total','Marker','x','LineStyle','-');
+    plot(tps(3:-1:1),'DisplayName','Peak','Marker','o','LineStyle','-');
+    plot(tpa(3:-1:1)*1e4,'DisplayName','Area','Marker','sq','LineStyle','-');
     legend('show')
     legend('Location','South')
     
@@ -58,7 +58,7 @@ function resultsdecel(rs)
     set(gca,'FontSize',12)
     set(gca,'YScale','log')
     grid on
-    legend('VVSF2','VVSF','VSF','SF','S=1')
+    legend('S=1','SF','VSF')
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)

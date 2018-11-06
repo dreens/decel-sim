@@ -12,121 +12,80 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    ri.dname = 'Cryo12Testing';
-    ri.num = 1e5;
+    ri.dname = 'Alternate-Charging-Beyond';
+    
+    % initial number:
+    ri.num = 1e4;
+    
+    % initial temperature, spatial distribution:
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2e-3;
     ri.tempz = 1;
     ri.spreadz = 5e-3;
     ri.initvz = 820;
-    ri.dist = 'flat';
-    ri.continue = true;
+    ri.dist = 'flat'; % or gaussian, spherical, other options.
+    ri.vdd = 1e-3; % valve decelerator distance
+
+    
+    % set this to load fields from a previous run. Useful for separating
+    % deceleration from trap loading for example.
+    ri.continue = false;
     phaserange = 54:2:84; iii=1;
+    phaserange = 0;
+    
+    % you can just name the file to load the previous run:
     ri.contname = cell(1,length(phaserange));
+    
+    % or specify stubs to be prepended to the filenames in contname:
     ri.contfillstub = 'VSF';% {'S1','SF','VSF'};
     for n=phaserange
         ri.contname{iii} = sprintf('W0%%s56p%d',n); iii = iii + 1;
     end
-        
-    % decelerator configuration variables
-    ri.vdd = 1e-3;
     
+    %% Sequence Specification
+    %
+    % Load ri.decels with one field for each charge configuration. The
+    % field needs to be a single letter. The value of the field is the file
+    % name without '.dat', or occasionally an arraylist where the first
+    % field is the filename and the second contains some processing
+    % instructions.
+    %
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
-    % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym
-    %d.a =  'longdecel'; %{'pmpm_2mm_no-sym','ppmm_2mm'};
-    %d.b = 'ppgg';
-    %d.c = {'pmpm_2mm_no-sym','noXY'};
-    %d.d = 'singlerod';
-    %d.e = 'ppmm_2mm';
-    d.l = {'tricycleload13broad','load'};
-    d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels{1} = d;
-    d.l = {'tricycleload25broad','load'};
-    d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels{2} = d;
-    d.l = {'ringloadbroad','load'};
-    d.t = {'ringtrapbroad','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels{3} = d;
-    d.l = {'cryoloadbroad','load'};
-    d.t = {'cryotrapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    ri.decels{1} = d;
-    d.l = {'cryo2loadbroad','load'};
-    d.t = {'cryo2trapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    ri.decels{2} = d;
-    d.l = {'clover1load','load'};
-    d.t = {'clover1trap','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels{1} = d;
-    d.l = {'clover2load','load'};
-    d.t = {'clover2trap','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels{2} = d;
-    d.l = {'clover3load','load'};
-    d.t = {'clover2trap','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels = d;
-    d.l = {'ringloadbroadCLV','load'};
-    d.t = {'mattclover','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels = d;
-    
-    %ri.decels = d;
-    
-    %ri.decels{1} = struct('a','longdecel','b','longdecel');
-    %ri.decels{2} = struct('a','longdecel','b','singlerod');
-    %ri.decels{3} = struct('a','longdecel','b','ppgg');
+    % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym, singlerod, ppgg
+    ri.decels{1} = struct('a','longdecel','b','longdecel');
+    ri.decels{2} = struct('a','longdecel','b','singlerod');
+    ri.decels{3} = struct('a','longdecel','b','ppgg');
+    %ri.decels{4} = struct('a','longdecel','b',{'pmpm_2mm_no-sym','noXY'});
     
     ri.reloadfields = false;
         
     % decelerator timing variables
-    ri.phase = 50;%num2cell(56.54:.02:56.84);
+    ri.phase = 50;
     ri.phi2off = 0;
     n = 333;
-    ri.chargetype{1} = 'lt';
-    %ri.chargetype{2} = 'su';
-    %ri.chargetype{3} = 'nv';
-    %ri.chargetype{1} = repmat('aa',1,n);
-    %ri.chargetype{2} = repmat('ad',1,n);
-    %ri.chargetype{3} = repmat('ab',1,n);
-    %ri.chargetype = repmat('ab',1,n);
-    %ri.chargetype{4} = repmat('ae',1,n);
-    %ri.chargetype{5} = repmat('ce',1,n);
-    ri.rot = [0 90 90 180 180 270 270 0];
+    ri.chargetype = repmat('ba',1,n);
+    ri.rot = [0 0 90 90 180 180 270 270];
     ri.rot = repmat(ri.rot,1,83);
-    ri.rot = [ri.rot 0 90 0 0];
-    ri.rot = [0 0];
-    ri.trans = [1 0 0 1];
+    ri.rot = [ri.rot 0 0];
+    
+    ri.trans = [1 1 0 0];
     ri.trans = repmat(ri.trans,1,166);
-    ri.trans = [ri.trans 1 0 0 0];
-    ri.trans = [0 0];
-    %ri.stages = floor((1:(2*n-1))/2+1);
-    %ri.rot180 = mod(floor((1:(2*n-1))/4),2);
-    %ri.endphases = repmat([inf -inf],1,n);
-    %{
-    ri.endphases{1} = [repmat([inf -inf],1,n) 6 5e-3];
-    ri.endphases{2} = [repmat([inf -inf],1,n) 3 5e-3];
-    ri.endphases{3} = [repmat([inf -inf],1,n) 0 5e-3];
-    ri.endphases{4} = [repmat([inf -inf],1,n) -3 5e-3];
-    %}
-    ri.endphases{1} = [18 5e-3];
-    ri.endphases{2} = [15 5e-3];
-    ri.endphases{3} = [12 5e-3];
-    ri.endphases{4} = [9  5e-3];
-    ri.endphases{5} = [6  5e-3];
-    ri.endphases{6} = [3  5e-3];
-    ri.endphases{7} = [0  5e-3];
-    ri.endphases{8} = [-3 5e-3];
-    ri.endphases{9} = [-6 5e-3];
-    ri.endphases{10} = [-9 5e-3];
-    %}
+    ri.trans = [ri.trans 1 1];
+
+    % the inf flag will get replaced with the ri.phase variable
+    ri.endphases{1} = [repmat([130 230 310 50],1,n)];
+    ri.endphases{1} = [repmat([130 230 310 50],1,n)];
+    ri.endphases{1} = [repmat([130 230 310 50],1,n)];
+    ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
+    
+    % each stage has its endpoint calculated by phase, velocity, or time.
+    % specify this as 'p', 'v', or 't':
     ri.calctype = [repmat('pp',1,n)];
-    ri.calctype = 'vt';
-    %ri.endphases{1} = [repmat([inf -inf],1,n-1) inf -90];
-    %ri.endphases{3} = repmat([p -p],1,n);
-    %ri.endphases{4} = repmat([p -p],1,n);
-    %ri.endphases{5} = repmat([67.6,-20],1,n);
-    ri.finalvz = 0;
 
     % simulation timing variables
     ri.smallt = 1e-6;
-    ri.reflectEnd = false;
+    ri.reflectEnd = true; % end if the synch molecule is reflected.
     
     % laser beam variables
     ri.lasertype = 'disk';
@@ -162,26 +121,37 @@ function rsf = simdecel()
     save(['autosaves/rundecelstructs_' t '_' r.dname '.mat'],'rsf')
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
     
-    save('Partials/endBetweenLast4.mat','rsf')
+    % save in Partials folder for reloading to simulate load, trap.
+    %save('Partials/endBetweenLast4.mat','rsf')
     
     %disp(rsf(1).vels(end))
-    %resultsdecel(rsf)
+    resultsdecel(rsf)
 end
 
 function init()
     global r
+    %% Initialize fields, 
     % Load the mat file, or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
 
+    % r.decels will be a struct with a field for each charge configuration
     labels = fields(r.decels);
+    
+    % for each charge configuration...
     for i=1:length(labels)
+        % d is the file name + any other processing insturctions for that
+        % configuration.
         d = r.decels.(labels{i});
+        
+        % deal with the no instruction case, get filename as dname.
         if iscell(d)
             dname = d{1};
         else
             dname = d;
             d = {d};
         end
+        
+        % send messages and pass off to processfields if not already done.
         if ~exist(['Fields/' dname '.mat'],'file') || r.reloadfields
             if exist(['Fields/' dname '.dat'],'file')
                 processfields(d{:});
@@ -189,6 +159,9 @@ function init()
                 error(['File ''Fields/' dname '.dat'' not found']);
             end
         end
+        
+        % add a field to the r.f structure with the data for the
+        % corresponding charge configuration.
         r.f.(labels{i}) = load(['Fields/' dname '.mat']);
     end
     
@@ -198,7 +171,7 @@ function init()
     r.endphases(r.endphases==-inf) = -r.phase;
     
     % Choose the phase angle as a function of vfinal, vinitial, and stage
-    % number.
+    % number. Don't do this if r.finalvz is set to zero.
     if r.finalvz 
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
         % changed the bounds for acceleration
@@ -218,6 +191,7 @@ function init()
     
 
     %% Initialize Molecules
+    % as long as we aren't loading molecules from a previous run:
     if ~r.continue
         spreads = repmat([r.spreadxy r.spreadxy r.spreadz],r.num,1);
         temps = repmat([r.tempxy r.tempxy r.tempz],r.num,1);
@@ -326,7 +300,7 @@ function gone = stage()
 
     % Handle 'translations' of the potentials by artifically futzing with
     % the z coordinates.
-    checktrans()
+    %checktrans()
         
     % Make sure the synch molecule is "in" the fields. If not assume
     % loading and redefine z-coordinates
@@ -364,7 +338,16 @@ function gone = stage()
     function b = done()
         switch r.calctype(r.numstage)
             case 'p'
-                b = r.f.(c).phase(r.pos(1,3)) >= r.endphases(r.numstage);
+                difference = mod(r.f.(c).phase(r.pos(1,3)),360) - ...
+                    r.endphases(r.numstage);
+                if difference < 0
+                    b = false;
+                elseif difference > 0
+                    b = true;
+                    if difference > 180
+                        b = false;
+                    end
+                end
                 b = b || isnan(r.vel(1,3));
             case 'v'
                 b = r.vel(1,3) <= r.endphases(r.numstage);
@@ -379,7 +362,17 @@ function gone = stage()
         while abs(undershoot) > 1e-11 && r.vel(1,3) > 0
             % get the undershoot in terms of phase
             undershoot = r.endphases(r.numstage) - ...
-                r.f.(c).phase(r.pos(1,3));
+                mod(r.f.(c).phase(r.pos(1,3)),360);
+            
+            % if significant undershoot, throw error
+            if undershoot > 5
+                message = sprintf('%s%s%d%s%d.',...
+                    'Too much overshoot, stage definition issue.',...
+                    ' Synch molecule at phase angle ',...
+                    mod(r.f.(c).phase(r.pos(1,3)),360),...
+                    ', but target phase was ',r.endphases(r.numstage));
+                error(message)
+            end
 
             % translate to time ignoring acceleration
             undershoot = undershoot *r.f.(c).zstagel/360/r.vel(1,3);
@@ -431,12 +424,12 @@ function a = acc()
     %r.pos(3,2) = 1.9e-3;
 
     
-    % first rotate into the right frame:
+    % first rotate, translate into the right frame:
     rad = r.rot(r.numstage);
     c = cos(rad); s = sin(rad);
     x = r.pos(:,1)*c - r.pos(:,2)*s;
     y = r.pos(:,1)*s + r.pos(:,2)*c;
-    z = r.pos(:,3);
+    z = r.pos(:,3) + r.trans(r.numstage)*(5e-3); %translate
   
     
     %just look up the force from the tables of dvdr (v as in potential

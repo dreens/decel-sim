@@ -12,8 +12,8 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    ri.dname = 'Cryo12Testing';
-    ri.num = 1e5;
+    ri.dname = 'CryoDTesting';
+    ri.num = 1e3;
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2e-3;
     ri.tempz = 1;
@@ -44,16 +44,22 @@ function rsf = simdecel()
     %ri.decels{1} = d;
     d.l = {'tricycleload25broad','load'};
     d.t = {'tricycletrapbroad','trap',6.175e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    %ri.decels{2} = d;
+    ri.decels{1} = d;
     d.l = {'ringloadbroad','load'};
     d.t = {'ringtrapbroad','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
     %ri.decels{3} = d;
     d.l = {'cryoloadbroad','load'};
-    d.t = {'cryotrapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    d.t = {'cryotrapbroad','trap',5.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
     ri.decels{1} = d;
     d.l = {'cryo2loadbroad','load'};
     d.t = {'cryo2trapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
-    ri.decels{2} = d;
+    %ri.decels{1} = d;
+    d.l = {'cryo3loadbroad','load'};
+    d.t = {'cryo3trapbroad','trap',6.0875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    %ri.decels{1} = d;
+    d.l = {'cryoDloadbroad','load'};
+    d.t = {'cryoDtrapbroad','trap',6.1875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
+    ri.decels{1} = d;
     d.l = {'clover1load','load'};
     d.t = {'clover1trap','trap',6.5875e-3}; % distance between 0 of loading fields to beginning of trapping fields.
     %ri.decels{1} = d;
@@ -152,6 +158,7 @@ function rsf = simdecel()
         r.f = 0; %clear the fields, massive data sink.
         rsf(i) = r;
         fprintf('speed:%3.1f\n',rsf(i).vels(end))
+        fprintf('max so far:%4d\n',max([rsf.numleft]))
     end
     % Save the struct of runs, just in case the fitsim2data or results
     % functions have petty errors. Wouldn't want to lost everything.

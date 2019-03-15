@@ -90,7 +90,7 @@ end
     [~, bb] = min((z-pM).^2);
     [~, cc] = min((z-pH).^2);
 slope2=(ff(40,40,cc)-ff(40,40,bb))/(5e-3+1e-8);
-acel2=slope2/mOH
+acel2=slope2/mOH;
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
@@ -114,7 +114,7 @@ slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
 vv = vv - zp.*slope2;
    % vv = vv - (zp-2.5e-3).*slope;
 % We can also get the acceleration implied by that slope.
-accel = slope/mOH
+accel = slope/mOH;
 
 % Finally redefine zero energy.
 vv = vv - vv(mX,mX,mZ);

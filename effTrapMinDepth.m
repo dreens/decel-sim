@@ -11,6 +11,19 @@ c2 = (size(potential3D,2)+1)/2;
 z = potential3D(c1,c2,:);
 z = squeeze(z);
 [~, l] = findpeaks(-z);
+i = 1;
+while length(l)>1
+    [~, l] = findpeaks(-z,'MinPeakProminence',i);
+    i = i + 1;
+    if length(l)==0
+        [~, l] = findpeaks(-z,'MinPeakProminence',i-2);
+        l = l(1);
+    end
+end
+figure(123)
+hold on
+plot(z)
+drawnow
 
 potD = potential3D;
 mm = min(potD(:));
@@ -24,7 +37,9 @@ basin = watershed(potD);
 trapLabel = basin(c1,c2,l);
 
 potFindMin = potD;
-potFindMin(basin~=trapLabel) = 65535;
+if any(basin~=trapLabel)
+    potFindMin(basin~=trapLabel) = 65535;
+end
 [~, indTrueMin] = min(potFindMin(:));
 trueMin = potential3D(indTrueMin);
 
@@ -36,7 +51,12 @@ d3(2,[1 3],2) = true;
 d3([1 3],2,2) = true;
 strd3 = strel('arbitrary',d3);
 trapBWE = imerode(trapBW,strel('cube',3));
-boundary = trapBW & ~trapBWE;
+edge = false(size(trapBW));
+edge(:,:,[1 end]) = true;
+edge(:,[1 end],:) = true;
+edge([1 end],:,:) = true;
+boundary = trapBW & (~trapBWE | edge);
+
 
 potential3D(~boundary) = max(potential3D(:));
 [minD,loc] = min(potential3D(:));

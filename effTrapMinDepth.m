@@ -20,10 +20,10 @@ while length(l)>1
         l = l(1);
     end
 end
-figure(123)
-hold on
-plot(z)
-drawnow
+%figure(123)
+%hold on
+%plot(z)
+%drawnow
 
 potD = potential3D;
 mm = min(potD(:));

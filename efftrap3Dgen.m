@@ -81,6 +81,9 @@ end
 % symmetrizing over the axis, so why not do it directly.
 vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
 
+% Symmetrize LR
+vv = (vv + permute(vv,[2 1 3]))/2;
+
 % Now velocity compensation. First get coordinates of what should be the
 % trap center.
 mZ = (length(zphi)+1)/2;

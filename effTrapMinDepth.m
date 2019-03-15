@@ -37,7 +37,7 @@ basin = watershed(potD);
 trapLabel = basin(c1,c2,l);
 
 potFindMin = potD;
-if any(basin~=trapLabel)
+if any(basin(:)~=trapLabel(:))
     potFindMin(basin~=trapLabel) = 65535;
 end
 [~, indTrueMin] = min(potFindMin(:));

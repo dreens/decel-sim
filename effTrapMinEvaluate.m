@@ -8,14 +8,14 @@ vsf = [];
 xsf = [];
 for phi=phis
     phi
-    out = efftrap3Dgen({'longdecel','longdecel'},[phi-180,-phi,phi],[1 1]);
-    s1 = [s1 effTrapMinDepth(out)];
-    outpggg = efftrap3Dgen({'singlerod','longdecel'},[phi-180,-phi,phi],[1 1]);
-    sf = [sf effTrapMinDepth(outpggg)];
-    outppgg = efftrap3Dgen({'ppgg','longdecel'},[phi-180,-phi,phi],[1 1]);
-    vsf = [vsf effTrapMinDepth(outppgg)];
-    outppmm = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,-phi,phi],[1 1]);
-    xsf = [xsf effTrapMinDepth(outppmm)];
+    out{phi} = efftrap3Dgen({'longdecel','longdecel'},[phi-180,-phi,phi],[1 1]);
+    outpggg{phi} = efftrap3Dgen({'singlerod','longdecel'},[phi-180,-phi,phi],[1 1]);
+    outppgg{phi} = efftrap3Dgen({'ppgg','longdecel'},[phi-180,-phi,phi],[1 1]);
+    outppmm{phi} = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,-phi,phi],[1 1]);
+    s1 = [s1 effTrapMinDepth(out{phi})];
+    sf = [sf effTrapMinDepth(outpggg{phi})];
+    vsf = [vsf effTrapMinDepth(outppgg{phi})];
+    xsf = [xsf effTrapMinDepth(outppmm{phi})];
 end
 
 figure;

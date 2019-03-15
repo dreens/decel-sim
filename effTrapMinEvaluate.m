@@ -1,7 +1,8 @@
 %%
 % Make use of the Min Depth Finder to study some plots!
 %
-phis = [89];%5:5:85];
+phis = [3:3:87];
+outs3 = {};
 if false%~exist('out')
     out = {};
     outpggg = {};
@@ -28,7 +29,7 @@ for phi=phis
 end
 
 figure;
-phis = [1, 5:5:85, 89];
+phis = 1:89;
 plot(phis,s1(phis),'DisplayName','S=1')
 hold on
 plot(phis,sf(phis),'DisplayName','SF')

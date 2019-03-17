@@ -30,7 +30,7 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-15:.025:10)*1e-3;
+z=(-25:.025:10)*1e-3;
 
 x = (-.975:.025:.975)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);

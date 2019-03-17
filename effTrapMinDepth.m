@@ -57,21 +57,39 @@ edge(:,[1 end],:) = true;
 edge([1 end],:,:) = true;
 boundary = trapBW & (~trapBWE | edge);
 
+restrictPot = potential3D;
+restrictPot(~boundary) = max(restrictPot(:));
+[minD,loc] = min(restrictPot(:));
 
-potential3D(~boundary) = max(potential3D(:));
-[minD,loc] = min(potential3D(:));
+% Let's get volume and PSV too.
+trapPot = false(size(potential3D));
+trapPot(trapBW) = true;
+trapPot(potential3D > minD) = false;
+vol = sum(trapPot(:));
+sp = 25e-6;
+volume = vol/(sp^3);
+
+% And now phase space volume.
+% get a matrix with max velocity at each point in the trap.
+trapPSV = sqrt(abs(potential3D-minD)*2/mOH);
+% replace max velocity with 3-volume in velocity space of all allowed vel's
+trapPSV = (4/3)*pi*trapPSV.^3;
+trapPSV(~trapPot) = 0;
+psVol = sum(trapPSV(:));
+psVolume = psVol/(sp^3);
+
 if nargout <= 1
     varargout = {minD - trueMin};
-elseif nargout == 2    
-    [a b c] = ind2sub(size(potential3D),loc);
-    [~, lr] = max(abs([a b c] - [c1 c2 l]));
-    if lr==3
-        minLoc = 'longitudinal';
+    elseif nargout == 2    
+        [a b c] = ind2sub(size(potential3D),loc);
+        [~, lr] = max(abs([a b c] - [c1 c2 l]));
+        if lr==3
+            minLoc = 'longitudinal';
+        else
+            minLoc = 'transverse';
+        end
+        varargout = {minD - trueMin,minLoc};
     else
-        minLoc = 'transverse';
+        error('Too many output arguments');
     end
-    varargout = {minD - trueMin,minLoc};
-else
-    error('Too many output arguments');
-end
 end

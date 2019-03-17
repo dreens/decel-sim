@@ -67,10 +67,11 @@ trapPot(trapBW) = true;
 trapPot(potential3D > minD) = false;
 vol = sum(trapPot(:));
 sp = 25e-6;
-volume = vol/(sp^3);
+volume = vol*(sp^3);
 
 % And now phase space volume.
 % get a matrix with max velocity at each point in the trap.
+mOH = 17*1.67e-27;
 trapPSV = sqrt(abs(potential3D-minD)*2/mOH);
 % replace max velocity with 3-volume in velocity space of all allowed vel's
 trapPSV = (4/3)*pi*trapPSV.^3;
@@ -78,9 +79,9 @@ trapPSV(~trapPot) = 0;
 psVol = sum(trapPSV(:));
 psVolume = psVol/(sp^3);
 
-if nargout <= 1
-    varargout = {minD - trueMin};
-    elseif nargout == 2    
+    if nargout <= 1
+        varargout = {minD - trueMin};
+    elseif nargout > 1    
         [a b c] = ind2sub(size(potential3D),loc);
         [~, lr] = max(abs([a b c] - [c1 c2 l]));
         if lr==3
@@ -89,7 +90,14 @@ if nargout <= 1
             minLoc = 'transverse';
         end
         varargout = {minD - trueMin,minLoc};
-    else
-        error('Too many output arguments');
+        if nargout > 2
+            varargout{end+1} = volume;
+        end
+        if nargout ==4
+            varargout{end+1} = psVolume;
+        end
+        if nargout > 4
+            error('Too many output arguments');
+        end
     end
 end

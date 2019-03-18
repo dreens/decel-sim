@@ -2,7 +2,7 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [-35:5:85, 89];
+phis = [-35:5:85, 89, 90, 95];
 c = @(p) p + (p<=0)*180;
 
 if ~exist('modes','var') || ~isstruct(modes)
@@ -85,7 +85,24 @@ end
 %plot(phis,xsf(phis),'DisplayName','XSF')
 %legend('show')
 
-%%
+%% Plot Lots of Things, Edit as Needed
+figure; hold on
+allModes = fields(modes);
+for i=1:length(allModes)
+    modeName = allModes{i};
+    if length(modeName)>=6 && strcmp(modeName(1),'v')
+        thisM = modes.(modeName);
+        accs = [thisM([180 1:90]).acc]/1e3;
+        depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
+        plot(accs,depths,'DisplayName',allModes{i})
+    end
+end
+
+xlabel('Deceleration (km/s/s)')
+ylabel('Trap Depth (mK)')
+title('Effective Trap Depths')
+
+%% Plot the Non-Optimized, Well-Defined Modes
 figure; hold on
 allModes = fields(modes);
 for i=1:length(allModes)
@@ -102,7 +119,7 @@ xlabel('Deceleration (km/s/s)')
 ylabel('Trap Depth (mK)')
 title('Effective Trap Depths')
 
-%% Optimized envelope for XSF, VSF mods
+%% Optimized envelope for XSF mod
 % Let's just grab the peaks.
 %figure;
 allModes = fields(modes);
@@ -139,6 +156,44 @@ locs = [1.46 15.02 21.49 locs];
 peaks = [197.4 217.2 228.8 peaks];
 
 plot(locs,peaks,'DisplayName','XSF*')
+
+%% Optimized envelope for VSF mod
+% Let's just grab the peaks.
+%figure;
+allModes = fields(modes);
+locs = [];
+peaks = [];
+for i=1:length(allModes)
+    modeName = allModes{i};
+    if length(modeName)>=6 && strcmp(modeName(1:2),'vs')
+        thisM = modes.(modeName);
+        depths = [thisM.dep];
+        accs = [thisM.acc];
+        deptweak = accs*5e-7*1.38e-23;
+        [~, loc] = max(depths+deptweak);
+        peaks(end+1) = depths(loc);
+        locs(end+1) = accs(loc);
+    end
+end
+
+% above a certain cutoff they stop working well:
+locs = locs([2:10 12]);
+peaks = peaks([2:10 12]);
+
+% next we need to add the leading results onto the end:
+locs  = [locs  [modes.vsfe130([70:5:85 89]).acc]];
+peaks = [peaks [modes.vsfe130([70:5:85 89]).dep]];
+
+% change units
+locs = locs * 1e-3;
+peaks = peaks / 1.38e-23 / 1e-3;
+
+% close to zero phase angle, nothing seems to work perfectly. I'm just
+% going to hard code it, these peaks come by plotting full envelopes.
+%locs = [1.46 15.02 21.49 locs];
+%peaks = [197.4 217.2 228.8 peaks];
+
+plot(locs,peaks,'DisplayName','VSF*')
 
 %% Delete Phi2 Related Modes
 if false

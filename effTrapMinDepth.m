@@ -77,7 +77,7 @@ trapPSV = sqrt(abs(potential3D-minD)*2/mOH);
 trapPSV = (4/3)*pi*trapPSV.^3;
 trapPSV(~trapPot) = 0;
 psVol = sum(trapPSV(:));
-psVolume = psVol/(sp^3);
+psVolume = psVol*(sp^3);
 
     if nargout <= 1
         varargout = {minD - trueMin};

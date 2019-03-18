@@ -3,7 +3,7 @@
 % used to get effective traps for DongDong's advanced switching schemes or
 % for checking alternatives to VSF mode, etc.
 
-function vv = efftrap3Dgen(decels,phis,primes)
+function varargout = efftrap3Dgen(decels,phis,primes)
 
 assert(length(decels)+1==length(phis),'You need one phase for each charge configuration plus an extra.');
 assert(length(primes)==length(decels),'Specify a prime for each charge config');
@@ -96,9 +96,17 @@ slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
 vv = vv - zp.*slope;
 
 % We can also get the acceleration implied by that slope.
-accel = slope/mOH
+accel = slope/mOH;
 
 % Finally redefine zero energy.
 vv = vv - vv(mX,mX,mZ);
+
+if nargout == 1
+    varargout = {vv};
+elseif nargout == 2
+    varargout = {vv, accel};
+else
+    error('Too many output arguments expected')
+end
 
 end

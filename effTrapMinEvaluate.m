@@ -2,8 +2,8 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [-15:5:85, 89];
-check = @(p) p + (p<=0)*180;
+phis = [-35:5:85, 89];
+c = @(p) p + (p<=0)*180;
 
 if ~exist('modes','var') || ~isstruct(modes)
     modes = struct();
@@ -33,114 +33,42 @@ if ~isfield(modes,'xsf')
     modes.xsf.decels = {'ppmm_2mm','longdecel'};
     modes.xsf.phifunc = @(p) [p-180, -p, p];
 end
-if ~isfield(modes,'vsfe20')
-    modes.vsfe20 = struct();
-    modes.vsfe20.decels = {'ppgg','longdecel'};
-    modes.vsfe20.phifunc = @(p) [p-180, (p<45)*(p-20)+(p>45)*(p-160), p];
-end
-if ~isfield(modes,'xsfe20')
-    modes.xsfe20 = struct();
-    modes.xsfe20.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe20.phifunc = @(p) [p-180, (p<45)*(p-20)+(p>45)*(p-160), p];
-end
-if ~isfield(modes,'vsfe40')
-    modes.vsfe40 = struct();
-    modes.vsfe40.decels = {'ppgg','longdecel'};
-    modes.vsfe40.phifunc = @(p) [p-180, (p<45)*(p-40)+(p>45)*(p-140), p];
-end
-if ~isfield(modes,'xsfe40')
-    modes.xsfe40 = struct();
-    modes.xsfe40.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe40.phifunc = @(p) [p-180, (p<45)*(p-40)+(p>45)*(p-140), p];
-end
-if ~isfield(modes,'vsfe60')
-    modes.vsfe60 = struct();
-    modes.vsfe60.decels = {'ppgg','longdecel'};
-    modes.vsfe60.phifunc = @(p) [p-180, (p<45)*(p-60)+(p>45)*(p-120), p];
-end
-if ~isfield(modes,'xsfe60')
-    modes.xsfe60 = struct();
-    modes.xsfe60.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe60.phifunc = @(p) [p-180, (p<45)*(p-60)+(p>45)*(p-120), p];
-end
-if ~isfield(modes,'vsfe80')
-    modes.vsfe80 = struct();
-    modes.vsfe80.decels = {'ppgg','longdecel'};
-    modes.vsfe80.phifunc = @(p) [p-180, (p<45)*(p-80)+(p>45)*(p-100), p];
-end
-if ~isfield(modes,'xsfe80')
-    modes.xsfe80 = struct();
-    modes.xsfe80.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe80.phifunc = @(p) [p-180, (p<45)*(p-80)+(p>45)*(p-100), p];
-end
-if ~isfield(modes,'vsfe10')
-    modes.vsfe10 = struct();
-    modes.vsfe10.decels = {'ppgg','longdecel'};
-    modes.vsfe10.phifunc = @(p) [p-180, (p<45)*(p-10)+(p>45)*(p-170), p];
-end
-if ~isfield(modes,'xsfe10')
-    modes.xsfe10 = struct();
-    modes.xsfe10.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe10.phifunc = @(p) [p-180, (p<45)*(p-10)+(p>45)*(p-170), p];
-end
-if ~isfield(modes,'vsfe30')
-    modes.vsfe30 = struct();
-    modes.vsfe30.decels = {'ppgg','longdecel'};
-    modes.vsfe30.phifunc = @(p) [p-180, (p<45)*(p-30)+(p>45)*(p-150), p];
-end
-if ~isfield(modes,'xsfe30')
-    modes.xsfe30 = struct();
-    modes.xsfe30.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe30.phifunc = @(p) [p-180, (p<45)*(p-30)+(p>45)*(p-150), p];
-end
-if ~isfield(modes,'vsfe50')
-    modes.vsfe50 = struct();
-    modes.vsfe50.decels = {'ppgg','longdecel'};
-    modes.vsfe50.phifunc = @(p) [p-180, (p<45)*(p-50)+(p>45)*(p-130), p];
-end
-if ~isfield(modes,'xsfe50')
-    modes.xsfe50 = struct();
-    modes.xsfe50.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe50.phifunc = @(p) [p-180, (p<45)*(p-50)+(p>45)*(p-130), p];
-end
-if ~isfield(modes,'vsfe70')
-    modes.vsfe70 = struct();
-    modes.vsfe70.decels = {'ppgg','longdecel'};
-    modes.vsfe70.phifunc = @(p) [p-180, (p<45)*(p-70)+(p>45)*(p-110), p];
-end
-if ~isfield(modes,'xsfe70')
-    modes.xsfe70 = struct();
-    modes.xsfe70.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe70.phifunc = @(p) [p-180, (p<45)*(p-70)+(p>45)*(p-110), p];
-end
-if ~isfield(modes,'vsfe90')
-    modes.vsfe90 = struct();
-    modes.vsfe90.decels = {'ppgg','longdecel'};
-    modes.vsfe90.phifunc = @(p) [p-180, (p<45)*(p-90)+(p>45)*(p-90), p];
-end
-if ~isfield(modes,'xsfe90')
-    modes.xsfe90 = struct();
-    modes.xsfe90.decels = {'ppmm_2mm','longdecel'};
-    modes.xsfe90.phifunc = @(p) [p-180, (p<45)*(p-90)+(p>45)*(p-90), p];
-end
+%% Vary Phi2
+for p2=10:10:170
+    thisM = ['vsfe' num2str(p2)];
+    if ~isfield(modes,thisM)
+        modes.(thisM) = struct();
+        modes.(thisM).decels = {'ppgg','longdecel'};
+        modes.(thisM).phifunc = @(p) [p-180, p-p2, p];
+    end
+    thisM = ['xsfe' num2str(p2)];
+    if ~isfield(modes,thisM)
+        modes.(thisM) = struct();
+        modes.(thisM).decels = {'ppmm_2mm','longdecel'};
+        modes.(thisM).phifunc = @(p) [p-180, p-p2, p];
+    end
 
+end
 %% All of the needed potentials and min depths.
 allmodes = fields(modes);
 for i=1:length(allmodes)
     fprintf('Mode %s:\n',allmodes{i})
     thisM = modes.(allmodes{i});
+    if length(thisM) < 90
+        thisM(2:90) = thisM(1);
+    end
     if length(thisM) < 180
-        thisM(2:180) = thisM(1);
+        thisM(91:180) = thisM(6);
     end
     for p=phis
         fprintf(' Phi=%d\n',p)
-        if ~isfield(thisM(p),'pot') || isempty(thisM(p).pot)
-            [thisM(p).pot, thisM(p).acc] = ...
-                efftrap3Dgen(thisM(p).decels,thisM(p).phifunc(p),[1 1]);
+        if ~isfield(thisM(c(p)),'pot') || isempty(thisM(c(p)).pot)
+            [thisM(c(p)).pot, thisM(c(p)).acc] = ...
+                efftrap3Dgen(thisM(c(p)).decels,thisM(c(p)).phifunc(p),[1 1]);
         end
-        if ~isfield(thisM(p),'dep') || isempty(thisM(p).dep)
-            [thisM(p).dep, thisM(p).typ, thisM(p).vol, thisM(p).psv] = ...
-                effTrapMinDepth(thisM(p).pot);
+        if ~isfield(thisM(c(p)),'dep') || isempty(thisM(c(p)).dep)
+            [thisM(c(p)).dep, thisM(c(p)).typ, thisM(c(p)).vol, thisM(c(p)).psv] = ...
+                effTrapMinDepth(thisM(c(p)).pot);
         end
     end
     modes.(allmodes{i}) = thisM;
@@ -162,9 +90,11 @@ figure; hold on
 allModes = fields(modes);
 for i=1:length(allModes)
     modeName = allModes{i};
-    if length(modeName)~=6 || ~strcmp(modeName(end-2),'e')
+    if length(modeName)<6
         thisM = modes.(modeName);
-        plot([thisM(:).acc]/1e3,[thisM(:).dep]/1.38e-23/1e-3,'DisplayName',allModes{i})
+        accs = [thisM([180 1:90]).acc]/1e3;
+        depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
+        plot(accs,depths,'DisplayName',allModes{i})
     end
 end
 
@@ -174,23 +104,55 @@ title('Effective Trap Depths')
 
 %% Optimized envelope for XSF, VSF mods
 % Let's just grab the peaks.
-figure;
+%figure;
 allModes = fields(modes);
 locs = [];
 peaks = [];
 for i=1:length(allModes)
     modeName = allModes{i};
-    if length(modeName)==6 && strcmp(modeName(1:2),'xs')
+    if length(modeName)>=6 && strcmp(modeName(1:2),'xs')
         thisM = modes.(modeName);
         depths = [thisM.dep];
         accs = [thisM.acc];
-        deptweak = (1:length(depths))*1.38e-23*1e-3;
+        deptweak = accs*1e-7*1.38e-23;
         [~, loc] = max(depths+deptweak);
         peaks(end+1) = depths(loc);
         locs(end+1) = accs(loc);
     end
 end
 
-figure;
-plot(locs,peaks,'.')
-    
+% above a certain cutoff they stop working well:
+locs = locs(2:11);
+peaks = peaks(2:11);
+
+% next we need to add the leading results onto the end:
+locs  = [locs  [modes.xsfe110([70:5:85 89]).acc]];
+peaks = [peaks [modes.xsfe110([70:5:85 89]).dep]];
+
+% change units
+locs = locs * 1e-3;
+peaks = peaks / 1.38e-23 / 1e-3;
+
+% close to zero phase angle, nothing seems to work perfectly. I'm just
+% going to hard code it, these peaks come by plotting full envelopes.
+locs = [1.46 15.02 21.49 locs];
+peaks = [197.4 217.2 228.8 peaks];
+
+plot(locs,peaks,'DisplayName','XSF*')
+
+%% Delete Phi2 Related Modes
+if false
+    allModes = fields(modes);
+
+    for i=1:length(allModes)
+        if length(allModes{i})==7
+            modes = rmfield(modes,allModes{i});
+        end
+    end
+
+end
+
+
+%% Add phase information
+
+

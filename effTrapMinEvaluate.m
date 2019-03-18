@@ -1,56 +1,92 @@
 %%
 % Make use of the Min Depth Finder to study some plots!
 %
+
 phis = [1, 5:5:85, 89];
 
+if ~exist('modes','var') || ~isstruct(modes)
+    modes = struct();
+end
+if ~isfield(modes,'s1')
+    modes.s1 = struct();
+    modes.s1.decels = {'longdecel','longdecel'};
+    modes.s1.phifunc = @(p) [p-180, p-90, p];
+end
+if ~isfield(modes,'s3')
+    modes.s3 = struct();
+    modes.s3.decels = {'longdecel','longdecel'};
+    modes.s3.phifunc = @(p) [p-540, p-90, p];
+end
+if ~isfield(modes,'sf')
+    modes.sf = struct();
+    modes.sf.decels = {'singlerod','longdecel'};
+    modes.sf.phifunc = @(p) [p-180, -p, p];
+end
+if ~isfield(modes,'vsf')
+    modes.sf = struct();
+    modes.sf.decels = {'ppgg','longdecel'};
+    modes.sf.phifunc = @(p) [p-180, -p, p];
+end
+if ~isfield(modes,'xsf')
+    modes.sf = struct();
+    modes.sf.decels = {'ppmm_2mm','longdecel'};
+    modes.sf.phifunc = @(p) [p-180, -p, p];
+end
+if ~isfield(modes,'vsfe')
+    modes.sf = struct();
+    modes.sf.decels = {'ppgg','longdecel'};
+    modes.sf.phifunc = @(p) [p-180, p-60, p];
+end
+if ~isfield(modes,'xsfe')
+    modes.sf = struct();
+    modes.sf.decels = {'ppmm_2mm','longdecel'};
+    modes.sf.phifunc = @(p) [p-180, p-60, p];
+end
+
 %% All of the needed potentials and min depths.
-if ~exist('outs1')
-    outs1 = {};
-    ous1a = [];
+allmodes = fields(modes);
+for i=1:length(allmodes)
+    modes.(allmodes(i))
     for phi=phis
-        [outs1{phi}, outs1a(phi)] = efftrap3Dgen({'longdecel','longdecel'},[phi-180,0,phi],[1 1]);
+        [outs1.pot{phi}, outs1.acc(phi)] = efftrap3Dgen({'longdecel','longdecel'},[phi-180,0,phi],[1 1]);
+        [outs1.dep outs1.typ outs1.vol outs1.psv] = effTrapMinDepth(outs1.pot);
     end
 end
 if ~exist('outs3')
-    outs3 = {};
-    outs3a = [];
+    outs3 = struct();
     for phi=phis
-        [outs3{phi},outs3a(phi)] = efftrap3Dgen({'longdecel','longdecel'},[phi-540,0,phi],[1 1]);
+        [outs3.pot,outs3.acc] = efftrap3Dgen({'longdecel','longdecel'},[phi-540,0,phi],[1 1]);
+        [outs3.dep outs3.typ outs3.vol outs3.psv] = effTrapMinDepth(outs1.pot);
     end
 end
 if ~exist('outpggg')
-    outpggg = {};
-    outpggga = [];
+    outpggg = struct();
     for phi=phis
-        [outpggg{phi},outpggga(phi)] = efftrap3Dgen({'singlerod','longdecel'},[phi-180,-phi,phi],[1 1]);
+        [outpggg.pot,outpggg.acc] = efftrap3Dgen({'singlerod','longdecel'},[phi-180,-phi,phi],[1 1]);
     end
 end
 if ~exist('outppgg')
-    outppgg = {};
-    outppgga = [];
+    outppgg = struct();
     for phi=phis
-        [outppgg{phi}, outppgga(phi)] = efftrap3Dgen({'ppgg','longdecel'},[phi-180,-phi,phi],[1 1]);
+        [outppgg.pot, outppgg.acc] = efftrap3Dgen({'ppgg','longdecel'},[phi-180,-phi,phi],[1 1]);
     end
 end
 if ~exist('outppmm')
-    outppmm = {};
-    outppmma = [];
+    outppmm = struct();
     for phi=phis
-        [outppmm{phi}, outppmma(phi)] = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,-phi,phi],[1 1]);
+        [outppmm.pot, outppmm.acc] = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,-phi,phi],[1 1]);
     end
 end
 if ~exist('outppggs')
-    outppggs = {};
-    outppggsa = [];
+    outppggs = struct();
     for phi=phis
-        [outppggs{phi}, outppggsa(phi)] = efftrap3Dgen({'ppgg','longdecel'},[phi-180,phi-60,phi],[1 1]);
+        [outppggs.pot, outppggs.acc] = efftrap3Dgen({'ppgg','longdecel'},[phi-180,phi-60,phi],[1 1]);
     end
 end
 if ~exist('outppmms')
-    outppmms = {};
-    outppmmsa = [];
+    outppmms = struct();
     for phi=phis
-        [outppmms{phi}, outppmmsa(phi)] = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,phi-60,phi],[1 1]);
+        [outppmms.pot, outppmms.acc] = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,phi-60,phi],[1 1]);
     end
 end
 

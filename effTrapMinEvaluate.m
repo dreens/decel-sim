@@ -1,18 +1,61 @@
 %%
 % Make use of the Min Depth Finder to study some plots!
 %
-phis = 1:89;%[70:5:85 89];
-%outs3 = {};
-if false%~exist('out')
-    out = {};
-    outpggg = {};
-    outppgg = {};
-    outppmm = {};
-    s1 = [];
-    sf = [];
-    vsf = [];
-    xsf = [];
+phis = [1, 5:5:85, 89];
+
+%% All of the needed potentials and min depths.
+if ~exist('outs1')
+    outs1 = {};
+    ous1a = [];
+    for phi=phis
+        [outs1{phi}, outs1a(phi)] = efftrap3Dgen({'longdecel','longdecel'},[phi-180,0,phi],[1 1]);
+    end
 end
+if ~exist('outs3')
+    outs3 = {};
+    outs3a = [];
+    for phi=phis
+        [outs3{phi},outs3a(phi)] = efftrap3Dgen({'longdecel','longdecel'},[phi-540,0,phi],[1 1]);
+    end
+end
+if ~exist('outpggg')
+    outpggg = {};
+    outpggga = [];
+    for phi=phis
+        [outpggg{phi},outpggga(phi)] = efftrap3Dgen({'singlerod','longdecel'},[phi-180,-phi,phi],[1 1]);
+    end
+end
+if ~exist('outppgg')
+    outppgg = {};
+    outppgga = [];
+    for phi=phis
+        [outppgg{phi}, outppgga(phi)] = efftrap3Dgen({'ppgg','longdecel'},[phi-180,-phi,phi],[1 1]);
+    end
+end
+if ~exist('outppmm')
+    outppmm = {};
+    outppmma = [];
+    for phi=phis
+        [outppmm{phi}, outppmma(phi)] = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,-phi,phi],[1 1]);
+    end
+end
+if ~exist('outppggs')
+    outppggs = {};
+    outppggsa = [];
+    for phi=phis
+        [outppggs{phi}, outppggsa(phi)] = efftrap3Dgen({'ppgg','longdecel'},[phi-180,phi-60,phi],[1 1]);
+    end
+end
+if ~exist('outppmms')
+    outppmms = {};
+    outppmmsa = [];
+    for phi=phis
+        [outppmms{phi}, outppmmsa(phi)] = efftrap3Dgen({'ppmm_2mm','longdecel'},[phi-180,phi-60,phi],[1 1]);
+    end
+end
+
+
+
 for phi=phis
     phi
     midphi = phi-120;

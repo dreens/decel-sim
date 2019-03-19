@@ -2,7 +2,7 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [-35:5:85, 89, 90, 95];
+phis = [0:5:90];
 c = @(p) p + (p<=0)*180;
 
 if ~exist('modes','var') || ~isstruct(modes)
@@ -33,6 +33,27 @@ if ~isfield(modes,'xsf')
     modes.xsf.decels = {'ppmm_2mm','longdecel'};
     modes.xsf.phifunc = @(p) [p-180, -p, p];
 end
+if ~isfield(modes,'vsf0')
+    modes.vsf0 = struct();
+    modes.vsf0.decels = {'ppgg','None'};
+    modes.vsf0.phifunc = @(p) [p-180, p-90, p];
+end
+if ~isfield(modes,'xsf0')
+    modes.xsf0 = struct();
+    modes.xsf0.decels = {'ppmm_2mm','None'};
+    modes.xsf0.phifunc = @(p) [p-180, p-90, p];
+end
+if ~isfield(modes,'vsf01')
+    modes.vsf01 = struct();
+    modes.vsf01.decels = {'ppgg','None'};
+    modes.vsf01.phifunc = @(p) [p-190, p-80, p-10];
+end
+if ~isfield(modes,'xsf01')
+    modes.xsf01 = struct();
+    modes.xsf01.decels = {'ppmm_2mm','None'};
+    modes.xsf01.phifunc = @(p) [p-190, p-80, p-10];
+end
+
 %% Vary Phi2
 for p2=10:10:170
     thisM = ['vsfe' num2str(p2)];
@@ -92,8 +113,8 @@ for i=1:length(allModes)
     modeName = allModes{i};
     if length(modeName)>=6 && strcmp(modeName(1),'v')
         thisM = modes.(modeName);
-        accs = [thisM([180 1:90]).acc]/1e3;
-        depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
+        accs = [thisM([100:180 1:95]).acc]/1e3;
+        depths = [thisM([100:180 1:95]).dep]/1.38e-23/1e-3;
         plot(accs,depths,'DisplayName',allModes{i})
     end
 end
@@ -111,13 +132,14 @@ for i=1:length(allModes)
         thisM = modes.(modeName);
         accs = [thisM([180 1:90]).acc]/1e3;
         depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
-        plot(accs,depths,'DisplayName',allModes{i})
+        plot(accs,depths,'DisplayName',allModes{i},'LineWidth',2)
     end
 end
 
 xlabel('Deceleration (km/s/s)')
 ylabel('Trap Depth (mK)')
 title('Effective Trap Depths')
+xlim([0 400])
 
 %% Optimized envelope for XSF mod
 % Let's just grab the peaks.
@@ -155,7 +177,7 @@ peaks = peaks / 1.38e-23 / 1e-3;
 locs = [1.46 15.02 21.49 locs];
 peaks = [197.4 217.2 228.8 peaks];
 
-plot(locs,peaks,'DisplayName','XSF*')
+plot(locs,peaks,'DisplayName','XSF*','LineWidth',2)
 
 %% Optimized envelope for VSF mod
 % Let's just grab the peaks.
@@ -190,10 +212,10 @@ peaks = peaks / 1.38e-23 / 1e-3;
 
 % close to zero phase angle, nothing seems to work perfectly. I'm just
 % going to hard code it, these peaks come by plotting full envelopes.
-%locs = [1.46 15.02 21.49 locs];
-%peaks = [197.4 217.2 228.8 peaks];
+locs = [.18 13.08 21.57 locs];
+peaks = [32.4 74.2 120.3 peaks];
 
-plot(locs,peaks,'DisplayName','VSF*')
+plot(locs,peaks,'DisplayName','VSF*','LineWidth',2)
 
 %% Delete Phi2 Related Modes
 if false

@@ -15,10 +15,15 @@ i = 1;
 while length(l)>1
     [~, l] = findpeaks(-z,'MinPeakProminence',i);
     i = i + 1;
-    if length(l)==0
+    if isempty(l)
         [~, l] = findpeaks(-z,'MinPeakProminence',i-2);
         l = l(1);
     end
+end
+if isempty(l)
+    varargout = {0,'longitudinal',0,0};
+    varargout = varargout(1:max(nargout,1));
+    return
 end
 %figure(123)
 %hold on
@@ -79,25 +84,14 @@ trapPSV(~trapPot) = 0;
 psVol = sum(trapPSV(:));
 psVolume = psVol*(sp^3);
 
-    if nargout <= 1
-        varargout = {minD - trueMin};
-    elseif nargout > 1    
-        [a b c] = ind2sub(size(potential3D),loc);
-        [~, lr] = max(abs([a b c] - [c1 c2 l]));
-        if lr==3
-            minLoc = 'longitudinal';
-        else
-            minLoc = 'transverse';
-        end
-        varargout = {minD - trueMin,minLoc};
-        if nargout > 2
-            varargout{end+1} = volume;
-        end
-        if nargout ==4
-            varargout{end+1} = psVolume;
-        end
-        if nargout > 4
-            error('Too many output arguments');
-        end
-    end
+[a, b, c] = ind2sub(size(potential3D),loc);
+[~, lr] = max(abs([a b c] - [c1 c2 l]));
+if lr==3
+    minLoc = 'longitudinal';
+else
+    minLoc = 'transverse';
+end
+
+varargout = {minD-trueMin,minLoc,volume,psVolume};
+varargout = varargout(1:max(1,nargout));
 end

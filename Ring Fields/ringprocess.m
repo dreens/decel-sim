@@ -2,7 +2,7 @@
 %
 cd ..
 allpots = cell(1,5);
-for ii=0:4
+for ii=5:-1:0
 
 pot = importdata(['Ring Fields/ringdecel_efftrap' num2str(ii) '.dat'],' ',9);
 all = pot.data;
@@ -48,16 +48,29 @@ energy = @(e)  arrayfun(energysingle,e);
 vv = energy(ee);
 
 allpots{ii+1} = vv;
-
 end
-%% Look things over
-for ii=1:5
+%% Look things over, average
+for ii=1:6
     figure;
     surf(rr,zz,allpots{ii});
-    title(['Traveling Wave, \phi=' num2str(ii-1) '\pi/20'])
-    
+    title(['Traveling Wave, \phi=' num2str(ii-1) '\pi/24'])
     
 end
+
 
 
 %% Take the average
+meanpot = zeros(size(allpots{1}));
+
+for ii=1:6
+    meanpot = meanpot + allpots{ii};
+end
+meanpot = meanpot/6;
+    
+figure;
+surf(rr,zz,meanpot);
+title(['Traveling Wave Averaged'])
+
+    
+    
+    

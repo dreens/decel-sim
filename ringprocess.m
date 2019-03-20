@@ -1,6 +1,5 @@
 %% Ring Decelerator Field Processor
 %
-cd ..
 allpots = cell(1,5);
 for ii=5:-1:0
 
@@ -9,7 +8,7 @@ all = pot.data;
 
 r = all(:,1)*1e-3; %convert to meters.
 z = all(:,2)*1e-3;
-e = all(:,3);   %units of V/m
+e = all(:,3)*(5/8);   %units of V/m % added 5/8 since trav wave devices only go to rest at 10 kV peak-peak thus far.
 
 % find unique x,y,z coordinates
 rs = sort(uniquetol(r,1e-6,'DataScale',1));
@@ -73,4 +72,30 @@ title(['Traveling Wave Averaged'])
 
     
     
-    
+%% Consider different tilts
+accs = 0:200;
+deps = zeros(size(accs));
+pot3D = zeros(2*size(meanpot,1)-1, size(meanpot,2), 3);
+mOH = 2.82328e-26; % Accounts for Oxygen binding energy
+mid = size(meanpot,1);
+
+for a=accs
+    thisTiltPot = meanpot + zz * a * 1e3 * mOH;
+    thisTiltPot = thisTiltPot - thisTiltPot(1,31);
+    pot3D(mid:end,:,2) = thisTiltPot;
+    pot3D(mid:-1:1,:,2) = thisTiltPot;
+    pot3D(:,:,[1 3]) = max(thisTiltPot(:));
+    deps(a+1) = effTrapMinDepth(pot3D);
+end
+%% Plot the ring decel trap depth v decel
+figure;
+depsmK = deps / 1.38e-23 * 1e3;
+plot(accs,depsmK,'DisplayName','T-Wave','LineWidth',2)
+xlabel('Deceleration (km/s/s)','FontSize',13)
+ylabel('Worst Case Trap Depth (mK)','FontSize',13)
+title('Trap Depth v Deceleration, 10 kV (pp) T-Wave','FontSize',14)
+set(gca,'FontSize',13)
+
+
+
+

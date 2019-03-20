@@ -261,5 +261,32 @@ end
 % phase space density that more than overlaps the trap, let them evolve for
 % some typical time like 3 milliseconds, and then infer the trapped phase
 % space volume from the remaining number.
+%
+% Did this mostly in simEffTrap. Here we just loop through and plot.
+figure; hold on
+allModes = fields(modes);
+plotModes = {'s1','s3','sf'};
+for i=1:length(allModes)
+    modeName = allModes{i};
+    if any(strcmp(modeName,plotModes))
+        thisM = modes.(modeName);
+        accs = [thisM([180 phis(2:end)]).acc]/1e3;
+        psvs = [];
+        for p=phis
+            fprintf(' Phi=%d\n',p)
+            if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
+                [num, psv] = simEffTrap(thisM(c(p)).pot);
+                psvs = [psvs psv];
+            end
+        end
+ 
+        
+        plot(accs,psvs,'DisplayName',allModes{i},'LineWidth',2)
+    end
+end
 
+xlabel('Deceleration (km/s/s)')
+ylabel('Phase Space Volume (m^6/s^3)')
+title('Effective Trap Depths')
+xlim([0 400])
 

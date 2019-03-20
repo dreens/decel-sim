@@ -48,16 +48,15 @@ vv = energy(ee);
 
 allpots{ii+1} = vv;
 end
-%% Look things over, average
+%% Look things over
+if false
 for ii=1:6
     figure;
     surf(rr,zz,allpots{ii});
     title(['Traveling Wave, \phi=' num2str(ii-1) '\pi/24'])
     
 end
-
-
-
+end
 %% Take the average
 meanpot = zeros(size(allpots{1}));
 
@@ -66,14 +65,15 @@ for ii=1:6
 end
 meanpot = meanpot/6;
     
+if false
 figure;
 surf(rr,zz,meanpot);
 title(['Traveling Wave Averaged'])
-
+end
     
     
 %% Consider different tilts
-accs = 0:200;
+accs = 0:106;
 deps = zeros(size(accs));
 pot3D = zeros(2*size(meanpot,1)-1, size(meanpot,2), 3);
 mOH = 2.82328e-26; % Accounts for Oxygen binding energy
@@ -88,13 +88,13 @@ for a=accs
     deps(a+1) = effTrapMinDepth(pot3D);
 end
 %% Plot the ring decel trap depth v decel
-figure;
+%figure;
 depsmK = deps / 1.38e-23 * 1e3;
 plot(accs,depsmK,'DisplayName','T-Wave','LineWidth',2)
-xlabel('Deceleration (km/s/s)','FontSize',13)
-ylabel('Worst Case Trap Depth (mK)','FontSize',13)
-title('Trap Depth v Deceleration, 10 kV (pp) T-Wave','FontSize',14)
-set(gca,'FontSize',13)
+%xlabel('Deceleration (km/s/s)','FontSize',13)
+%ylabel('Worst Case Trap Depth (mK)','FontSize',13)
+%title('Trap Depth v Deceleration, 10 kV (pp) T-Wave','FontSize',14)
+%set(gca,'FontSize',13)
 
 
 

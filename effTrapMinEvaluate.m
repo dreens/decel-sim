@@ -48,6 +48,16 @@ if ~isfield(modes,'vsf01')
     modes.vsf01.decels = {'ppgg','None'};
     modes.vsf01.phifunc = @(p) [p-190, p-80, p-10];
 end
+if ~isfield(modes,'vsf02')
+    modes.vsf02 = struct();
+    modes.vsf02.decels = {'ppgg','None'};
+    modes.vsf02.phifunc = @(p) [p-200, p-70, p-20];
+end
+if ~isfield(modes,'vsf03')
+    modes.vsf03 = struct();
+    modes.vsf03.decels = {'ppgg','None'};
+    modes.vsf03.phifunc = @(p) [p-210, p-60, p-30];
+end
 if ~isfield(modes,'xsf01')
     modes.xsf01 = struct();
     modes.xsf01.decels = {'ppmm_2mm','None'};
@@ -107,6 +117,7 @@ end
 %legend('show')
 
 %% Plot Lots of Things, Edit as Needed
+if false
 figure; hold on
 allModes = fields(modes);
 for i=1:length(allModes)
@@ -122,13 +133,14 @@ end
 xlabel('Deceleration (km/s/s)')
 ylabel('Trap Depth (mK)')
 title('Effective Trap Depths')
-
+end
 %% Plot the Non-Optimized, Well-Defined Modes
 figure; hold on
 allModes = fields(modes);
+plotModes = {'s1','s3','sf'};
 for i=1:length(allModes)
     modeName = allModes{i};
-    if length(modeName)<6
+    if any(strcmp(modeName,plotModes))
         thisM = modes.(modeName);
         accs = [thisM([180 1:90]).acc]/1e3;
         depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
@@ -140,6 +152,47 @@ xlabel('Deceleration (km/s/s)')
 ylabel('Trap Depth (mK)')
 title('Effective Trap Depths')
 xlim([0 400])
+
+%% Optimized envelope for VSF mod
+% Let's just grab the peaks.
+%figure;
+allModes = fields(modes);
+locs = [];
+peaks = [];
+for i=1:length(allModes)
+    modeName = allModes{i};
+    if length(modeName)>=6 && strcmp(modeName(1:2),'vs')
+        thisM = modes.(modeName);
+        depths = [thisM.dep];
+        accs = [thisM.acc];
+        deptweak = accs*5e-7*1.38e-23;
+        [~, loc] = max(depths+deptweak);
+        peaks(end+1) = depths(loc);
+        locs(end+1) = accs(loc);
+    end
+end
+
+% above a certain cutoff they stop working well:
+locs = locs([2:10 12]);
+peaks = peaks([2:10 12]);
+
+% next we need to add the leading results onto the end:
+locs  = [locs  [modes.vsfe130([70:5:85 89]).acc]];
+peaks = [peaks [modes.vsfe130([70:5:85 89]).dep]];
+
+% change units
+locs = locs * 1e-3;
+peaks = peaks / 1.38e-23 / 1e-3;
+
+% close to zero phase angle, nothing seems to work perfectly. I'm just
+% going to hard code it, these peaks come by plotting full envelopes.
+% Actually, let's grab peaks from the VSF modification where no
+% conventional charge config is used (vsf0, vsf01, vsf02 above)
+locs = [0  21.57 locs];
+peaks = [101.7 120.3 peaks];
+
+plot(locs,peaks,'DisplayName','vsf*','LineWidth',2)
+
 
 %% Optimized envelope for XSF mod
 % Let's just grab the peaks.
@@ -177,45 +230,16 @@ peaks = peaks / 1.38e-23 / 1e-3;
 locs = [1.46 15.02 21.49 locs];
 peaks = [197.4 217.2 228.8 peaks];
 
-plot(locs,peaks,'DisplayName','XSF*','LineWidth',2)
+plot(locs,peaks,'DisplayName','xsf*','LineWidth',2)
 
-%% Optimized envelope for VSF mod
-% Let's just grab the peaks.
-%figure;
-allModes = fields(modes);
-locs = [];
-peaks = [];
-for i=1:length(allModes)
-    modeName = allModes{i};
-    if length(modeName)>=6 && strcmp(modeName(1:2),'vs')
-        thisM = modes.(modeName);
-        depths = [thisM.dep];
-        accs = [thisM.acc];
-        deptweak = accs*5e-7*1.38e-23;
-        [~, loc] = max(depths+deptweak);
-        peaks(end+1) = depths(loc);
-        locs(end+1) = accs(loc);
-    end
-end
-
-% above a certain cutoff they stop working well:
-locs = locs([2:10 12]);
-peaks = peaks([2:10 12]);
-
-% next we need to add the leading results onto the end:
-locs  = [locs  [modes.vsfe130([70:5:85 89]).acc]];
-peaks = [peaks [modes.vsfe130([70:5:85 89]).dep]];
-
-% change units
-locs = locs * 1e-3;
-peaks = peaks / 1.38e-23 / 1e-3;
-
-% close to zero phase angle, nothing seems to work perfectly. I'm just
-% going to hard code it, these peaks come by plotting full envelopes.
-locs = [.18 13.08 21.57 locs];
-peaks = [32.4 74.2 120.3 peaks];
-
-plot(locs,peaks,'DisplayName','VSF*','LineWidth',2)
+%% Add in T-Wave Decel
+ringprocess
+xlabel('Deceleration (km/s/s)','FontSize',13)
+ylabel('Worst Case Trap Depth (mK)','FontSize',13)
+title('Trap Depth v Deceleration','FontSize',14)
+set(gca,'FontSize',13)
+hl = legend('show');
+hl.FontSize = 13;
 
 %% Delete Phi2 Related Modes
 if false
@@ -230,6 +254,5 @@ if false
 end
 
 
-%% Add phase information
 
 

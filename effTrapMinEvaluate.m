@@ -253,6 +253,13 @@ if false
 
 end
 
-
+%% Actual Simulation?
+% Here we make an attempt to actually load up these traps and see what
+% happens!
+%
+% Plan is to load the traps with a randomly initialized but homogeneous
+% phase space density that more than overlaps the trap, let them evolve for
+% some typical time like 3 milliseconds, and then infer the trapped phase
+% space volume from the remaining number.
 
 

@@ -104,11 +104,13 @@ slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
 vv = vv - zp.*slope;
 
 % We can also get the acceleration implied by that slope.
-accel = slope/mOH
+accel = slope/mOH;
     
 if ~isnan(acc)
     vv = vv + zp.*slope;
-    vv = vv - zp.*acc*mOH
+    vv = vv - zp.*acc*mOH;
+    accel = acc;
+end
 
 % Finally redefine zero energy.
 vv = vv - vv(mX,mX,mZ);

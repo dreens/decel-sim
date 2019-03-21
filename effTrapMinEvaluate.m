@@ -2,8 +2,8 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [0:5:30];
-c = @(p) p + (p<=0)*180;
+phis = [0:5:90];
+c = @(p) p + (p<=0)*180 + (p>90)*90;
 
 if ~exist('modes','var') || ~isstruct(modes)
     modes = struct();
@@ -115,6 +115,9 @@ for i=1:length(allmodes)
     end
     if length(thisM) < 180
         thisM(91:180) = thisM(6);
+    end
+    if length(thisM) < 270
+        thisM(181:270) = thisM(6);
     end
     for p=phis
         fprintf(' Phi=%d\n',p)
@@ -311,7 +314,7 @@ end
 % space volume from the remaining number.
 %
 % Did this mostly in simEffTrap. Here we just loop through and plot.
-simphis = [0:5:85 89];
+simphis = [0:5:120];
 figure; hold on
 allModes = fields(modes);
 plotModes = {'s1','s3','sf'};
@@ -327,7 +330,10 @@ for i=1:length(allModes)
             if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
                 [num, psv] = simEffTrap(thisM(c(p)).pot,'num',1e3);
                 psvs = [psvs psv];
-            end
+            elseif p>90
+                if strcmp(modeName,'s3')
+                    a = ((p-90)/5)
+                pot = efftrap3Dgen(thisM(1).decels,thisM(1).phifunc(90),[1 1],a);
         end
  
         

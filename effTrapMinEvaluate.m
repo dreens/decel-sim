@@ -159,26 +159,36 @@ xlim([0 400])
 allModes = fields(modes);
 locs = [];
 peaks = [];
+bestModes = {};
+bestPhis = [];
 for i=1:length(allModes)
     modeName = allModes{i};
     if length(modeName)>=6 && strcmp(modeName(1:2),'vs')
         thisM = modes.(modeName);
+        phidef = [1:90 -89:0];
+        thesePhis = phidef(cellfun(@isempty,{thisM.dep}));
         depths = [thisM.dep];
         accs = [thisM.acc];
         deptweak = accs*5e-7*1.38e-23;
         [~, loc] = max(depths+deptweak);
         peaks(end+1) = depths(loc);
         locs(end+1) = accs(loc);
+        bestPhis(end+1) = thesePhis(loc);
+        bestModes{end+1} = modeName;
     end
 end
 
 % above a certain cutoff they stop working well:
 locs = locs([2:10 12]);
 peaks = peaks([2:10 12]);
+bestPhis = bestPhis([2:10 12]);
+bestModes = bestModes([2:10 12]);
 
 % next we need to add the leading results onto the end:
 locs  = [locs  [modes.vsfe130([70:5:85 89]).acc]];
 peaks = [peaks [modes.vsfe130([70:5:85 89]).dep]];
+bestPhis = [bestPhis 70:5:90];
+bestModes(end+1:end+5) = {'vsfe130'};
 
 % change units
 locs = locs * 1e-3;

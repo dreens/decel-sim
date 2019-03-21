@@ -2,7 +2,7 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [0:5:90];
+phis = [-20:5:100];
 c = @(p) p + (p<=0)*180;
 
 if ~exist('modes','var') || ~isstruct(modes)
@@ -117,15 +117,15 @@ end
 %legend('show')
 
 %% Plot Lots of Things, Edit as Needed
-if false
+if true
 figure; hold on
 allModes = fields(modes);
 for i=1:length(allModes)
     modeName = allModes{i};
     if length(modeName)>=6 && strcmp(modeName(1),'v')
         thisM = modes.(modeName);
-        accs = [thisM([100:180 1:95]).acc]/1e3;
-        depths = [thisM([100:180 1:95]).dep]/1.38e-23/1e-3;
+        accs = [thisM([105:180 1:100]).acc]/1e3;
+        depths = [thisM([105:180 1:100]).dep]/1.38e-23/1e-3;
         plot(accs,depths,'DisplayName',allModes{i})
     end
 end
@@ -166,7 +166,7 @@ for i=1:length(allModes)
     if length(modeName)>=6 && strcmp(modeName(1:2),'vs')
         thisM = modes.(modeName);
         phidef = [1:90 -89:0];
-        thesePhis = phidef(cellfun(@isempty,{thisM.dep}));
+        thesePhis = phidef(~cellfun(@isempty,{thisM.dep}));
         depths = [thisM.dep];
         accs = [thisM.acc];
         deptweak = accs*5e-7*1.38e-23;
@@ -200,6 +200,8 @@ peaks = peaks / 1.38e-23 / 1e-3;
 % conventional charge config is used (vsf0, vsf01, vsf02 above)
 locs = [0  21.57 locs];
 peaks = [101.7 120.3 peaks];
+bestPhis = [-5 peaks]
+bestModes = { 'vsfe20' bestModes}
 
 plot(locs,peaks,'DisplayName','vsf*','LineWidth',2)
 

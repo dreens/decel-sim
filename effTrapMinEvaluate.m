@@ -2,7 +2,7 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [-20:5:100];
+phis = [0:5:30];
 c = @(p) p + (p<=0)*180;
 
 if ~exist('modes','var') || ~isstruct(modes)
@@ -63,6 +63,31 @@ if ~isfield(modes,'xsf01')
     modes.xsf01.decels = {'ppmm_2mm','None'};
     modes.xsf01.phifunc = @(p) [p-190, p-80, p-10];
 end
+if ~isfield(modes,'xsfxb')
+    modes.xsfxb = struct();
+    modes.xsfxb.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb.phifunc = @(p) [p-180, p-135, p-45, p];
+end
+if ~isfield(modes,'xsfxb10')
+    modes.xsfxb10 = struct();
+    modes.xsfxb10.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb10.phifunc = @(p) [p-180, p-145, p-35, p];
+end
+if ~isfield(modes,'xsfxb20')
+    modes.xsfxb20 = struct();
+    modes.xsfxb20.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb20.phifunc = @(p) [p-180, p-155, p-25, p];
+end
+if ~isfield(modes,'xsfxb30')
+    modes.xsfxb30 = struct();
+    modes.xsfxb30.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb30.phifunc = @(p) [p-180, p-165, p-15, p];
+end
+if ~isfield(modes,'xsfxbm10')
+    modes.xsfxbm10 = struct();
+    modes.xsfxbm10.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxbm10.phifunc = @(p) [p-180, p-125, p-55, p];
+end
 
 %% Vary Phi2
 for p2=10:10:170
@@ -94,8 +119,10 @@ for i=1:length(allmodes)
     for p=phis
         fprintf(' Phi=%d\n',p)
         if ~isfield(thisM(c(p)),'pot') || isempty(thisM(c(p)).pot)
+            phisies = thisM(c(p)).phifunc(p);
+            onesies = phisies(2:end)*0+1;
             [thisM(c(p)).pot, thisM(c(p)).acc] = ...
-                efftrap3Dgen(thisM(c(p)).decels,thisM(c(p)).phifunc(p),[1 1]);
+                efftrap3Dgen(thisM(c(p)).decels,phisies,onesies);
         end
         if ~isfield(thisM(c(p)),'dep') || isempty(thisM(c(p)).dep)
             [thisM(c(p)).dep, thisM(c(p)).typ, thisM(c(p)).vol, thisM(c(p)).psv] = ...
@@ -236,8 +263,8 @@ bestModesXSF(end+1:end+5) = {'xsfe110'};
 % going to hard code it, these peaks come by plotting full envelopes.
 % Actually, let's grab peaks from the VSF modification where no
 % conventional charge config is used (vsf0, vsf01, vsf02 above)
-bestPhisXSF = [0 0 0 bestPhisXSF];
-bestModesXSF = {'xsfe50' 'xsfe40' 'xsfe30' bestModesXSF{:}};
+bestPhisXSF = [0 bestPhisXSF];
+bestModesXSF = {'xsfxb30' bestModesXSF{:}};
 
 bestAccs = bestPhisXSF;
 bestPeaks = bestPhisXSF;
@@ -284,19 +311,21 @@ end
 % space volume from the remaining number.
 %
 % Did this mostly in simEffTrap. Here we just loop through and plot.
+simphis = [0:5:85 89];
 figure; hold on
 allModes = fields(modes);
 plotModes = {'s1','s3','sf'};
 for i=1:length(allModes)
     modeName = allModes{i};
     if any(strcmp(modeName,plotModes))
+        fprintf(['Mode: ' modeName '\n'])
         thisM = modes.(modeName);
-        accs = [thisM([180 c(phis(2:end))]).acc]/1e3;
+        accs = [thisM([180 c(simphis(2:end))]).acc]/1e3;
         psvs = [];
-        for p=phis
+        for p=simphis
             fprintf(' Phi=%d\n',p)
             if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
-                [num, psv] = simEffTrap(thisM(c(p)).pot,'num',1e2);
+                [num, psv] = simEffTrap(thisM(c(p)).pot,'num',1e3);
                 psvs = [psvs psv];
             end
         end
@@ -312,27 +341,33 @@ title('Effective Trap Depths')
 xlim([0 400])
 
 
-%% Next add in the VSF and XSF stuff.
+% Next add in the VSF and XSF stuff.
+%figure;
+%hold on
 accs = bestPhisVSF;
 psvs = bestPhisVSF;
 for i=1:length(bestPhisVSF)
+    fprintf(['Mode: ' bestModesVSF{i} ' Phi: ' num2str(bestPhisVSF(i)) '\n'])
     thisM = modes.(bestModesVSF{i});
     thisM = thisM(c(bestPhisVSF(i)));
     accs(i) = thisM.acc;
-    [num, psv] = simEffTrap(thisM.pot,'num',1e2);
+    [num, psv] = simEffTrap(thisM.pot,'num',1e3);
     psvs(i) = psv;
 end
+accs = accs * 1e-3;
 plot(accs,psvs,'DisplayName','vsf*','LineWidth',2)
 
 accs = bestPhisXSF;
 psvs = bestPhisXSF;
 for i=1:length(bestPhisXSF)
+    fprintf(['Mode: ' bestModesXSF{i} ' Phi: ' num2str(bestPhisXSF(i)) '\n'])
     thisM = modes.(bestModesXSF{i});
     thisM = thisM(c(bestPhisXSF(i)));
     accs(i) = thisM.acc;
-    [num, psv] = simEffTrap(thisM.pot,'num',1e2);
+    [num, psv] = simEffTrap(thisM.pot,'num',1e4);
     psvs(i) = psv;
 end
+accs = accs*1e-3;
 plot(accs,psvs,'DisplayName','xsf*','LineWidth',2)
     
     

@@ -310,11 +310,11 @@ end
 % space volume from the remaining number.
 %
 % Did this mostly in simEffTrap. Here we just loop through and plot.
-simphis = [0:10:140];
-NN = 1e3;
+simphis = 0:5:100;
+NN = 1e4;
 figure; hold on
 allModes = fields(modes);
-plotModes = {'s1','s3'};%,'sf'};
+plotModes = {'s1','s3','sf'};
 for mode=plotModes
     modeName = mode{:};
     fprintf(['Mode: ' modeName '\n'])
@@ -322,7 +322,7 @@ for mode=plotModes
     psvs = [];
     accs = [];
     for p=simphis
-        fprintf(' Phi=%d\n',p)
+        fprintf(' Phi=%d:',p)
         if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
             [num, psv] = simEffTrap(thisM(c(p)).pot,'num',NN);
             psvs = [psvs psv];
@@ -339,18 +339,22 @@ for mode=plotModes
             psvs = [psvs psv];
             accs = [accs a];
         end
+        fprintf(' %d, %1.1f\n',num,psv)
     end
     accs = accs / 1e3; % back to km/s/s
     plot(accs,psvs,'DisplayName',allModes{i},'LineWidth',2)
 end
 
-xlabel('Deceleration (km/s/s)')
-ylabel('Phase Space Volume (m^6/s^3)')
-title('Effective Trap Depths')
+xlabel('Deceleration (km/s/s)','FontSize',13)
+ylabel('Phase Space Volume (m^6/s^3)','FontSize',13)
+title('Monte-Carlo in Effective Trap','FontSize',14)
 xlim([0 400])
+set(gca,'FontSize',13)
+hl = legend('show');
+hl.FontSize = 13;
 
 
-%% Next add in the VSF and XSF stuff.
+% Next add in the VSF and XSF stuff.
 %figure;
 %hold on
 accs = bestPhisVSF;
@@ -363,6 +367,17 @@ for i=1:length(bestPhisVSF)
     [num, psv] = simEffTrap(thisM.pot,'num',NN);
     psvs(i) = psv;
 end
+
+% Add in some higher phase angles
+for a=[300e3 310e3]
+    mode = modes.(bestModesVSF{end});
+    mode = mode(90);
+    pot = efftrap3Dgen(mode.decels,mode.phifunc(90),[1 1],a);
+    [num, psv] = simEffTrap(pot,'num',NN);
+    psvs = [psvs psv];
+    accs = [accs a];
+end
+            
 accs = accs * 1e-3;
 plot(accs,psvs,'DisplayName','vsf*','LineWidth',2)
 
@@ -375,12 +390,20 @@ for i=1:length(bestPhisXSF)
     accs(i) = thisM.acc;
     [num, psv] = simEffTrap(thisM.pot,'num',NN);
     psvs(i) = psv;
+end    
+    
+% Add in some higher phase angles
+for a=[370e3 380e3]
+    mode = modes.(bestModesXSF{end});
+    mode = mode(90);
+    pot = efftrap3Dgen(mode.decels,mode.phifunc(90),[1 1],a);
+    [num, psv] = simEffTrap(pot,'num',NN);
+    psvs = [psvs psv];
+    accs = [accs a];
 end
+
 accs = accs*1e-3;
 plot(accs,psvs,'DisplayName','xsf*','LineWidth',2)
-    
-    
-    
-    
+
     
     

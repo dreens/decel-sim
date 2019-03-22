@@ -9,7 +9,7 @@ function varargout = simEffTrap(varargin)
 
     settings = struct();
     settings.maxVel = 10;
-    settings.time = 10e-3;
+    settings.time = 3e-3;
     settings.step = 1e-6;
     settings.num = 1e3;
     settings.zwidth = 3; %half width of the initialized volume in z direction
@@ -48,7 +48,12 @@ function varargout = simEffTrap(varargin)
     dvdx = convn(pot,xd,'same')/sp;
     dvdy = convn(pot,yd,'same')/sp;
     dvdz = convn(pot,zd,'same')/sp;
-
+    
+    % convolutions behave funny on the borders, zero these.
+    dvdx([1 end],:,:) = 0;
+    dvdy(:,[1 end],:) = 0;
+    dvdz(:,:,[1 end]) = 0;
+    
     tv = -.975:.025:.975; tv = tv * 1e-3;
     lg = -3e-3:sp:3e-3;
     [xx,yy,zz] = ndgrid(tv,tv,lg);
@@ -58,7 +63,7 @@ function varargout = simEffTrap(varargin)
     
     for time=0:settings.step:settings.time
         pos = pos + vel*settings.step/2;
-        vel = vel - [ax(pos(:,1),pos(:,2),pos(:,3)), ay(pos(:,1),pos(:,2),pos(:,3)), az(pos(:,1),pos(:,2),pos(:,3))]*settings.step;
+        vel = vel + [ax(pos(:,1),pos(:,2),pos(:,3)), ay(pos(:,1),pos(:,2),pos(:,3)), az(pos(:,1),pos(:,2),pos(:,3))]*settings.step;
         pos = pos + vel*settings.step/2;
         if ~mod(time/settings.step,100) || time == settings.time
             lost = any(isnan(pos),2);

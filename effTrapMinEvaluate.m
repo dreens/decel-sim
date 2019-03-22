@@ -63,31 +63,31 @@ if ~isfield(modes,'xsf01')
     modes.xsf01.decels = {'ppmm_2mm','None'};
     modes.xsf01.phifunc = @(p) [p-190, p-80, p-10];
 end
-if ~isfield(modes,'xsfxb')
-    modes.xsfxb = struct();
-    modes.xsfxb.decels = {'longdecel','ppmm_2mm','longdecel'};
-    modes.xsfxb.phifunc = @(p) [p-180, p-135, p-45, p];
-end
-if ~isfield(modes,'xsfxb10')
-    modes.xsfxb10 = struct();
-    modes.xsfxb10.decels = {'longdecel','ppmm_2mm','longdecel'};
-    modes.xsfxb10.phifunc = @(p) [p-180, p-145, p-35, p];
-end
-if ~isfield(modes,'xsfxb20')
-    modes.xsfxb20 = struct();
-    modes.xsfxb20.decels = {'longdecel','ppmm_2mm','longdecel'};
-    modes.xsfxb20.phifunc = @(p) [p-180, p-155, p-25, p];
-end
+% if ~isfield(modes,'xsfxb')
+%     modes.xsfxb = struct();
+%     modes.xsfxb.decels = {'longdecel','ppmm_2mm','longdecel'};
+%     modes.xsfxb.phifunc = @(p) [p-180, p-135, p-45, p];
+% end
+% if ~isfield(modes,'xsfxb10')
+%     modes.xsfxb10 = struct();
+%     modes.xsfxb10.decels = {'longdecel','ppmm_2mm','longdecel'};
+%     modes.xsfxb10.phifunc = @(p) [p-180, p-145, p-35, p];
+% end
+% if ~isfield(modes,'xsfxb20')
+%     modes.xsfxb20 = struct();
+%     modes.xsfxb20.decels = {'longdecel','ppmm_2mm','longdecel'};
+%     modes.xsfxb20.phifunc = @(p) [p-180, p-155, p-25, p];
+% end
 if ~isfield(modes,'xsfxb30')
     modes.xsfxb30 = struct();
     modes.xsfxb30.decels = {'longdecel','ppmm_2mm','longdecel'};
     modes.xsfxb30.phifunc = @(p) [p-180, p-165, p-15, p];
 end
-if ~isfield(modes,'xsfxbm10')
-    modes.xsfxbm10 = struct();
-    modes.xsfxbm10.decels = {'longdecel','ppmm_2mm','longdecel'};
-    modes.xsfxbm10.phifunc = @(p) [p-180, p-125, p-55, p];
-end
+% if ~isfield(modes,'xsfxbm10')
+%     modes.xsfxbm10 = struct();
+%     modes.xsfxbm10.decels = {'longdecel','ppmm_2mm','longdecel'};
+%     modes.xsfxbm10.phifunc = @(p) [p-180, p-125, p-55, p];
+% end
 
 %% Vary Phi2
 for p2=10:10:170
@@ -205,8 +205,8 @@ for i=1:length(allModes)
 end
 
 % above a certain cutoff they stop working well:
-bestPhisVSF = bestPhisVSF([2:10 12]);
-bestModesVSF = bestModesVSF([2:10 12]);
+bestPhisVSF = bestPhisVSF([5:13 15]);
+bestModesVSF = bestModesVSF([5:13 15]);
 
 % next we need to add the leading results onto the end:
 bestPhisVSF = [bestPhisVSF 70:5:90];
@@ -255,8 +255,8 @@ for i=1:length(allModes)
 end
 
 % above a certain cutoff they stop working well:
-bestPhisXSF = bestPhisXSF([2:11]);
-bestModesXSF = bestModesXSF([2:11]);
+bestPhisXSF = bestPhisXSF([3:12]);
+bestModesXSF = bestModesXSF([3:12]);
 
 % next we need to add the leading results onto the end:
 bestPhisXSF = [bestPhisXSF 70:5:90];
@@ -315,6 +315,7 @@ end
 %
 % Did this mostly in simEffTrap. Here we just loop through and plot.
 simphis = [0:5:120];
+NN = 1e3;
 figure; hold on
 allModes = fields(modes);
 plotModes = {'s1','s3','sf'};
@@ -328,12 +329,18 @@ for i=1:length(allModes)
         for p=simphis
             fprintf(' Phi=%d\n',p)
             if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
-                [num, psv] = simEffTrap(thisM(c(p)).pot,'num',1e3);
+                [num, psv] = simEffTrap(thisM(c(p)).pot,'num',NN);
                 psvs = [psvs psv];
             elseif p>90
                 if strcmp(modeName,'s3')
-                    a = ((p-90)/5)
+                    a = 2*((p-90)/5) + 86;
+                else
+                    a = 4*((p-90)/5) + 259;
+                end
                 pot = efftrap3Dgen(thisM(1).decels,thisM(1).phifunc(90),[1 1],a);
+                [num, psv] = simEffTrap(pot,'num',NN);
+                psvs = [psvs psv];
+            end
         end
  
         
@@ -357,7 +364,7 @@ for i=1:length(bestPhisVSF)
     thisM = modes.(bestModesVSF{i});
     thisM = thisM(c(bestPhisVSF(i)));
     accs(i) = thisM.acc;
-    [num, psv] = simEffTrap(thisM.pot,'num',1e3);
+    [num, psv] = simEffTrap(thisM.pot,'num',NN);
     psvs(i) = psv;
 end
 accs = accs * 1e-3;
@@ -370,7 +377,7 @@ for i=1:length(bestPhisXSF)
     thisM = modes.(bestModesXSF{i});
     thisM = thisM(c(bestPhisXSF(i)));
     accs(i) = thisM.acc;
-    [num, psv] = simEffTrap(thisM.pot,'num',1e4);
+    [num, psv] = simEffTrap(thisM.pot,'num',NN);
     psvs(i) = psv;
 end
 accs = accs*1e-3;

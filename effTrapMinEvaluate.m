@@ -342,7 +342,7 @@ for mode=plotModes
         fprintf(' %d, %1.1f\n',num,psv)
     end
     accs = accs / 1e3; % back to km/s/s
-    plot(accs,psvs,'DisplayName',allModes{i},'LineWidth',2)
+    plot(accs,psvs,'DisplayName',plotModes{i},'LineWidth',2)
 end
 
 xlabel('Deceleration (km/s/s)','FontSize',13)
@@ -393,7 +393,7 @@ for i=1:length(bestPhisXSF)
 end    
     
 % Add in some higher phase angles
-for a=[370e3 380e3]
+for a=[370e3]
     mode = modes.(bestModesXSF{end});
     mode = mode(90);
     pot = efftrap3Dgen(mode.decels,mode.phifunc(90),[1 1],a);
@@ -406,4 +406,4 @@ accs = accs*1e-3;
 plot(accs,psvs,'DisplayName','xsf*','LineWidth',2)
 
     
-    
+%% Now figure out how to get Traveling Wave in here.    

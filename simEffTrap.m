@@ -74,7 +74,7 @@ function varargout = simEffTrap(varargin)
     
     num = size(pos,1);
     temp = mean(.5*mOH*sum(vel.^2,2))/1.38e-23;
-    initPSV = (2*settings.maxVel)^3 * (2e-3 * settings.zwidth)^3;
+    initPSV = (2*settings.maxVel)^3 * (2e-3)^3  * settings.zwidth;
     psv = num/settings.num * initPSV;
     varargout = {num,psv,temp};
     varargout = varargout(1:max(nargout,1));

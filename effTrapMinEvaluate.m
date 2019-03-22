@@ -165,21 +165,19 @@ ylabel('Trap Depth (mK)')
 title('Effective Trap Depths')
 end
 %% Plot the Non-Optimized, Well-Defined Modes
-figure; hold on
+figure; subplot(2,1,1); hold on
 allModes = fields(modes);
 plotModes = {'s1','s3','sf'};
-for i=1:length(allModes)
-    modeName = allModes{i};
-    if any(strcmp(modeName,plotModes))
-        thisM = modes.(modeName);
-        accs = [thisM([180 1:90]).acc]/1e3;
-        depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
-        if strcmp(modeName,'s3')
-            accs(4) = [];
-            depths(4) = [];
-        end
-        plot(accs,depths,'DisplayName',allModes{i},'LineWidth',2)
+for i=1:length(plotModes)
+    modeName = plotModes{i};
+    thisM = modes.(modeName);
+    accs = [thisM([180 1:90]).acc]/1e3;
+    depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
+    if strcmp(modeName,'s3')
+        accs(4) = [];
+        depths(4) = [];
     end
+    plot(accs,depths,'DisplayName',upper(modeName),'LineWidth',2)
 end
 
 xlabel('Deceleration (km/s/s)')
@@ -231,7 +229,7 @@ end
 bestAccs = bestAccs * 1e-3;
 bestPeaks = bestPeaks / 1.38e-23 / 1e-3;
 
-plot(bestAccs,bestPeaks,'DisplayName','vsf*','LineWidth',2)
+plot(bestAccs,bestPeaks,'DisplayName','VSF*','LineWidth',2)
 
 %% Optimized envelope for XSF mod
 % Let's just grab the peaks.
@@ -277,7 +275,7 @@ end
 bestAccs = bestAccs * 1e-3;
 bestPeaks = bestPeaks / 1.38e-23 / 1e-3;
 
-plot(bestAccs,bestPeaks,'DisplayName','xsf*','LineWidth',2)
+plot(bestAccs,bestPeaks,'DisplayName','XSF*','LineWidth',2)
 
 %% Add in T-Wave Decel
 ringprocess
@@ -312,7 +310,7 @@ end
 % Did this mostly in simEffTrap. Here we just loop through and plot.
 simphis = 0:5:100;
 NN = 1e4;
-figure; hold on
+subplot(2,1,2); hold on
 allModes = fields(modes);
 plotModes = {'s1','s3','sf'};
 for mode=plotModes
@@ -342,7 +340,7 @@ for mode=plotModes
         fprintf(' %d, %1.1f\n',num,psv)
     end
     accs = accs / 1e3; % back to km/s/s
-    plot(accs,psvs,'DisplayName',plotModes{i},'LineWidth',2)
+    plot(accs,psvs,'DisplayName',upper(modeName),'LineWidth',2)
 end
 
 xlabel('Deceleration (km/s/s)','FontSize',13)
@@ -354,17 +352,18 @@ hl = legend('show');
 hl.FontSize = 13;
 
 
-% Next add in the VSF and XSF stuff.
+%% Next add in the VSF
 %figure;
 %hold on
 accs = bestPhisVSF;
 psvs = bestPhisVSF;
 for i=1:length(bestPhisVSF)
-    fprintf(['Mode: ' bestModesVSF{i} ' Phi: ' num2str(bestPhisVSF(i)) '\n'])
+    fprintf(['Mode: ' bestModesVSF{i} ' Phi: ' num2str(bestPhisVSF(i))])
     thisM = modes.(bestModesVSF{i});
     thisM = thisM(c(bestPhisVSF(i)));
     accs(i) = thisM.acc;
     [num, psv] = simEffTrap(thisM.pot,'num',NN);
+    fprintf(', N: %d, PSV: %f\n',num,psv)
     psvs(i) = psv;
 end
 
@@ -379,16 +378,17 @@ for a=[300e3 310e3]
 end
             
 accs = accs * 1e-3;
-plot(accs,psvs,'DisplayName','vsf*','LineWidth',2)
-
+plot(accs,psvs,'DisplayName','VSF*','LineWidth',2)
+%% And the XSF
 accs = bestPhisXSF;
 psvs = bestPhisXSF;
 for i=1:length(bestPhisXSF)
-    fprintf(['Mode: ' bestModesXSF{i} ' Phi: ' num2str(bestPhisXSF(i)) '\n'])
+    fprintf(['Mode: ' bestModesXSF{i} ' Phi: ' num2str(bestPhisXSF(i))])
     thisM = modes.(bestModesXSF{i});
     thisM = thisM(c(bestPhisXSF(i)));
     accs(i) = thisM.acc;
-    [num, psv] = simEffTrap(thisM.pot,'num',NN);
+    [num, psv] = simEffTrap(thisM.pot,'num',NN,'maxVel',17);
+    fprintf(', N: %d, PSV: %f\n',num,psv)
     psvs(i) = psv;
 end    
     
@@ -397,13 +397,30 @@ for a=[370e3]
     mode = modes.(bestModesXSF{end});
     mode = mode(90);
     pot = efftrap3Dgen(mode.decels,mode.phifunc(90),[1 1],a);
-    [num, psv] = simEffTrap(pot,'num',NN);
+    [num, psv] = simEffTrap(pot,'num',NN,'maxVel',17);
     psvs = [psvs psv];
     accs = [accs a];
 end
 
 accs = accs*1e-3;
-plot(accs,psvs,'DisplayName','xsf*','LineWidth',2)
+plot(accs,psvs,'DisplayName','XSF*','LineWidth',2)
 
     
 %% Now figure out how to get Traveling Wave in here.    
+raccs
+tpots
+psvs = raccs;
+i = 1;
+for tp=tpots
+    fprintf(' Acc=%d: ',raccs(i))
+    [num, psv] = simEffTrapRing(tp{:},'num',NN,'maxVel',17);
+    psvs(i) = psv; i = i+1;
+    fprintf('N=%d, PSV=%f\n',num,psv)
+end
+
+plot(raccs,psvs/pi,'DisplayName','TW','LineWidth',2)
+
+
+
+
+

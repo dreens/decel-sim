@@ -78,6 +78,8 @@ deps = zeros(size(accs));
 pot3D = zeros(2*size(meanpot,1)-1, size(meanpot,2), 3);
 mOH = 2.82328e-26; % Accounts for Oxygen binding energy
 mid = size(meanpot,1);
+raccs = [0:5:100 106];
+tpots = cell(size(raccs));
 
 for a=accs
     thisTiltPot = meanpot + zz * a * 1e3 * mOH;
@@ -87,6 +89,13 @@ for a=accs
     pot3D(:,:,[1 3]) = max(thisTiltPot(:));
     deps(a+1) = effTrapMinDepth(pot3D);
 end
+for i=1:length(raccs)
+    thisTiltPot = meanpot + zz * raccs(i) * 1e3 * mOH;
+    thisTiltPot = thisTiltPot - thisTiltPot(1,31);
+    tpots{i} = thisTiltPot;
+end
+
+    
 %% Plot the ring decel trap depth v decel
 %figure;
 depsmK = deps / 1.38e-23 * 1e3;

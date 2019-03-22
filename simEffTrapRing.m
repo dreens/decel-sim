@@ -46,11 +46,12 @@ function varargout = simEffTrapRing(varargin)
     sp = 50e-6;
     r2 = 0:2*sp:2e-3;
     z2 = -3e-3:2*sp:3e-3;
+    [r2 z2] = ndgrid(r2,z2);
     tv = -2e-3:sp:2e-3;
     lg = -3e-3:sp:3e-3;
     [xx,yy,zz] = ndgrid(tv,tv,lg);
     vv = xx;
-    vv(:) = interp2(r2,z2,pot,sqrt(xx(:).^2+yy(:).^2),zz(:));
+    vv(:) = interp2(r2',z2',pot',sqrt(xx(:).^2+yy(:).^2),zz(:));
     pot = vv;
 
     

@@ -20,7 +20,7 @@ function varargout = simEffTrapRing(varargin)
         properties = varargin(2:2:end);
         values = varargin(3:2:end);
         for i=1:length(properties)
-            assert(ischar(properties{i}),['Input #' num2str(i*2+1) ' must be the name of a property, but is not even a string.'])
+            assert(isstr(properties{i}),['Input #' num2str(i*2+1) ' must be the name of a property, but is not even a string.'])
             assert(isfield(settings,properties{i}),['Property ' properties{i} ' is not a valid setting for simEffTrap.'])
             settings.(properties{i}) = values{i};
         end
@@ -28,34 +28,46 @@ function varargout = simEffTrapRing(varargin)
     
     mOH = 2.82328e-26; % Accounts for Oxygen binding energy
     
-    pos = rand(settings.num,2)*2;
-    pos(:,2) = (pos(:,2)-1)*settings.zwidth;
+    pos = rand(settings.num,3)*4-2;
+    pos(:,3) = pos(:,3)*settings.zwidth/2;
     pos = pos*1e-3; % convert to mm
-    vel = rand(settings.num,2)*2-1;
+    vel = rand(settings.num,3)*2-1;
     vel = vel * settings.maxVel;
     
     
     
     % get symmetric derivative kernels so we can differentiate the
     % potential matrix via convolution
-    rd = [-.5; 0; .5];
-    zd = rd';
+    xd = reshape([-.5 0 .5],3,1,1);
+    yd = reshape(xd,1,3,1);
+    zd = reshape(xd,1,1,3);
+    
+    % create grids and create potential from cylindrical ring potential
+    sp = 50e-6;
+    r2 = 0:2*sp:2e-3;
+    z2 = -3e-3:2*sp:3e-3;
+    tv = -2e-3:sp:2e-3;
+    lg = -3e-3:sp:3e-3;
+    [xx,yy,zz] = ndgrid(tv,tv,lg);
+    vv = xx;
+    vv(:) = interp2(r2,z2,pot,sqrt(xx(:).^2+yy(:).^2),zz(:));
+    pot = vv;
+
     
     % perform the derivatives. Convolution style differentiation requires
     % scaling by the matrix point spacing.
-    sp = 100e-6;
-    dvdr = convn(pot,rd,'same')/sp;
+    dvdx = convn(pot,xd,'same')/sp;
+    dvdy = convn(pot,yd,'same')/sp;
     dvdz = convn(pot,zd,'same')/sp;
     
     % convolutions behave funny on the borders, zero these.
-    dvdr([1 end],:) = 0;
-    dvdz(:,[1 end]) = 0;
+    dvdx([1 end],:,:) = 0;
+    dvdy(:,[1 end],:) = 0;
+    dvdz(:,:,[1 end]) = 0;
     
-    tv = 0:sp:2e-3;
-    lg = -3e-3:sp:3e-3;
-    [rr,zz] = ndgrid(tv,lg);
-    ar  = griddedInterpolant(rr,zz,dvdr/mOH,'linear','none');
-    az  = griddedInterpolant(rr,zz,dvdz/mOH,'linear','none');    
+    ax  = griddedInterpolant(xx,yy,zz,dvdx/mOH,'linear','none');
+    ay  = griddedInterpolant(xx,yy,zz,dvdy/mOH,'linear','none');
+    az  = griddedInterpolant(xx,yy,zz,dvdz/mOH,'linear','none');    
     
     for time=0:settings.step:settings.time
         pos = pos + vel*settings.step/2;
@@ -70,7 +82,7 @@ function varargout = simEffTrapRing(varargin)
     
     num = size(pos,1);
     temp = mean(.5*mOH*sum(vel.^2,2))/1.38e-23;
-    initPSV = (2*settings.maxVel)^3 * (2e-3 * settings.zwidth)^3;
+    initPSV = (2*settings.maxVel)^3 * (4e-3)^3 * settings.zwidth/2;
     psv = num/settings.num * initPSV;
     varargout = {num,psv,temp};
     varargout = varargout(1:max(nargout,1));

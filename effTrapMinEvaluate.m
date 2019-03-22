@@ -2,7 +2,7 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [0:5:90];
+phis = [0:5:35];
 c = @(p) p + (p<=0)*180 + (p>90)*90;
 
 if ~exist('modes','var') || ~isstruct(modes)
@@ -174,6 +174,10 @@ for i=1:length(allModes)
         thisM = modes.(modeName);
         accs = [thisM([180 1:90]).acc]/1e3;
         depths = [thisM([180 1:90]).dep]/1.38e-23/1e-3;
+        if strcmp(modeName,'s3')
+            accs(4) = [];
+            depths(4) = [];
+        end
         plot(accs,depths,'DisplayName',allModes{i},'LineWidth',2)
     end
 end
@@ -186,27 +190,23 @@ xlim([0 400])
 %% Optimized envelope for VSF mod
 % Let's just grab the peaks.
 %figure;
-allModes = fields(modes);
+grabNums = [20:10:100 120];
 bestModesVSF = {};
-bestPhisVSF = [];
-for i=1:length(allModes)
-    modeName = allModes{i};
-    if length(modeName)>=5 && strcmp(modeName(1:2),'vs')
-        thisM = modes.(modeName);
-        phidef = [1:90 -89:0];
-        thesePhis = phidef(~cellfun(@isempty,{thisM.dep}));
-        depths = [thisM.dep];
-        accs = [thisM.acc];
-        deptweak = accs*5e-7*1.38e-23;
-        [~, loc] = max(depths+deptweak);
-        bestPhisVSF(end+1) = thesePhis(loc);
-        bestModesVSF{end+1} = modeName;
-    end
+for j=grabNums
+    bestModesVSF{end+1} = ['vsfe' num2str(j)];
 end
-
-% above a certain cutoff they stop working well:
-bestPhisVSF = bestPhisVSF([5:13 15]);
-bestModesVSF = bestModesVSF([5:13 15]);
+bestPhisVSF = grabNums*0;
+for i=1:length(bestModesVSF)
+    modeName = bestModesVSF{i};
+    thisM = modes.(modeName);
+    phidef = [1:90 -89:0];
+    thesePhis = phidef(~cellfun(@isempty,{thisM.dep}));
+    depths = [thisM.dep];
+    accs = [thisM.acc];
+    deptweak = accs*5e-7*1.38e-23;
+    [~, loc] = max(depths+deptweak);
+    bestPhisVSF(i) = thesePhis(loc);
+end
 
 % next we need to add the leading results onto the end:
 bestPhisVSF = [bestPhisVSF 70:5:90];
@@ -217,7 +217,7 @@ bestModesVSF(end+1:end+5) = {'vsfe130'};
 % Actually, let's grab peaks from the VSF modification where no
 % conventional charge config is used (vsf0, vsf01, vsf02 above)
 bestPhisVSF = [45 -5 bestPhisVSF];
-bestModesVSF = {'vsf03' 'vsfe20' bestModesVSF{:}};
+bestModesVSF = [{'vsf03' 'vsfe20'} bestModesVSF];
 
 bestAccs = bestPhisVSF;
 bestPeaks = bestPhisVSF;
@@ -236,27 +236,23 @@ plot(bestAccs,bestPeaks,'DisplayName','vsf*','LineWidth',2)
 %% Optimized envelope for XSF mod
 % Let's just grab the peaks.
 %figure;
-allModes = fields(modes);
-bestModesXSF = {};
-bestPhisXSF = [];
-for i=1:length(allModes)
-    modeName = allModes{i};
-    if length(modeName)>=5 && strcmp(modeName(1:2),'xs')
-        thisM = modes.(modeName);
-        phidef = [1:90 -89:0];
-        thesePhis = phidef(~cellfun(@isempty,{thisM.dep}));
-        depths = [thisM.dep];
-        accs = [thisM.acc];
-        deptweak = accs*5e-7*1.38e-23;
-        [~, loc] = max(depths+deptweak);
-        bestPhisXSF(end+1) = thesePhis(loc);
-        bestModesXSF{end+1} = modeName;
-    end
+grabModes = cell(1,length(20:10:110));
+for j=20:10:110
+    grabModes{j/10-1} = ['xsfe' num2str(j)];
 end
-
-% above a certain cutoff they stop working well:
-bestPhisXSF = bestPhisXSF([3:12]);
-bestModesXSF = bestModesXSF([3:12]);
+bestModesXSF = grabModes;
+bestPhisXSF = zeros(1,length(grabModes));
+for i=1:length(grabModes)
+    modeName = grabModes{i};
+    thisM = modes.(modeName);
+    phidef = [1:90 -89:0];
+    thesePhis = phidef(~cellfun(@isempty,{thisM.dep}));
+    depths = [thisM.dep];
+    accs = [thisM.acc];
+    deptweak = accs*5e-7*1.38e-23;
+    [~, loc] = max(depths+deptweak);
+    bestPhisXSF(i) = thesePhis(loc);
+end
 
 % next we need to add the leading results onto the end:
 bestPhisXSF = [bestPhisXSF 70:5:90];
@@ -267,7 +263,7 @@ bestModesXSF(end+1:end+5) = {'xsfe110'};
 % Actually, let's grab peaks from the VSF modification where no
 % conventional charge config is used (vsf0, vsf01, vsf02 above)
 bestPhisXSF = [0 bestPhisXSF];
-bestModesXSF = {'xsfxb30' bestModesXSF{:}};
+bestModesXSF = [{'xsfxb30'} bestModesXSF];
 
 bestAccs = bestPhisXSF;
 bestPeaks = bestPhisXSF;
@@ -314,38 +310,38 @@ end
 % space volume from the remaining number.
 %
 % Did this mostly in simEffTrap. Here we just loop through and plot.
-simphis = [0:5:120];
+simphis = [0:10:140];
 NN = 1e3;
 figure; hold on
 allModes = fields(modes);
-plotModes = {'s1','s3','sf'};
-for i=1:length(allModes)
-    modeName = allModes{i};
-    if any(strcmp(modeName,plotModes))
-        fprintf(['Mode: ' modeName '\n'])
-        thisM = modes.(modeName);
-        accs = [thisM([180 c(simphis(2:end))]).acc]/1e3;
-        psvs = [];
-        for p=simphis
-            fprintf(' Phi=%d\n',p)
-            if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
-                [num, psv] = simEffTrap(thisM(c(p)).pot,'num',NN);
-                psvs = [psvs psv];
-            elseif p>90
-                if strcmp(modeName,'s3')
-                    a = 2*((p-90)/5) + 86;
-                else
-                    a = 4*((p-90)/5) + 259;
-                end
-                pot = efftrap3Dgen(thisM(1).decels,thisM(1).phifunc(90),[1 1],a);
-                [num, psv] = simEffTrap(pot,'num',NN);
-                psvs = [psvs psv];
+plotModes = {'s1','s3'};%,'sf'};
+for mode=plotModes
+    modeName = mode{:};
+    fprintf(['Mode: ' modeName '\n'])
+    thisM = modes.(modeName);
+    psvs = [];
+    accs = [];
+    for p=simphis
+        fprintf(' Phi=%d\n',p)
+        if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
+            [num, psv] = simEffTrap(thisM(c(p)).pot,'num',NN);
+            psvs = [psvs psv];
+            accs = [accs thisM(c(p)).acc];
+        elseif p>90
+            if strcmp(modeName,'s3')
+                a = 4*((p-90)/5) + 86;
+            else
+                a = 8*((p-90)/5) + 259;
             end
+            a = a * 1e3; % convert to m/s/s
+            pot = efftrap3Dgen(thisM(1).decels,thisM(1).phifunc(90),[1 1],a);
+            [num, psv] = simEffTrap(pot,'num',NN);
+            psvs = [psvs psv];
+            accs = [accs a];
         end
- 
-        
-        plot(accs,psvs,'DisplayName',allModes{i},'LineWidth',2)
     end
+    accs = accs / 1e3; % back to km/s/s
+    plot(accs,psvs,'DisplayName',allModes{i},'LineWidth',2)
 end
 
 xlabel('Deceleration (km/s/s)')
@@ -354,7 +350,7 @@ title('Effective Trap Depths')
 xlim([0 400])
 
 
-% Next add in the VSF and XSF stuff.
+%% Next add in the VSF and XSF stuff.
 %figure;
 %hold on
 accs = bestPhisVSF;

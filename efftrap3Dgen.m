@@ -7,8 +7,9 @@ function varargout = efftrap3Dgen(decels,phis,primes,varargin)
 
 if ~isempty(varargin)
     acc = varargin{1};
-    warning('4th Argument Found, Forcing a Deceleration rate.')
+    warning('effTrap:acc','4th Argument Found, Forcing a Deceleration rate.')
     assert(isreal(acc),'Acceleration must be a real number.')
+    warning('off','effTrap:acc')
 else
     acc = nan;
 end

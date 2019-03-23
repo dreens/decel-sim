@@ -2,7 +2,7 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [0:5:35];
+phis = [-5:5:90];
 c = @(p) p + (p<=0)*180 + (p>90)*90;
 
 if ~exist('modes','var') || ~isstruct(modes)

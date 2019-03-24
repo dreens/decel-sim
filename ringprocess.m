@@ -99,7 +99,7 @@ end
 %% Plot the ring decel trap depth v decel
 %figure;
 depsmK = deps / 1.38e-23 * 1e3;
-plot(accs,depsmK,'DisplayName','T-Wave','LineWidth',2)
+plot(accs,depsmK,'DisplayName','TW','LineWidth',2)
 %xlabel('Deceleration (km/s/s)','FontSize',13)
 %ylabel('Worst Case Trap Depth (mK)','FontSize',13)
 %title('Trap Depth v Deceleration, 10 kV (pp) T-Wave','FontSize',14)

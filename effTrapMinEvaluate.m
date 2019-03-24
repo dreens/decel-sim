@@ -309,7 +309,7 @@ end
 %
 % Did this mostly in simEffTrap. Here we just loop through and plot.
 simphis = 0:5:100;
-NN = 1e4;
+NN = 1e5;
 subplot(2,1,2); hold on
 allModes = fields(modes);
 plotModes = {'s1','s3','sf'};
@@ -322,7 +322,8 @@ for mode=plotModes
     for p=simphis
         fprintf(' Phi=%d:',p)
         if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
-            [num, psv] = simEffTrap(thisM(c(p)).pot,'num',NN);
+            f = 1+2*strcmp(modeName,'s1');
+            [num, psv] = simEffTrap(thisM(c(p)).pot,'num',NN*f);
             psvs = [psvs psv];
             accs = [accs thisM(c(p)).acc];
         elseif p>90
@@ -333,7 +334,7 @@ for mode=plotModes
             end
             a = a * 1e3; % convert to m/s/s
             pot = efftrap3Dgen(thisM(1).decels,thisM(1).phifunc(90),[1 1],a);
-            [num, psv] = simEffTrap(pot,'num',NN);
+            [num, psv] = simEffTrap(pot,'num',NN*3);
             psvs = [psvs psv];
             accs = [accs a];
         end
@@ -348,6 +349,8 @@ ylabel('Phase Space Volume (m^6/s^3)','FontSize',13)
 title('Monte-Carlo in Effective Trap','FontSize',14)
 xlim([0 400])
 set(gca,'FontSize',13)
+set(gca,'YScale','log')
+ylim([1e-6,1e-3]);
 hl = legend('show');
 hl.FontSize = 13;
 
@@ -413,12 +416,12 @@ psvs = raccs;
 i = 1;
 for tp=tpots
     fprintf(' Acc=%d: ',raccs(i))
-    [num, psv] = simEffTrapRing(tp{:},'num',NN,'maxVel',17);
+    [num, psv] = simEffTrapRing(tp{:},'num',NN*3,'maxVel',17);
     psvs(i) = psv; i = i+1;
     fprintf('N=%d, PSV=%f\n',num,psv)
 end
 
-plot(raccs,psvs/pi,'DisplayName','TW','LineWidth',2)
+plot(raccs,psvs,'DisplayName','TW','LineWidth',2)
 
 
 

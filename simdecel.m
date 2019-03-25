@@ -12,17 +12,17 @@ function rsf = simdecel()
     % runs over different parameter options.
     
     % variables for the initial distribution
-    ri.dname = 'Alternate-Charging-Beyond';
+    ri.dname = 'Vary Initial Speed and Length Together';
     
     % initial number:
-    ri.num = 1e2;
+    ri.num = 1e4;
     
     % initial temperature, spatial distribution:
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2e-3;
     ri.tempz = 2;
     ri.spreadz = 5e-3;
-    ri.initvz = 640.7;
+    ri.initvz = {1000,950,900,850,801,781,761,741,721,701,681,660.7,640.7};
     ri.dist = 'flat'; % or gaussian, spherical, other options.
     ri.vdd = 1e-3; % valve decelerator distance
 
@@ -54,10 +54,11 @@ function rsf = simdecel()
     % Choose from electrodering, uniformmagnet, normal, magneticpin,
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym, singlerod, ppgg
-    ri.decels{1} = struct('a','longdecel','b','longdecel');
-    ri.decels{2} = struct('a','longdecel','b','singlerod');
-    ri.decels{3} = struct('a','longdecel','b','ppgg');
-    ri.decels{4} = struct('a','longdecel','b','ppmm_2mm');
+    %ri.decels = struct('a','longdecel','b','longdecel');
+    %ri.decels = struct('a','longdecel','b','singlerod');
+    ri.decels = struct('a','longdecel','b','ppgg');
+    %ri.decels = struct('a','longdecel','b','ppmm_2mm');
+    
     
     ri.reloadfields = false;
         
@@ -65,27 +66,32 @@ function rsf = simdecel()
     ri.phase = 50;
     ri.phi2off = 0;
     
-    n = 208;
-    ri.chargetype = repmat('ba',1,n);
-    ri.rot = [0 0 90 90 180 180 270 270];
-    ri.rot = repmat(ri.rot,1,ceil(n/4));
-    ri.rot = ri.rot(1:2*n);
-    
-    ri.trans = [1 1 0 0];
-    ri.trans = repmat(ri.trans,1,ceil(n/2));
-    ri.trans = ri.trans(1:2*n);
+    i = 1;
+    for n = [423,393,363,333,304,292,280,268,256,244,232,220,208]
+        ri.chargetype{i} = repmat('ba',1,n);
+        rot = [0 0 90 90 180 180 270 270];
+        rot = repmat(rot,1,ceil(n/4));
+        ri.rot{i} = rot(1:2*n);
 
-    % the inf flag will get replaced with the ri.phase variable
-    ri.endphases{1} = [repmat([125 235 305 55],1,n)];
-    ri.endphases{2} = [repmat([125 235 305 55],1,n)];
-    ri.endphases{3} = [repmat([145 234.3 325 54.3],1,n)];
-    ri.endphases{4} = [repmat([150 229.35 330 49.35],1,n)];
-    ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
+        trans = [1 1 0 0];
+        trans = repmat(trans,1,ceil(n/2));
+        ri.trans{i} = trans(1:2*n);
     
-    % each stage has its endpoint calculated by phase, velocity, or time.
-    % specify this as 'p', 'v', or 't':
-    ri.calctype = [repmat('pp',1,n)];
+    
+        % the inf flag will get replaced with the ri.phase variable
+        %ri.endphases{i} = repmat([125 235 305 55],1,n); % S=1
+        %ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
+        ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
+        %ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
+        ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
 
+        % each stage has its endpoint calculated by phase, velocity, or time.
+        % specify this as 'p', 'v', or 't':
+        ri.calctype{i} = [repmat('pp',1,n)];
+
+        i = i + 1;
+    end
+    
     % simulation timing variables
     ri.smallt = 4e-7;
     ri.reflectEnd = true; % end if the synch molecule is reflected.
@@ -105,7 +111,7 @@ function rsf = simdecel()
     global r 
     
     %% Here we just loop through the struct of runs, and run each one.
-    for i=1:1%length(rs)
+    for i=1:length(rs)
         rng(rs(i).seed) %seed the random number generator
         fprintf('run:%3d/%d\n ',i,length(rs))
         r = rs(i);

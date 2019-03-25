@@ -22,7 +22,7 @@ function rsf = simdecel()
     ri.spreadxy = 2e-3;
     ri.tempz = 2;
     ri.spreadz = 5e-3;
-    ri.initvz = 1000;
+    ri.initvz = 640.7;
     ri.dist = 'flat'; % or gaussian, spherical, other options.
     ri.vdd = 1e-3; % valve decelerator distance
 
@@ -64,7 +64,8 @@ function rsf = simdecel()
     % decelerator timing variables
     ri.phase = 50;
     ri.phi2off = 0;
-    n = 423;
+    
+    n = 208;
     ri.chargetype = repmat('ba',1,n);
     ri.rot = [0 0 90 90 180 180 270 270];
     ri.rot = repmat(ri.rot,1,ceil(n/4));
@@ -128,7 +129,7 @@ function rsf = simdecel()
     
     %disp(rsf(1).vels(end))
     rsf(end).time*1e3
-    resultsdecel(rsf)
+    %resultsdecel(rsf)
 end
 
 function init()

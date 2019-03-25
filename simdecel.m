@@ -15,14 +15,14 @@ function rsf = simdecel()
     ri.dname = 'Alternate-Charging-Beyond';
     
     % initial number:
-    ri.num = 1e4;
+    ri.num = 1e3;
     
     % initial temperature, spatial distribution:
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2e-3;
-    ri.tempz = 1;
+    ri.tempz = 2;
     ri.spreadz = 5e-3;
-    ri.initvz = 820;
+    ri.initvz = 900;
     ri.dist = 'flat'; % or gaussian, spherical, other options.
     ri.vdd = 1e-3; % valve decelerator distance
 
@@ -41,7 +41,7 @@ function rsf = simdecel()
     for n=phaserange
         ri.contname{iii} = sprintf('W0%%s56p%d',n); iii = iii + 1;
     end
-    ri.contname = {'none'};
+    ri.contname = 'none';
     
     %% Sequence Specification
     %
@@ -77,8 +77,8 @@ function rsf = simdecel()
     % the inf flag will get replaced with the ri.phase variable
     ri.endphases{1} = [repmat([125 235 305 55],1,n)];
     ri.endphases{2} = [repmat([125 235 305 55],1,n)];
-    ri.endphases{3} = [repmat([145 235 325 55],1,n)];
-    ri.endphases{4} = [repmat([150 230 330 50],1,n)];
+    ri.endphases{3} = [repmat([145 233 325 53],1,n)];
+    ri.endphases{4} = [repmat([150 229 330 49],1,n)];
     ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
     
     % each stage has its endpoint calculated by phase, velocity, or time.
@@ -127,6 +127,7 @@ function rsf = simdecel()
     %save('Partials/endBetweenLast4.mat','rsf')
     
     %disp(rsf(1).vels(end))
+    rsf(end).time*1e3
     resultsdecel(rsf)
 end
 

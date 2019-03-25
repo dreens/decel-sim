@@ -41,6 +41,7 @@ function rsf = simdecel()
     for n=phaserange
         ri.contname{iii} = sprintf('W0%%s56p%d',n); iii = iii + 1;
     end
+    ri.contname = {'none'};
     
     %% Sequence Specification
     %
@@ -56,7 +57,7 @@ function rsf = simdecel()
     ri.decels{1} = struct('a','longdecel','b','longdecel');
     ri.decels{2} = struct('a','longdecel','b','singlerod');
     ri.decels{3} = struct('a','longdecel','b','ppgg');
-    %ri.decels{4} = struct('a','longdecel','b',{'pmpm_2mm_no-sym','noXY'});
+    ri.decels{4} = struct('a','longdecel','b','ppmm_2mm');
     
     ri.reloadfields = false;
         
@@ -74,9 +75,10 @@ function rsf = simdecel()
     ri.trans = [ri.trans 1 1];
 
     % the inf flag will get replaced with the ri.phase variable
-    ri.endphases{1} = [repmat([130 230 310 50],1,n)];
-    ri.endphases{1} = [repmat([130 230 310 50],1,n)];
-    ri.endphases{1} = [repmat([130 230 310 50],1,n)];
+    ri.endphases{1} = [repmat([125 235 305 55],1,n)];
+    ri.endphases{2} = [repmat([125 235 305 55],1,n)];
+    ri.endphases{3} = [repmat([145 235 325 55],1,n)];
+    ri.endphases{4} = [repmat([150 230 330 50],1,n)];
     ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
     
     % each stage has its endpoint calculated by phase, velocity, or time.
@@ -95,7 +97,7 @@ function rsf = simdecel()
     ri.seed = 21112;
     
     %Unpack r into a struct of runs
-    rs = unpacker(ri,'product');
+    rs = unpacker(ri,'linear');
     
     % Making r global doesn't save time, but its silly passing it back and
     % forth all the time.

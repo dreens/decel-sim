@@ -22,7 +22,7 @@ function rsf = simdecel()
     ri.spreadxy = 2e-3;
     ri.tempz = 2;
     ri.spreadz = 5e-3;
-    ri.initvz = 900;
+    ri.initvz = 1000;
     ri.dist = 'flat'; % or gaussian, spherical, other options.
     ri.vdd = 1e-3; % valve decelerator distance
 
@@ -86,7 +86,7 @@ function rsf = simdecel()
     ri.calctype = [repmat('pp',1,n)];
 
     % simulation timing variables
-    ri.smallt = 1e-6;
+    ri.smallt = 4e-7;
     ri.reflectEnd = true; % end if the synch molecule is reflected.
     
     % laser beam variables

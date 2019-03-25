@@ -15,7 +15,7 @@ function rsf = simdecel()
     ri.dname = 'Alternate-Charging-Beyond';
     
     % initial number:
-    ri.num = 1e3;
+    ri.num = 1e2;
     
     % initial temperature, spatial distribution:
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
@@ -64,21 +64,21 @@ function rsf = simdecel()
     % decelerator timing variables
     ri.phase = 50;
     ri.phi2off = 0;
-    n = 333;
+    n = 423;
     ri.chargetype = repmat('ba',1,n);
     ri.rot = [0 0 90 90 180 180 270 270];
-    ri.rot = repmat(ri.rot,1,83);
-    ri.rot = [ri.rot 0 0];
+    ri.rot = repmat(ri.rot,1,ceil(n/4));
+    ri.rot = ri.rot(1:2*n);
     
     ri.trans = [1 1 0 0];
-    ri.trans = repmat(ri.trans,1,166);
-    ri.trans = [ri.trans 1 1];
+    ri.trans = repmat(ri.trans,1,ceil(n/2));
+    ri.trans = ri.trans(1:2*n);
 
     % the inf flag will get replaced with the ri.phase variable
     ri.endphases{1} = [repmat([125 235 305 55],1,n)];
     ri.endphases{2} = [repmat([125 235 305 55],1,n)];
-    ri.endphases{3} = [repmat([145 233 325 53],1,n)];
-    ri.endphases{4} = [repmat([150 229 330 49],1,n)];
+    ri.endphases{3} = [repmat([145 234.3 325 54.3],1,n)];
+    ri.endphases{4} = [repmat([150 229.35 330 49.35],1,n)];
     ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
     
     % each stage has its endpoint calculated by phase, velocity, or time.
@@ -104,7 +104,7 @@ function rsf = simdecel()
     global r 
     
     %% Here we just loop through the struct of runs, and run each one.
-    for i=1:length(rs)
+    for i=1:1%length(rs)
         rng(rs(i).seed) %seed the random number generator
         fprintf('run:%3d/%d\n ',i,length(rs))
         r = rs(i);

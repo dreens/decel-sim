@@ -1,4 +1,4 @@
-function rsf = simdecel()
+function rsf = simdecel(varargin)
 %MATLAB Simulation of OH experiment
     %% constants for general use
     ri.k = 1.381e-23;
@@ -22,7 +22,7 @@ function rsf = simdecel()
     ri.spreadxy = 2e-3;
     ri.tempz = 2;
     ri.spreadz = 5e-3;
-    ri.initvz = {1000,950,900,850,801,781,761,741,721,701,681,660.7,650.7,640.7,630.7,620.7,610.8};
+    ri.initvz = {1000,950,900,850,801,781,761,741,721,701,681,660.7,650.7,640.7,630.7,620.7};
     ri.dist = 'flat'; % or gaussian, spherical, other options.
     ri.vdd = 1e-3; % valve decelerator distance
 
@@ -55,8 +55,8 @@ function rsf = simdecel()
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym, singlerod, ppgg
     %ri.decels = struct('a','longdecel','b','longdecel');
-    ri.decels = struct('a','longdecel','b','singlerod');
-    %ri.decels = struct('a','longdecel','b','ppgg');
+    %ri.decels = struct('a','longdecel','b','singlerod');
+    ri.decels = struct('a','longdecel','b','ppgg');
     %ri.decels = struct('a','longdecel','b','ppmm_2mm');
     
     
@@ -67,7 +67,7 @@ function rsf = simdecel()
     ri.phi2off = 0;
     
     i = 1;
-    for n = [423,393,363,333,304,292,280,268,256,244,232,220,214,208,202,196,190]
+    for n = [423,393,363,333,304,292,280,268,256,244,232,220,214,208,202,196]
         ri.chargetype{i} = repmat('ba',1,n);
         rot = [0 0 90 90 180 180 270 270];
         rot = repmat(rot,1,ceil(n/4));
@@ -80,8 +80,8 @@ function rsf = simdecel()
     
         % the inf flag will get replaced with the ri.phase variable
         %ri.endphases{i} = repmat([125 235 305 55],1,n); % S=1
-        ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
-        %ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
+        %ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
+        ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
         %ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
         ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
 
@@ -103,6 +103,18 @@ function rsf = simdecel()
     % random number seed
     ri.seed = 21112;
     
+    % overwrite directly passed variables
+    lv = length(varargin);
+    assert(~mod(lv),'Arguments should be specified in pairs, but %d arguments passed.',lv);
+    for i=1:lv/2
+        fn = varargin{2*i-1};
+        if ~isfield(ri,fn)
+            warning('simdecelWarn:notfield','Field %s does not appear to be a valid simdecel specification variable',fn)
+            warning('off','simdecelWarn:notfield')
+        end
+        ri.(varargin{2*i-1}) = varargin{2*i);
+    end
+    
     %Unpack r into a struct of runs
     rs = unpacker(ri,'linear');
     
@@ -119,7 +131,7 @@ function rsf = simdecel()
         run();
         r.f = 0; %clear the fields, massive data sink.
         rsf(i) = r;
-        fprintf('speed:%3.1f\n',rsf(i).vels(end))
+        fprintf('speed:%3.1f\ttime:%1.3f\n',r.vels(end),r.time*1e3)
     end
     % Save the struct of runs, just in case the fitsim2data or results
     % functions have petty errors. Wouldn't want to lost everything.
@@ -134,7 +146,7 @@ function rsf = simdecel()
     %save('Partials/endBetweenLast4.mat','rsf')
     
     %disp(rsf(1).vels(end))
-    rsf(end).time*1e3
+    %rsf(end).time*1e3
     %resultsdecel(rsf)
 end
 

@@ -15,7 +15,7 @@ function rsf = simdecel(varargin)
     ri.dname = 'Vary_Initial_Speed_Length';
     
     % initial number:
-    ri.num = 1e2;
+    ri.num = 1e4;
     
     % initial temperature, spatial distribution:
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
@@ -105,14 +105,14 @@ function rsf = simdecel(varargin)
     
     % overwrite directly passed variables
     lv = length(varargin);
-    assert(~mod(lv),'Arguments should be specified in pairs, but %d arguments passed.',lv);
+    assert(~mod(lv,2),'Arguments should be specified in pairs, but %d arguments passed.',lv);
     for i=1:lv/2
         fn = varargin{2*i-1};
         if ~isfield(ri,fn)
             warning('simdecelWarn:notfield','Field %s does not appear to be a valid simdecel specification variable',fn)
             warning('off','simdecelWarn:notfield')
         end
-        ri.(varargin{2*i-1}) = varargin{2*i);
+        ri.(varargin{2*i-1}) = varargin{2*i};
     end
     
     %Unpack r into a struct of runs

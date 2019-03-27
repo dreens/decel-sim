@@ -15,14 +15,14 @@ function rsf = simdecel(varargin)
     ri.dname = 'Vary_Initial_Speed_Length';
     
     % initial number:
-    ri.num = 1e4;
+    ri.num = 1e3;
     
     % initial temperature, spatial distribution:
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2e-3;
     ri.tempz = 2;
     ri.spreadz = 5e-3;
-    ri.initvz = {1000,950,900,850,801,781,761,741,721,701,681,660.7,650.7,640.7,630.7,620.7};
+    ri.initvz = 900;
     ri.dist = 'flat'; % or gaussian, spherical, other options.
     ri.vdd = 1e-3; % valve decelerator distance
 
@@ -56,8 +56,8 @@ function rsf = simdecel(varargin)
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym, singlerod, ppgg
     %ri.decels = struct('a','longdecel','b','longdecel');
     %ri.decels = struct('a','longdecel','b','singlerod');
-    ri.decels = struct('a','longdecel','b','ppgg');
-    %ri.decels = struct('a','longdecel','b','ppmm_2mm');
+    %ri.decels = struct('a','longdecel','b','ppgg');
+    ri.decels = struct('a','longdecel','b','ppmm_2mm');
     
     
     ri.reloadfields = false;
@@ -66,23 +66,24 @@ function rsf = simdecel(varargin)
     ri.phase = 50;
     ri.phi2off = 0;
     
+    ri.initvz = 609.7;
     i = 1;
-    for n = [423,393,363,333,304,292,280,268,256,244,232,220,214,208,202,196]
+    for n = 190
         ri.chargetype{i} = repmat('ba',1,n);
-        rot = [0 0 90 90 180 180 270 270];
-        rot = repmat(rot,1,ceil(n/4));
-        ri.rot{i} = rot(1:2*n);
+        rt = [0 0 90 90 180 180 270 270];
+        rt = repmat(rt,1,ceil(n/4));
+        ri.rot{i} = rt(1:2*n);
 
-        trans = [1 1 0 0];
-        trans = repmat(trans,1,ceil(n/2));
-        ri.trans{i} = trans(1:2*n);
+        tran = [1 1 0 0];
+        tran = repmat(tran,1,ceil(n/2));
+        ri.trans{i} = tran(1:2*n);
     
     
         % the inf flag will get replaced with the ri.phase variable
         %ri.endphases{i} = repmat([125 235 305 55],1,n); % S=1
         %ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
-        ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
-        %ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
+        %ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
+        ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
         ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
 
         % each stage has its endpoint calculated by phase, velocity, or time.

@@ -37,26 +37,53 @@ rssf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,...
 
 
 %% Plotting
+%
+% Even for pathetically low speeds, I don't find much loss. I need to
+% include some flight time out of the decelerator, which is universally
+% required for use of the beam either for collisions or trapping.
+%
+% I'll start with say 5 mm flight.
+
 l = length(rss1);
 s1 = [rss1.numleft];
 s1v = s1;
+dd = 10e-3;
 for i=1:l
-    s1v = rss1(i).vels(end);
+    s = rss1(i);
+    s1v(i) = s.vels(end);
+    tt = dd/s1v(i);
+    pf = s.pos + s.vel*tt;
+    pf(:,3) = (pf(:,3) - pf(1,3))/2;
+    pf = pf/1e-3;
+    pf = sum(pf.^2,2);
+    s1(i) = sum(pf<1.5);
 end
 
 figure; hold on
-plot(s1v,s1)
-
+plot(s1v,s1,'DisplayName','S=1','LineWidth',2)
+xlabel('Final Speed','FontSize',13)
+ylabel('Number Remaining','FontSize',13)
+title('Breakdown of Effective Trap','FontSize',14)
+set(gca,'FontSize',13)
+h = legend('show');
+set(h,'FontSize',13)
 
 l = length(rssf);
 sf = [rssf.numleft];
 sfv = sf;
+dd = 10e-3;
 for i=1:l
-    sfv = rssf(i).vels(end);
+    s = rssf(i);
+    sfv(i) = s.vels(end);
+    tt = dd/sfv(i);
+    pf = s.pos + s.vel*tt;
+    pf(:,3) = (pf(:,3) - pf(1,3))/2;
+    pf = pf/1e-3;
+    pf = sum(pf.^2,2);
+    sf(i) = sum(pf<1.5);
 end
 
-figure; hold on
-plot(sfv,sf)
+plot(sfv,sf,'DisplayName','SF','LineWidth',2)
 
 
 

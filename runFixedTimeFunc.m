@@ -10,19 +10,20 @@ function rsall = runFixedTimeFunc()
 %% For each mode, get corrected initial velocities to fix runtime.
 modes = {'s1','s3','sf','vsf','xsf'};
 decels = struct('a','longdecel','b','longdecel');
-decels(2:4) = decels(1);
-decels(2).b = 'singlerod';
-decels(3).b = 'ppgg';
-decels(4).b = 'ppmm_2mm';
+decels(2:length(modes)) = decels(1);
+decels(3).b = 'singlerod';
+decels(4).b = 'ppgg';
+decels(5).b = 'ppmm_2mm';
 phases = [125 235 305 55 ; 125 235 305 55 ; 125 235 305 55 ; 145 234.3 325 54.3 ; 150 229.35 330 49.35];
 nums = fliplr([190:2:230 235:5:290 300:10:400]);
-times = repmat(nums,4,1);
+times = repmat(nums,length(modes),1);
 ivels = times;
 
 % make a dummy call to initialize struct array:
 demo = callSim(20,1000,decels(1),phases(1,:),'num',1);
 demo(1:length(modes),1:length(nums)) = demo;
 rsall = demo;
+demo2 = demo(1,:);
 
 parfor i=1:length(modes)
     % First get the acceleration
@@ -30,7 +31,7 @@ parfor i=1:length(modes)
     A = (1000 - out.vels(end))/out.time;
     thesetimes = nums;
     thesevels = nums;
-    thesers = demo(1,:)
+    thesers = demo2;
     % Now for each decelerator length...
     for n = nums
         

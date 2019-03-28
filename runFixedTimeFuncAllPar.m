@@ -8,14 +8,15 @@
 function rsall = runFixedTimeFuncAllPar()
 
 %% For each mode, get corrected initial velocities to fix runtime.
-modes = {'s3','s1','sf','vsf','xsf'};
+modes = {'s3'};%,'s1','sf','vsf','xsf'};
 decels = struct('a','longdecel','b','longdecel');
 decels(2:length(modes)) = decels(1);
-decels(3).b = 'singlerod';
-decels(4).b = 'ppgg';
-decels(5).b = 'ppmm_2mm';
+%decels(3).b = 'singlerod';
+%decels(4).b = 'ppgg';
+%decels(5).b = 'ppmm_2mm';
 phases = [125 235 305 55 ; 125 235 305 55 ; 125 235 305 55 ; 145 234.3 325 54.3 ; 150 229.35 330 49.35];
 nums = fliplr([190:2:230 235:5:290 300:10:400]);
+nums3 = fliplr([90:2:130 135:5:190 200:10:300]);
 times = repmat(nums,length(modes),1);
 ivels = times;
 
@@ -24,7 +25,7 @@ demo = callSim(20,1000,decels(1),phases(1,:),false,'num',1);
 demo(1:length(modes)*length(nums)) = demo;
 rsall = demo;
 
-parfor i=1:length(rsall)
+for i=1:length(rsall)
     
     j = floor(i/length(nums)-1e-9) + 1;
     m = modes{j};
@@ -32,6 +33,9 @@ parfor i=1:length(rsall)
     
     % First get the acceleration
     iss3 = strcmp('s3',m);
+    if iss3
+        n = nums3(n==nums);
+    end
     out = callSim(400,1000,decels(j),phases(j,:),iss3,'num',1);
     A = (1000 - out.vels(end))/out.time;
 
@@ -72,7 +76,8 @@ parfor i=1:length(rsall)
     rsall(i) = out;
 end
 
-rsall = reshape(rsall,length(modes),length(nums));
+rsall = reshape(rsall,length(nums),length(modes));
+rsall = rsall';
 %% Plotting
 %
 % Even for pathetically low speeds, I don't find much loss. I need to

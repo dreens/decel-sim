@@ -128,13 +128,17 @@ function rsf = simdecel(varargin)
     %% Here we just loop through the struct of runs, and run each one.
     for i=1:length(rs)
         rng(rs(i).seed) %seed the random number generator
-        fprintf('run:%3d/%d\n ',i,length(rs))
+        if r.verbose
+            fprintf('run:%3d/%d\n ',i,length(rs))
+        end
         r = rs(i);
         init();
         run();
         r.f = 0; %clear the fields, massive data sink.
         rsf(i) = r;
-        fprintf('speed:%3.1f\ttime:%1.3f\n',r.vels(end),r.time*1e3)
+        if r.verbose
+            fprintf('speed:%3.1f\ttime:%1.3f\n',r.vels(end),r.time*1e3)
+        end
     end
     % Save the struct of runs, just in case the fitsim2data or results
     % functions have petty errors. Wouldn't want to lost everything.
@@ -191,7 +195,9 @@ function init()
     end
     
     % Insert phase wherever 'inf' flag is found:
-    fprintf('%s%.2f\n','Phase: ',r.phase)
+    if r.verbose
+        fprintf('%s%.2f\n','Phase: ',r.phase)
+    end
     r.endphases(r.endphases==inf) = r.phase;
     r.endphases(r.endphases==-inf) = -r.phase;
     
@@ -207,7 +213,9 @@ function init()
             - r.f.(c).aenergy(-phi+r.phi2off)*(max(r.stages)-2) ...
             - r.f.(d).aenergy(-phi)*(max(r.stages)-1) ...
             - r.f.(c).aenergy(-90) - energy)^2,-90,90); 
-        fprintf('Phase Angle: %2.3f\n',r.phase);
+        if r.verbose
+            fprintf('Phase Angle: %2.3f\n',r.phase);
+        end
         p1 = max(r.endphases);
         p2 = min(r.endphases);
         r.endphases(r.endphases==p1) = r.phase;

@@ -8,13 +8,13 @@
 
 
 %% For each mode, get corrected initial velocities to fix runtime.
-modes = {'s1','sf','vsf','xsf'};
+modes = {'s1','s3','sf','vsf','xsf'};
 decels = struct('a','longdecel','b','longdecel');
 decels(2:4) = decels(1);
 decels(2).b = 'singlerod';
 decels(3).b = 'ppgg';
 decels(4).b = 'ppmm_2mm';
-phases = [125 235 305 55 ; 125 235 305 55 ; 145 234.3 325 54.3 ; 150 229.35 330 49.35];
+phases = [125 235 305 55 ; 125 235 305 55 ; 125 235 305 55 ; 145 234.3 325 54.3 ; 150 229.35 330 49.35];
 nums = fliplr([190:2:230 235:5:290 300:10:400]);
 times = repmat(nums,4,1);
 ivels = times;
@@ -42,7 +42,6 @@ for i=1:length(modes)
         % Now run with that vi and get the runtime.
         try
             out = callSim(n,vi,decels(i),phases(i,:),'num',1);
-            fprintf('N: %d, V: %.1f, T: %.3f\n',n,vi,out.time*1000);
             finalT = out.time;
             vf = out.vels(end);
             times(i,nums==n) = finalT*1e3;
@@ -65,7 +64,8 @@ for i=1:length(modes)
         ivels(i,nums==n) = vip;
         % Now do a serious full run.
         out = callSim(n,vip,decels(i),phases(i,:),'num',1e4);
-        fprintf('N: %d, V: %.1f, T: %.3f\n',n,vip,out.time*1000);
+        fprintf('Mode: %s, N: %d, V: %.1f, T: %.3f\n',...
+            modes{i},n,vip,out.time*1000);
         rsall(i,nums==n) = out;
     end
 end
@@ -76,50 +76,32 @@ end
 % include some flight time out of the decelerator, which is universally
 % required for use of the beam either for collisions or trapping.
 %
+figure; hold on
 for m=modes
     i = find(strcmp(m,modes));
     l = length(nums);
-    s1 = [rss1.numleft];
+    s1 = [rsall(i,:).numleft];
     s1v = s1;
     dd = 10e-3;
-    for i=1:l
-        s = rss1(i);
-        s1v(i) = s.vels(end);
-        tt = dd/s1v(i);
+    for j=1:l
+        s = rsall(i,j);
+        s1v(j) = s.vels(end);
+        tt = dd/s1v(j);
         pf = s.pos + s.vel*tt;
         pf(:,3) = (pf(:,3) - pf(1,3))/2;
         pf = pf/1e-3;
         pf = sum(pf.^2,2);
-        s1(i) = sum(pf<1.5);
+        s1(j) = sum(pf<1.5);
     end
+    plot(s1v,s1,'DisplayName',m{:},'LineWidth',2)
 end
 
-figure; hold on
-plot(s1v,s1,'DisplayName','S=1','LineWidth',2)
 xlabel('Final Speed','FontSize',13)
 ylabel('Number Remaining','FontSize',13)
 title('Breakdown of Effective Trap','FontSize',14)
 set(gca,'FontSize',13)
 h = legend('show');
 set(h,'FontSize',13)
-
-l = length(rssf);
-sf = [rssf.numleft];
-sfv = sf;
-dd = 10e-3;
-for i=1:l
-    s = rssf(i);
-    sfv(i) = s.vels(end);
-    tt = dd/sfv(i);
-    pf = s.pos + s.vel*tt;
-    pf(:,3) = (pf(:,3) - pf(1,3))/2;
-    pf = pf/1e-3;
-    pf = sum(pf.^2,2);
-    sf(i) = sum(pf<1.5);
-end
-
-plot(sfv,sf,'DisplayName','SF','LineWidth',2)
-
 
 %%
 function rs = callSim(N,ivz,D,M,varargin)

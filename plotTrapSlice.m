@@ -88,7 +88,7 @@ elseif strcmp(selectPlot,'contourArray')
             if types==30
                 cut = 213;
             else
-                cut = 193;
+                cut = 333;
             end
             makepatch(levels(views),colors(views,:),cut);
             zp = zp - ones(size(zp))*4.5e-3*views;
@@ -105,7 +105,7 @@ end
 function h = makepatch(t,c,cut)
     cut = min(cut,max(size(xp)));
     if t<=100
-        cut = 171;
+        cut = 191;
     end
     if ~strcmp(selectPlot,'contourArray')
         h = patch(isosurface(yp(:,:,1:cut),xp(:,:,1:cut),zp(:,:,1:cut),vvv(:,:,1:cut)*1e3/kB,t));

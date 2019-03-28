@@ -3,7 +3,16 @@
 % used to get effective traps for DongDong's advanced switching schemes or
 % for checking alternatives to VSF mode, etc.
 
-function vv = efftrap3Dgen(decels,phis,primes)
+function varargout = efftrap3Dgen(decels,phis,primes,varargin)
+
+if ~isempty(varargin)
+    acc = varargin{1};
+    warning('effTrap:acc','4th Argument Found, Forcing a Deceleration rate.')
+    assert(isreal(acc),'Acceleration must be a real number.')
+    warning('off','effTrap:acc')
+else
+    acc = nan;
+end
 
 assert(length(decels)+1==length(phis),'You need one phase for each charge configuration plus an extra.');
 assert(length(primes)==length(decels),'Specify a prime for each charge config');
@@ -30,7 +39,7 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-15:.025:10)*1e-3;
+z=(-25:.025:10)*1e-3;
 
 x = (-.975:.025:.975)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);
@@ -79,7 +88,10 @@ end
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
-% vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
+vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
+
+% Symmetrize LR
+vv = (vv + permute(vv,[2 1 3]))/2;
 
 % Now velocity compensation. First get coordinates of what should be the
 % trap center.
@@ -93,9 +105,23 @@ slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
 vv = vv - zp.*slope;
 
 % We can also get the acceleration implied by that slope.
-accel = slope/mOH
+accel = slope/mOH;
+    
+if ~isnan(acc)
+    vv = vv + zp.*slope;
+    vv = vv - zp.*acc*mOH;
+    accel = acc;
+end
 
 % Finally redefine zero energy.
 vv = vv - vv(mX,mX,mZ);
+
+if nargout == 1
+    varargout = {vv};
+elseif nargout == 2
+    varargout = {vv, accel};
+else
+    error('Too many output arguments expected')
+end
 
 end

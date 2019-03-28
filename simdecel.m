@@ -20,9 +20,9 @@ function rsf = simdecel(varargin)
     ri.num = 1;
     
     % initial temperature, spatial distribution:
-    ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    ri.tempxy = 2.5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2e-3;
-    ri.tempz = 2;
+    ri.tempz = 2.5;
     ri.spreadz = 5e-3;
     ri.initvz = 900;
     ri.dist = 'flat'; % or gaussian, spherical, other options.

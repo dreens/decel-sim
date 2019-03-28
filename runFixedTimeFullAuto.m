@@ -63,9 +63,9 @@ for i=1:length(modes)
         vip = (vi*(dt+1/dt)+vf*(dt-1/dt))/2;
         ivels(i,nums==n) = vip;
         % Now do a serious full run.
-        out = callSim(n,vip,decels(i),phases(i,:),'num',1e4);
-        fprintf('Mode: %s, N: %d, V: %.1f, T: %.3f\n',...
-            modes{i},n,vip,out.time*1000);
+        out = callSim(n,vip,decels(i),phases(i,:),'num',1e5);
+        fprintf('Mode: %s, N: %d, V: %.1f, T: %.3f, num: %d, vf: %.1f\n',...
+            modes{i},n,vip,out.time*1000,out.numleft,out.vels(end));
         rsall(i,nums==n) = out;
     end
 end
@@ -82,7 +82,7 @@ for m=modes
     l = length(nums);
     s1 = [rsall(i,:).numleft];
     s1v = s1;
-    dd = 10e-3;
+    dd = 5e-3;
     for j=1:l
         s = rsall(i,j);
         s1v(j) = s.vels(end);
@@ -92,14 +92,18 @@ for m=modes
         pf = pf/1e-3;
         pf = sum(pf.^2,2);
         s1(j) = sum(pf<1.5);
+        svz = sqrt(s.tempz*s.k/s.mOH);
+        svx = sqrt(s.tempxy*s.k/s.mOH);
+        psv1(j) = s1(j) / s.num * (svz*svx^2*s.spreadz*s.spreadxy^2);
     end
-    plot(s1v,s1,'DisplayName',m{:},'LineWidth',2)
+    plot(s1v,psv1,'DisplayName',m{:},'LineWidth',2)
 end
 
 xlabel('Final Speed','FontSize',13)
-ylabel('Number Remaining','FontSize',13)
+ylabel('Phase Space Volume (m^6/s^3)','FontSize',13)
 title('Breakdown of Effective Trap','FontSize',14)
 set(gca,'FontSize',13)
+set(gca,'YScale','log')
 h = legend('show');
 set(h,'FontSize',13)
 
@@ -113,6 +117,17 @@ function rs = callSim(N,ivz,D,M,varargin)
     tran = [1 1 0 0];
     tran = repmat(tran,1,ceil(N/2));
     tran = tran(1:2*N);
+    
+    if strcmp(M,'s3')
+        rot = repmat(rot',1,3); 
+        rot = rot';
+        rot = rot(:)';
+        rot = rot(1:2*N);
+        tran = repmat(tran',1,3);
+        tran = tran';
+        tran = tran(:)';
+        tran = tran(1:2*N);
+    end
     
     % if the user hasn't asked for verbosity, turn it off
     if ~any(strcmp('verbose',varargin))

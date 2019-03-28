@@ -32,7 +32,7 @@ parfor i=1:length(rsall)
     
     % First get the acceleration
     iss3 = strcmp('s3',m);
-    out = callSim(400,1000,decels(i),phases(i,:),iss3,'num',1);
+    out = callSim(400,1000,decels(j),phases(j,:),iss3,'num',1);
     A = (1000 - out.vels(end))/out.time;
 
     
@@ -46,7 +46,7 @@ parfor i=1:length(rsall)
 
     % Now run with that vi and get the runtime.
     try
-        out = callSim(n,vi,decels(i),phases(i,:),iss3,'num',1);
+        out = callSim(n,vi,decels(j),phases(j,:),iss3,'num',1);
         finalT = out.time;
         vf = out.vels(end);
     catch E
@@ -65,7 +65,7 @@ parfor i=1:length(rsall)
     dt = finalT/3e-3;
     vip = (vi*(dt+1/dt)+vf*(dt-1/dt))/2;
     % Now do a serious full run.
-    out = callSim(n,vip,decels(i),phases(i,:),iss3,'num',1e5);
+    out = callSim(n,vip,decels(j),phases(j,:),iss3,'num',1e5);
     fprintf('Mode: %s, N: %d, V: %.1f, T: %.3f, num: %d, vf: %.1f\n',...
         m,n,vip,out.time*1000,out.numleft,out.vels(end));
 

@@ -20,14 +20,17 @@ times = repmat(nums,4,1);
 ivels = times;
 
 % make a dummy call to initialize struct array:
-rsall = callSim(20,1000,decels(1),phases(1,:),'num',1);
-rsall(1:4,1:length(nums)) = rsall;
+demo = callSim(20,1000,decels(1),phases(1,:),'num',1);
+demo(1:length(modes),1:length(nums)) = demo;
+rsall = demo;
 
-for i=1:length(modes)
+parfor i=1:length(modes)
     % First get the acceleration
     out = callSim(400,1000,decels(i),phases(i,:),'num',1);
     A = (1000 - out.vels(end))/out.time;
-    
+    thesetimes = nums;
+    thesevels = nums;
+    thesers = demo(1,:)
     % Now for each decelerator length...
     for n = nums
         
@@ -44,12 +47,12 @@ for i=1:length(modes)
             out = callSim(n,vi,decels(i),phases(i,:),'num',1);
             finalT = out.time;
             vf = out.vels(end);
-            times(i,nums==n) = finalT*1e3;
+            thesetimes(nums==n) = finalT*1e3;
         catch E
             E
             vf = 0;
             finalT = 3.1e-3;
-            times(i,nums==n) = 0;
+            thesetimes(nums==n) = 0;
         end
         
         % Then correct the initial velocity using classical mechanics. This
@@ -61,13 +64,16 @@ for i=1:length(modes)
         % Eliminate a and D and vf' and get vi' in terms of vi, vf, t/t'.
         dt = finalT/3e-3;
         vip = (vi*(dt+1/dt)+vf*(dt-1/dt))/2;
-        ivels(i,nums==n) = vip;
+        thesevels(i,nums==n) = vip;
         % Now do a serious full run.
         out = callSim(n,vip,decels(i),phases(i,:),'num',1e5);
         fprintf('Mode: %s, N: %d, V: %.1f, T: %.3f, num: %d, vf: %.1f\n',...
             modes{i},n,vip,out.time*1000,out.numleft,out.vels(end));
-        rsall(i,nums==n) = out;
+        thesers(nums==n) = out;
     end
+    times(i,:) = thesetimes;
+    ivels(i,:) = thesevels;
+    rsall(i,:) = thesers;
 end
 
 %% Plotting

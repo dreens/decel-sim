@@ -7,6 +7,8 @@ function rsf = simdecel(varargin)
     ri.h = 6.62607e-34;
     ri.hb = ri.h/(2*pi);
     
+    ri.verbose = true;
+    
     %% initialization of a run
     % Like the fortran sim, these can be put in braces to indicate several
     % runs over different parameter options.
@@ -15,7 +17,7 @@ function rsf = simdecel(varargin)
     ri.dname = 'Vary_Initial_Speed_Length';
     
     % initial number:
-    ri.num = 1e3;
+    ri.num = 1;
     
     % initial temperature, spatial distribution:
     ri.tempxy = 1; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
@@ -66,9 +68,9 @@ function rsf = simdecel(varargin)
     ri.phase = 50;
     ri.phi2off = 0;
     
-    ri.initvz = 609.7;
+    ri.initvz = 636.7;
     i = 1;
-    for n = 190
+    for n = 202
         ri.chargetype{i} = repmat('ba',1,n);
         rt = [0 0 90 90 180 180 270 270];
         rt = repmat(rt,1,ceil(n/4));
@@ -94,7 +96,7 @@ function rsf = simdecel(varargin)
     end
     
     % simulation timing variables
-    ri.smallt = 4e-7;
+    ri.smallt = 2e-7;
     ri.reflectEnd = true; % end if the synch molecule is reflected.
     
     % laser beam variables
@@ -292,7 +294,9 @@ function run()
             break
         end
         if ~mod(r.numstage,10) || r.numstages - r.numstage < 10
-            fprintf('step:%3d/%d,\tN:%d\tv:%.0f\n',r.numstage,r.numstages,r.molnum(r.numstage),r.vel(1,3))
+            if r.verbose
+                fprintf('step:%3d/%d,\tN:%d\tv:%.0f\n',r.numstage,r.numstages,r.molnum(r.numstage),r.vel(1,3))
+            end
         end
         r.numstage = r.numstage + 1;
     end

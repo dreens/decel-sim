@@ -128,7 +128,7 @@ function rsf = simdecel(varargin)
     %% Here we just loop through the struct of runs, and run each one.
     for i=1:length(rs)
         rng(rs(i).seed) %seed the random number generator
-        if r.verbose
+        if rs(i).verbose
             fprintf('run:%3d/%d\n ',i,length(rs))
         end
         r = rs(i);

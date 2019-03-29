@@ -16,7 +16,7 @@ decels(2:length(modes)) = decels(1);
 %decels(5).b = 'ppmm_2mm';
 phases = [125 235 305 55 ; 125 235 305 55 ; 125 235 305 55 ; 145 234.3 325 54.3 ; 150 229.35 330 49.35];
 nums = fliplr([190:2:230 235:5:290 300:10:400]);
-nums3 = fliplr([90:2:130 135:5:190 200:10:300]);
+nums3 = fliplr([90:3:180 189:9:297]);
 times = repmat(nums,length(modes),1);
 ivels = times;
 

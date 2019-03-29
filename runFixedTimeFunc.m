@@ -77,45 +77,6 @@ parfor i=1:length(modes)
     ivels(i,:) = thesevels;
     rsall(i,:) = thesers;
 end
-
-%% Plotting
-%
-% Even for pathetically low speeds, I don't find much loss. I need to
-% include some flight time out of the decelerator, which is universally
-% required for use of the beam either for collisions or trapping.
-%
-if false
-figure; hold on
-for m=modes
-    i = find(strcmp(m,modes));
-    l = length(nums);
-    s1 = [rsall(i,:).numleft];
-    s1v = s1;
-    dd = 5e-3;
-    for j=1:l
-        s = rsall(i,j);
-        s1v(j) = s.vels(end);
-        tt = dd/s1v(j);
-        pf = s.pos + s.vel*tt;
-        pf(:,3) = (pf(:,3) - pf(1,3))/2;
-        pf = pf/1e-3;
-        pf = sum(pf.^2,2);
-        s1(j) = sum(pf<1.5);
-        svz = sqrt(s.tempz*s.k/s.mOH);
-        svx = sqrt(s.tempxy*s.k/s.mOH);
-        psv1(j) = s1(j) / s.num * (svz*svx^2*s.spreadz*s.spreadxy^2);
-    end
-    plot(s1v,psv1,'DisplayName',m{:},'LineWidth',2)
-end
-
-xlabel('Final Speed','FontSize',13)
-ylabel('Phase Space Volume (m^6/s^3)','FontSize',13)
-title('Breakdown of Effective Trap','FontSize',14)
-set(gca,'FontSize',13)
-set(gca,'YScale','log')
-h = legend('show');
-set(h,'FontSize',13)
-end
 end
 
 %%

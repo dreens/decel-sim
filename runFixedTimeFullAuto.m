@@ -98,13 +98,16 @@ for m=modes
     end
     plot(s1v,psv1,'DisplayName',m{:},'LineWidth',2)
 end
-
+plot([0 300],[5.2e-5 5.2e-5],'DisplayName','TW','LineWidth',2)
 xlabel('Final Speed','FontSize',13)
 ylabel('Phase Space Volume (m^6/s^3)','FontSize',13)
 title('Breakdown of Effective Trap','FontSize',14)
 set(gca,'FontSize',13)
 set(gca,'YScale','log')
 h = legend('show');
+xlim([0 300])
+set(gca,'xdir','reverse')
+ylim([5e-7 1e-4])
 set(h,'FontSize',13)
 
 %%

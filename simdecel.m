@@ -17,12 +17,12 @@ function rsf = simdecel(varargin)
     ri.dname = 'Vary_Initial_Speed_Length';
     
     % initial number:
-    ri.num = 1;
+    ri.num = 1e4;
     
     % initial temperature, spatial distribution:
-    ri.tempxy = 2.5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    ri.tempxy = 1.5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 2e-3;
-    ri.tempz = 2.5;
+    ri.tempz = 1.5;
     ri.spreadz = 5e-3;
     ri.initvz = 900;
     ri.dist = 'flat'; % or gaussian, spherical, other options.
@@ -57,9 +57,9 @@ function rsf = simdecel(varargin)
     % varygap2pX, where X is from 0 to 5, 
     % ppmm_2mm, pmpm_2mm, pmpm_2mm_no-sym, singlerod, ppgg
     %ri.decels = struct('a','longdecel','b','longdecel');
-    %ri.decels = struct('a','longdecel','b','singlerod');
+    ri.decels = struct('a','longdecel','b',{'singlerod','noXY'});
     %ri.decels = struct('a','longdecel','b','ppgg');
-    ri.decels = struct('a','longdecel','b','ppmm_2mm');
+    %ri.decels = struct('a','longdecel','b','ppmm_2mm');
     
     
     ri.reloadfields = false;
@@ -68,9 +68,9 @@ function rsf = simdecel(varargin)
     ri.phase = 50;
     ri.phi2off = 0;
     
-    ri.initvz = 636.7;
+    ri.initvz = 900;
     i = 1;
-    for n = 202
+    for n = 300
         ri.chargetype{i} = repmat('ba',1,n);
         rt = [0 0 90 90 180 180 270 270];
         rt = repmat(rt,1,ceil(n/4));
@@ -83,9 +83,9 @@ function rsf = simdecel(varargin)
     
         % the inf flag will get replaced with the ri.phase variable
         %ri.endphases{i} = repmat([125 235 305 55],1,n); % S=1
-        %ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
+        ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
         %ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
-        ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
+        %ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
         ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
 
         % each stage has its endpoint calculated by phase, velocity, or time.
@@ -170,7 +170,7 @@ function init()
     for i=1:length(labels)
         % d is the file name + any other processing insturctions for that
         % configuration.
-        d = r.decels.(labels{i});
+        d = {r.decels.(labels{i})};
         
         % deal with the no instruction case, get filename as dname.
         if iscell(d)
@@ -836,9 +836,15 @@ function processfields(varargin)
         titleLabel = 'Traping ';
     end
     
+    if fieldsymmetryXY
+        p = 1;
+    else
+        p = ceil(size(dvdzm,1)/2);
+    end
+    
     figure('position',[50,50,1100,1100])
     subplot(2,2,1)
-    surf(cap(squeeze(dvdzm(:,1,:)),cc));
+    surf(cap(squeeze(dvdzm(:,p,:)),cc));
     title([titleLabel 'dvdz, X-Z plane, ' fileN '.dat']);
 
     % You might think the labels are backwards, but they're not. surf uses
@@ -851,21 +857,21 @@ function processfields(varargin)
     zlim([-cc cc])
 
     subplot(2,2,2)
-    surf(cap(squeeze(dvdzm(1,:,:)),cc));
+    surf(cap(squeeze(dvdzm(p,:,:)),cc));
     title([titleLabel 'dvdz, Y-Z plane, ' fileN '.dat']); 
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,3)
-    surf(cap(squeeze(dvdxm(:,1,:)),cc));
+    surf(cap(squeeze(dvdxm(:,p,:)),cc));
     title([titleLabel 'dvdx, X-Z plane, ' fileN '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);
     zlim([-cc cc])
 
     subplot(2,2,4)
-    surf(cap(squeeze(dvdym(1,:,:)),cc));
+    surf(cap(squeeze(dvdym(p,:,:)),cc));
     title([titleLabel 'dvdy, Y-Z plane, ' fileN '.dat']);
     xlabel(['Z axis (' num2str(zsp) ')']);
     ylabel(['X axis (' num2str(xsp) ')']);

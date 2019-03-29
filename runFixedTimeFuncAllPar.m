@@ -8,7 +8,7 @@
 function rsall = runFixedTimeFuncAllPar()
 
 %% For each mode, get corrected initial velocities to fix runtime.
-modes = {'s3'};%,'s1','sf','vsf','xsf'};
+modes = {'s1','s3','sf','vsf','xsf'};
 decels = struct('a','longdecel','b','longdecel');
 decels(2:length(modes)) = decels(1);
 %decels(3).b = 'singlerod';

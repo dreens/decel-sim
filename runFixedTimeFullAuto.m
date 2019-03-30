@@ -76,10 +76,12 @@ end
 % include some flight time out of the decelerator, which is universally
 % required for use of the beam either for collisions or trapping.
 %
+modes = {'s1','s3','sf','vsf','xsf'};
+
 figure; hold on
 for m=modes
     i = find(strcmp(m,modes));
-    l = length(nums);
+    l = size(rsall,2);
     s1 = [rsall(i,:).numleft];
     s1v = s1;
     dd = 5e-3;
@@ -104,10 +106,10 @@ ylabel('Phase Space Volume (m^6/s^3)','FontSize',13)
 title('Breakdown of Effective Trap','FontSize',14)
 set(gca,'FontSize',13)
 set(gca,'YScale','log')
-h = legend('show');
+h = legend('S=1','S=3','SF','VSF','XSF','TW');
 xlim([0 300])
 set(gca,'xdir','reverse')
-ylim([5e-7 1e-4])
+ylim([1e-6 1e-4])
 set(h,'FontSize',13)
 
 %%

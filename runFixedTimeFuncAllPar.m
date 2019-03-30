@@ -11,9 +11,9 @@ function rsall = runFixedTimeFuncAllPar()
 modes = {'s1','s3','sf','vsf','xsf'};
 decels = struct('a','longdecel','b','longdecel');
 decels(2:length(modes)) = decels(1);
-%decels(3).b = 'singlerod';
-%decels(4).b = 'ppgg';
-%decels(5).b = 'ppmm_2mm';
+decels(3).b = 'singlerod';
+decels(4).b = 'ppgg';
+decels(5).b = 'ppmm_2mm';
 phases = [125 235 305 55 ; 125 235 305 55 ; 125 235 305 55 ; 145 234.3 325 54.3 ; 150 229.35 330 49.35];
 nums = fliplr([190:2:230 235:5:290 300:10:400]);
 nums3 = fliplr([90:3:180 189:9:297]);
@@ -25,7 +25,7 @@ demo = callSim(20,1000,decels(1),phases(1,:),false,'num',1);
 demo(1:length(modes)*length(nums)) = demo;
 rsall = demo;
 
-for i=1:length(rsall)
+parfor i=1:length(rsall)
     
     j = floor(i/length(nums)-1e-9) + 1;
     m = modes{j};

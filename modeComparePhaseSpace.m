@@ -53,21 +53,27 @@ f.PaperPosition = [0 0 10 4];
 [ha, pos] = tight_subplot(2,l,0,[.13 .01],[.08 .01]);
 l = length(modes);
 nn = 100;
+colordense = false;
 big = rsall(strcmp('xsf',modes)).numleft;
 for m=modes
     i = find(strcmp(m,modes));
     s = rsall(i);
+    
     axes(ha(i));
     x = (s.pos(:,3)-s.pos(1,3))*1e3;
     y = s.vel(:,3)-s.vel(1,3);
-    c = ksdensity([x(1:nn),y(1:nn)],[x,y]);
-    c = c * s.numleft/big;
-    c = log(c);
-    scatter(x,y,2,c,'filled');
-    ca = caxis;
-    caxis([-7 ca(2)+log(big/s.numleft)])
-    %cb = colorbar;
-    %cb.Ruler.Scale = 'log';
+    if colordense
+        c = ksdensity([x(1:nn),y(1:nn)],[x,y]);
+        c = c * s.numleft/big;
+        c = log(c);
+        scatter(x,y,2,c,'filled');
+        ca = caxis;
+        caxis([-7 ca(2)+log(big/s.numleft)])
+        %cb = colorbar;
+        %cb.Ruler.Scale = 'log';
+    else
+        plot(x,y,'k.','MarkerSize',2)
+    end
     xlim([-1.7 1.7])
     ylim([-17 17])
     text(1.6,15,upper(m),'FontSize',13,'FontWeight','bold','HorizontalAlignment','right')
@@ -79,14 +85,18 @@ for m=modes
     axes(ha(i+l))
     x = s.pos(:,1)*1e3;
     y = s.vel(:,1);
-    c = ksdensity([x(1:nn),y(1:nn)],[x,y]);
-    c = c * s.numleft/big;
-    c = log(c);
-    scatter(x,y,2,c,'filled');
-    ca = caxis;
-    caxis([-7 ca(2)+log(big/s.numleft)])
-    %cb = colorbar;
-    %cb.Ruler.Scale = 'log';
+    if colordense
+        c = ksdensity([x(1:nn),y(1:nn)],[x,y]);
+        c = c * s.numleft/big;
+        c = log(c);
+        scatter(x,y,2,c,'filled');
+        ca = caxis;
+        caxis([-7 ca(2)+log(big/s.numleft)])
+        %cb = colorbar;
+        %cb.Ruler.Scale = 'log';
+    else
+        plot(x,y,'k.','MarkerSize',2)
+    end
     xlim([-1.7 1.7])
     ylim([-17 17])
     set(gca,'FontSize',13)

@@ -50,7 +50,7 @@ end
 f = figure; %hold on
 f.Position = [100 50 1000 400];
 f.PaperPosition = [0 0 10 4];
-[ha, pos] = tight_subplot(2,l,0,[.13 .01],[.08 .01]);
+[ha, pos] = tight_subplot(2,l,0,[.15 .08],[.06 .001]);
 l = length(modes);
 nn = 100;
 colordense = false;
@@ -76,7 +76,9 @@ for m=modes
     end
     xlim([-1.7 1.7])
     ylim([-17 17])
-    text(1.6,15,upper(m),'FontSize',13,'FontWeight','bold','HorizontalAlignment','right')
+    ts = sprintf('%s',upper(m{:}));
+    title(ts,'FontSize',13)
+    %text(1.6,15,upper(m),'FontSize',13,'FontWeight','bold','HorizontalAlignment','right')
     set(gca,'FontSize',13)
     set(gca,'LineWidth',2)
     set(gca,'TickLength',[.02 .05])
@@ -108,16 +110,17 @@ end
 set(ha(1:l),'XTickLabel','');
 set(ha([2:l l+2:end]),'YTickLabel','');
 axes(ha(l+ceil(l/2)))
-xlabel('Position (mm)','FontSize',13)
+xlabel('X or Z Position (mm)','FontSize',13)
 axes(ha(1))
-ylabel('Velocity (m/s)','FontSize',13)
+ylabel('Z Velocity (m/s)','FontSize',13)
 axes(ha(1+l))
-ylabel('Velocity (m/s)','FontSize',13)
+ylabel('X Velocity (m/s)','FontSize',13)
 %axes(ha(ceil(l/2)))
 %title('Breakdown of Effective Trap','FontSize',14)
 %end
 print(gcf,'Figures/5x2-PSD-Compare','-dpng','-r300')
 system('open Figures/5x2-PSD-Compare.png')
+system('cp Figures/5x2-PSD-Compare.png ../alternate-charging/')
 %close(gcf)
 
 %%

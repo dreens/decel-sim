@@ -13,6 +13,10 @@ decels(3).b = 'singlerod';
 decels(4).b = 'ppgg';
 decels(5).b = 'ppmm_2mm';
 phases = [125 235 305 55 ; 125 235 305 55 ; 125 235 305 55 ; 145 234.3 325 54.3 ; 150 229.35 330 49.35];
+%phases = repmat([125 235 305 55 ],5,1); I added this to test the influence
+%on the phase space of tuning phi2. Relative to no tuning, VSF and XSF have
+%more molecules and greater comparability between transverse and
+%longitudinal phase space acceptance.
 
 if ~exist('rsall')
 
@@ -110,7 +114,7 @@ end
 set(ha(1:l),'XTickLabel','');
 set(ha([2:l l+2:end]),'YTickLabel','');
 axes(ha(l+ceil(l/2)))
-xlabel('X or Z Position (mm)','FontSize',13)
+xlabel('Z or X Position (mm)','FontSize',13)
 axes(ha(1))
 ylabel('Z Velocity (m/s)','FontSize',13)
 axes(ha(1+l))
@@ -118,9 +122,9 @@ ylabel('X Velocity (m/s)','FontSize',13)
 %axes(ha(ceil(l/2)))
 %title('Breakdown of Effective Trap','FontSize',14)
 %end
-print(gcf,'Figures/5x2-PSD-Compare','-dpng','-r300')
-system('open Figures/5x2-PSD-Compare.png')
-system('cp Figures/5x2-PSD-Compare.png ../alternate-charging/')
+%print(gcf,'Figures/5x2-PSD-Compare','-dpng','-r300')
+%system('open Figures/5x2-PSD-Compare.png')
+%system('cp Figures/5x2-PSD-Compare.png ../alternate-charging/')
 %close(gcf)
 
 %%
@@ -158,6 +162,7 @@ function rs = callSim(N,ivz,D,M,iss3,varargin)
         'trans',tran,...
         'endphases',ep,...
         'smallt',4e-7,...
+        'tempz',3.5,...
         'calctype',repmat('p',1,1000),...
         varargin{:});
 

@@ -82,13 +82,13 @@ for m=modes
     ylim([-17 17])
     ts = sprintf('%s',upper(m{:}));
     title(ts,'FontSize',13)
-    %text(1.6,15,upper(m),'FontSize',13,'FontWeight','bold','HorizontalAlignment','right')
+    text(1.6,-13.5,num2str(s.numleft),'FontSize',13,'FontWeight','bold','HorizontalAlignment','right');
     set(gca,'FontSize',13)
     set(gca,'LineWidth',2)
     set(gca,'TickLength',[.02 .05])
     colormap(jet)
     
-    axes(ha(i+l))
+    axes(ha(i+l));
     x = s.pos(:,1)*1e3;
     y = s.vel(:,1);
     if colordense
@@ -122,9 +122,9 @@ ylabel('X Velocity (m/s)','FontSize',13)
 %axes(ha(ceil(l/2)))
 %title('Breakdown of Effective Trap','FontSize',14)
 %end
-%print(gcf,'Figures/5x2-PSD-Compare','-dpng','-r300')
-%system('open Figures/5x2-PSD-Compare.png')
-%system('cp Figures/5x2-PSD-Compare.png ../alternate-charging/')
+print(gcf,'Figures/5x2-PSD-Compare','-dpng','-r300')
+system('open Figures/5x2-PSD-Compare.png')
+system('cp Figures/5x2-PSD-Compare.png ../alternate-charging/')
 %close(gcf)
 
 %%
@@ -162,7 +162,6 @@ function rs = callSim(N,ivz,D,M,iss3,varargin)
         'trans',tran,...
         'endphases',ep,...
         'smallt',4e-7,...
-        'tempz',3.5,...
         'calctype',repmat('p',1,1000),...
         varargin{:});
 

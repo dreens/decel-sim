@@ -5,18 +5,38 @@
 
 function varargout = efftrap3Dgen(decels,phis,primes,varargin)
 
-if ~isempty(varargin)
-    acc = varargin{1};
-    warning('effTrap:acc','4th Argument Found, Forcing a Deceleration rate.')
-    assert(isreal(acc),'Acceleration must be a real number.')
-    warning('off','effTrap:acc')
-else
-    acc = nan;
-end
+    assert(length(decels)+1==length(phis),'You need one phase for each charge configuration plus an extra.');
 
-assert(length(decels)+1==length(phis),'You need one phase for each charge configuration plus an extra.');
-assert(length(primes)==length(decels),'Specify a prime for each charge config');
+    settings = struct();
+    settings.primes = zeros(size(decels));
+    settings.primes(end/2+1:end) = 1;
+    settings.scales = ones(size(decels));
+    settings.acc = nan;
 
+    % update defaults for directly passed variables
+    lv = length(varargin);
+    assert(~mod(lv,2),'Arguments should be specified in pairs, but %d arguments passed.',lv);
+    for i=1:lv/2
+        fn = varargin{2*i-1};
+        if ~isfield(ri,fn)
+            warning('effTrap:notfield','Field %s does not appear to be a valid efftrap specification variable',fn)
+            warning('off','effTrap:notfield')
+        end
+        if strcmp(fn,'acc')
+            warning('effTrap:acc','4th Argument Set, Forcing a Deceleration rate.')
+            assert(isreal(acc),'Acceleration must be a real number.')
+            warning('off','effTrap:acc')
+        end
+        ri.(varargin{2*i-1}) = varargin{2*i};
+    end
+
+    prims = settings.primes;
+    acc = settings.acc;
+    scales = settings.scales;
+    assert(length(primes)==length(decels),'You need one prime for each charge configuration.');
+    assert(length(scales)==length(decels),'You need one scale for each charge configuration.');
+
+    
 % Shift phi a tiny bit to avoid strange problem that occurs if phi/90 is a
 % simple rational.
 phis = phis + .01;

@@ -3,7 +3,7 @@
 % used to get effective traps for DongDong's advanced switching schemes or
 % for checking alternatives to VSF mode, etc.
 
-function varargout = efftrap3Dgen(decels,phis,primes,varargin)
+function varargout = efftrap3Dgen(decels,phis,varargin)
 
     assert(length(decels)+1==length(phis),'You need one phase for each charge configuration plus an extra.');
 
@@ -18,21 +18,21 @@ function varargout = efftrap3Dgen(decels,phis,primes,varargin)
     assert(~mod(lv,2),'Arguments should be specified in pairs, but %d arguments passed.',lv);
     for i=1:lv/2
         fn = varargin{2*i-1};
-        if ~isfield(ri,fn)
+        if ~isfield(settings,fn)
             warning('effTrap:notfield','Field %s does not appear to be a valid efftrap specification variable',fn)
             warning('off','effTrap:notfield')
         end
         if strcmp(fn,'acc')
             warning('effTrap:acc','4th Argument Set, Forcing a Deceleration rate.')
-            assert(isreal(acc),'Acceleration must be a real number.')
             warning('off','effTrap:acc')
         end
-        ri.(varargin{2*i-1}) = varargin{2*i};
+        settings.(varargin{2*i-1}) = varargin{2*i};
     end
 
-    prims = settings.primes;
+    primes = settings.primes;
     acc = settings.acc;
     scales = settings.scales;
+    assert(isreal(acc),'Acceleration must be a real number.')
     assert(length(primes)==length(decels),'You need one prime for each charge configuration.');
     assert(length(scales)==length(decels),'You need one scale for each charge configuration.');
 
@@ -46,9 +46,9 @@ phis = phis + .01;
 ds(1:length(decels)) = struct();
 for i=1:length(decels)
     if ~strcmp(decels{i},'None')
-        ds(i).ff = load(['Decels/' decels{i} '.mat']);
+        ds(i).ff = load(['Fields/' decels{i} '.mat']);
     else
-        ds(i).ff.vf = @(x,~) zeros(max(size(x)),1);
+        ds(i).ff.vf = @(x,y,z) zeros(max(size(x)),1);
     end
 end
 
@@ -59,7 +59,7 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-25:.025:10)*1e-3;
+z=(-15:.025:5)*1e-3;
 
 x = (-.975:.025:.975)*1e-3;
 [xx,yy,zz] = ndgrid(x,x,z);
@@ -70,9 +70,9 @@ x = (-.975:.025:.975)*1e-3;
 lfgrids(1:length(decels)) = struct('vv',zeros(size(xx)));
 for i=1:length(lfgrids)
     if primes(i)
-        lfgrids(i).vv(:) = ds(i).ff.vf([xx(:) yy(:) zz(:)],2);
+        lfgrids(i).vv(:) = ds(i).ff.vf(xx(:),yy(:),zz(:))*scales(i);
     else
-        lfgrids(i).vv(:) = ds(i).ff.vf([yy(:) -xx(:) zz(:)],1);
+        lfgrids(i).vv(:) = ds(i).ff.vf(yy(:),-xx(:),zz(:)+5e-3)*scales(i);
     end
 end
 
@@ -108,10 +108,10 @@ end
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be
 % symmetrizing over the axis, so why not do it directly.
-vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
+% vv = (vv + vv(end:-1:1,end:-1:1,:))/2;
 
 % Symmetrize LR
-vv = (vv + permute(vv,[2 1 3]))/2;
+% vv = (vv + permute(vv,[2 1 3]))/2;
 
 % Now velocity compensation. First get coordinates of what should be the
 % trap center.

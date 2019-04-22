@@ -25,8 +25,8 @@ end
 
 if length(selectPlot)==2 && ~strcmp(selectPlot,'1D')
     h = figure('Position',[50 50 500 800]);
-    contourf(xp*1e3,zp*1e3,1e3*vv/kB,0:10:800);
-    caxis([0 500]);
+    contourf(xp*1e3,zp*1e3,1e3*vv/kB,-100:10:100);
+    caxis([-100 100]);
     g = colorbar;
     g.YLabel.String = 'Energy (mK)';
     g.YLabel.Rotation = 270;

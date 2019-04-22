@@ -56,9 +56,9 @@ outmod = efftrap3Dgen({'longdecel','ppgg','longdecel','longdecel','ppgg','longde
 plotTrapSlice({outmod},0,'contourArray')
 
 %%
-%outSFS = efftrap3Dgen({'longdecel','None','ppgg','None','longdecel','None','ppgg','None'},[-130,-50,-50,50,50,130,130,230,230],'scales',[1 1 .4 1 1 1 .4 1],'acc',0);
+outSFS = efftrap3Dgen({'longdecel','None','ppgg','None','longdecel','None','ppgg','None'},[-95,-85,-30,30,85,95,150,210,265],'primes',[0 0 0 0 1 1 1 1],'scales',[1 1 .075 1 1 1 .075 1],'acc',0);
 %outSFS = efftrap3Dgen({'ppgg','longdecel','ppgg','longdecel'},[-230,-130,-50,50,130],'scales',[1 1 1 1],'primes',[0 1 1 0]);
 %outAB = efftrap3Dgen({'None','ppgg','None','ppgg'},[-130,-50,50,130,230]);
-outO = efftrap3Dgen({'singlerod'},[-90 -80]);
+%outO = efftrap3Dgen({'longdecel'},[-135 45]);
 
-plotTrapSlice(outO,40,'yz')
+plotTrapSlice(-outSFS,29,'xz')

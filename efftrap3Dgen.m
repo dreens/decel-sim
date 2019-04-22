@@ -39,7 +39,7 @@ function varargout = efftrap3Dgen(decels,phis,varargin)
     
 % Shift phi a tiny bit to avoid strange problem that occurs if phi/90 is a
 % simple rational.
-phis = phis + .01;
+% phis = phis + .01;
 
 % Load the fields that will be combined in different phase angle ranges
 % to give the effective moving trap.
@@ -59,51 +59,67 @@ kB = 1.381e-23;
 % This is the range of coordinates that will be included. The z range is
 % large because different chunks get integrated over to get the effective
 % moving trap.
-z=(-15:.025:5)*1e-3;
+% z=(-15:.025:5)*1e-3;
 
 x = (-.975:.025:.975)*1e-3;
-[xx,yy,zz] = ndgrid(x,x,z);
+%[xx,yy,zz] = ndgrid(x,x,z);
 
 % lfgrids will contain large x-z grids giving the lab-fixed potential
 % energy over a few stages under the various charge configurations
 % specified.
-lfgrids(1:length(decels)) = struct('vv',zeros(size(xx)));
-for i=1:length(lfgrids)
-    if primes(i)
-        lfgrids(i).vv(:) = ds(i).ff.vf(xx(:),yy(:),zz(:))*scales(i);
-    else
-        lfgrids(i).vv(:) = ds(i).ff.vf(yy(:),-xx(:),zz(:)+5e-3)*scales(i);
-    end
-end
+% lfgrids(1:length(decels)) = struct('vv',zeros(size(xx)));
+% for i=1:length(lfgrids)
+%     if primes(i)
+%         lfgrids(i).vv(:) = ds(i).ff.vf(xx(:),yy(:),zz(:))*scales(i);
+%     else
+%         lfgrids(i).vv(:) = ds(i).ff.vf(yy(:),-xx(:),zz(:)+5e-3)*scales(i);
+%     end
+% end
 
 % Now we make a new z coordinate centered on the synchronous molecule. We
 % will fill the variable vv with effective potential energy relative to
 % this molecule.
 zphi = (-3:.025:3)*1e-3;
-[xp,yp,zp] = ndgrid(x,x,zphi);
-vv = zeros(size(xp));
+[~,~,zp] = ndgrid(x,x,zphi);
+vv = zp*0;
 
+sp = 5; % point density in degrees.
+% Now we loop through the configurations:
+for i=1:length(decels)
+    a = phis(i); b = phis(i+1);
+    c = b-a;
+    s = c/ceil(c/sp);
+    ps = a:s:b;
+    zzs = -2.5e-3 + ps/90*2.5e-3; % convert to z units
+    [xp,yp,zpp,wp] = ndgrid(x,x,zphi,zzs);
+    v = 0*xp;
+    p = primes(i); q = 1-p;
+    v(:) = ds(i).ff.vf(xp(:)*q+yp(:)*p,-p*xp(:)+q*yp(:),zpp(:)+wp(:)+p*5e-3+20e-3);
+    v = v*scales(i);
+    vv = vv + mean(v,4)*c;
+end
+vv = vv/(phis(end)-phis(1));
 % For each z effective coordinate, we will integrate over lab space z for a
 % 5 mm range with differing start and end points. The idea is that when a
 % molecule is ahead of the synchronous one in z, it experiences the
 % relevant charge configurations over a different range of lab space
 % coordinates, different in start and end point but not length. All
 % assuming the z velocity is large relative to the stage spacing.
-for i=1:length(zphi)
-    ps = -2.5e-3 + phis/90*2.5e-3;
-
-    as = ps;
-    for j=1:length(phis)
-        [c, as(j)] = min((zphi(i)+ps(j)-z).^2);
-        if c > (mode(diff(z))/2)^2
-            error('Add more z-points. angles out of range.')
-        end
-        if j>1
-            vv(:,:,i) = vv(:,:,i) + sum(lfgrids(j-1).vv(:,:,as(j-1):as(j)-1),3);
-        end
-    end
-    vv(:,:,i) = vv(:,:,i)/(as(end)-as(1));
-end
+% for i=1:length(zphi)
+%     ps = -2.5e-3 + phis/90*2.5e-3;
+% 
+%     as = ps;
+%     for j=1:length(phis)
+%         [c, as(j)] = min((zphi(i)+ps(j)-z).^2);
+%         if c > (mode(diff(z))/2)^2
+%             error('Add more z-points. angles out of range.')
+%         end
+%         if j>1
+%             vv(:,:,i) = vv(:,:,i) + sum(lfgrids(j-1).vv(:,:,as(j-1):as(j)-1),3);
+%         end
+%     end
+%     vv(:,:,i) = vv(:,:,i)/(as(end)-as(1));
+% end
 
 % Symmetrize for pggg. In principle I should add in the voltages
 % corresponding to gmgg etc, but I know that the net result will just be

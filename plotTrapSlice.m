@@ -17,6 +17,10 @@ if strcmp(selectPlot,'yz')
     xp = squeeze(yp(cut,:,:));
     zp = squeeze(zp(cut,:,:));
     vv = squeeze(vvv(cut,:,:));
+elseif strcmp(selectPlot,'xz')
+    xp = squeeze(xp(:,cut,:));
+    zp = squeeze(zp(:,cut,:));
+    vv = squeeze(vvv(:,cut,:));
 elseif strcmp(selectPlot,'xy')
     xp = squeeze(xp(:,:,cut));
     zp = squeeze(yp(:,:,cut));
@@ -25,7 +29,7 @@ end
 
 if length(selectPlot)==2 && ~strcmp(selectPlot,'1D')
     h = figure('Position',[50 50 500 800]);
-    contourf(xp*1e3,zp*1e3,1e3*vv/kB,-100:10:100);
+    contourf(xp*1e3,zp*1e3,1e3*vv/kB,-30:.5:30);
     caxis([-100 100]);
     g = colorbar;
     g.YLabel.String = 'Energy (mK)';

@@ -29,9 +29,8 @@ vline=linspace(c(2,1),c(2,end),100);
 
 plot(c(1,end)*ones(100,1)+(i-1)*L,vline,'b','LineWidth',2)
 plot(c(1,end)*ones(100,1)+(i-1)*L+L,vline,'b','LineWidth',2)
-
 end
-
+xlim(xl)
 %% s=3
 figure(200);
 subplot(4,1,2)
@@ -66,10 +65,11 @@ vline=linspace(c(2,1),d(2,end),100);
 plot(d(1,end)*ones(100,1)+(i-1)*3*L+2*L,vline,'b','LineWidth',2)
 
 end
+xlim(xl)
 %% VSF
 
 figure(200);
-subplot(4,1,4)
+subplot(4,1,3)
 hold on;
 
 c=sequence1('longdecel',45+90,135+90);
@@ -99,9 +99,9 @@ plot(c(1,end)*ones(100,1)+(i-1)*L,vline2,'b','LineWidth',2)
 plot(c(1,end)*ones(100,1)+(i-1)*L+L,vline2,'b','LineWidth',2)
 
 end
-
+xlim(xl)
 %% SF
-
+%{
 figure(200);
 subplot(4,1,3)
 hold on;
@@ -134,9 +134,10 @@ plot(c(1,1)*ones(100,1)+(i)*L,vline1,'b','LineWidth',2)
 plot(c(1,end)*ones(100,1)+(i-1)*L,vline2,'b','LineWidth',2)
 plot(c(1,end)*ones(100,1)+(i)*L,vline2,'b','LineWidth',2)
 end
+%}
 %% XSF
-figure(201);
-subplot(4,1,3)
+figure(200);
+subplot(4,1,4)
 hold on;
 phi1=-25;
 phi2=45;
@@ -169,7 +170,7 @@ plot(c(1,end)*ones(100,1)+(i-1)*L+L,vline2,'b','LineWidth',2)
 end
 
 
-
+xlim(xl)
 
 %% Helper Functions
 % returns a 2 column array, first column gives z axis coordinates in mm,
@@ -189,7 +190,7 @@ energy_all=[aenergy(0:1:90) aenergy(89:-1:-89)     aenergy(-90:1:0) ];
 energy_all=flip(energy_all);
 amp_z0=interp1(phi_all,energy_all,phi0:1:phif);
 
-out=[(phi0:1:phif)*L/180/1.3806e-26;amp_z0];
+out=[(phi0:1:phif)*L/180;amp_z0/3.33e-30/1e5];
 end
                   
 function out=sequence2(ss,phi0,phif)
@@ -208,6 +209,6 @@ phi_all=[0:1:360];
 energy_all=[flip(energy) energy(2:end-1) flip(energy) energy(2:end)];
 amp_z0=interp1(phi_all,energy_all,phi0:1:phif);
 
-out=[(phi0:1:phif)*L/180/1.3806e-26;amp_z0];
+out=[(phi0:1:phif)*L/180;amp_z0/3.33e-30/1e5];
                   
 end

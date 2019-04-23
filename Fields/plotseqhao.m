@@ -1,4 +1,11 @@
-%%s=1
+%% On-axis Energy Diagramming Tool
+% plotseqhao.m
+% Hao Wu, 4/20/2019
+
+%% Set some general parameters for plot style
+fs = 13;
+xl = [0 20];
+%% S=1
 figure(200);
 subplot(4,1,1)
 hold on;
@@ -165,6 +172,8 @@ end
 
 
 %% Helper Functions
+% returns a 2 column array, first column gives z axis coordinates in mm,
+% second column gives the potential energy in milliKelvin.
 function out=sequence1(ss,phi0,phif)
 % 1st colume: x; 2nd colume: 3rd: z; 4th: domain; 5th: E-field (V/m)
 
@@ -180,7 +189,7 @@ energy_all=[aenergy(0:1:90) aenergy(89:-1:-89)     aenergy(-90:1:0) ];
 energy_all=flip(energy_all);
 amp_z0=interp1(phi_all,energy_all,phi0:1:phif);
 
-out=[(phi0:1:phif)*L/180;amp_z0];
+out=[(phi0:1:phif)*L/180/1.3806e-26;amp_z0];
 end
                   
 function out=sequence2(ss,phi0,phif)
@@ -199,6 +208,6 @@ phi_all=[0:1:360];
 energy_all=[flip(energy) energy(2:end-1) flip(energy) energy(2:end)];
 amp_z0=interp1(phi_all,energy_all,phi0:1:phif);
 
-out=[(phi0:1:phif)*L/180;amp_z0];
+out=[(phi0:1:phif)*L/180/1.3806e-26;amp_z0];
                   
 end

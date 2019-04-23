@@ -2,9 +2,18 @@
 % plotseqhao.m
 % Hao Wu, 4/20/2019
 
+%% Setup the figure
+ff = figure;
+[ha, pos] = tight_subplot(3,2,[.05 .02],[.15 .08],[.06 .02]);
+set(ha([1 2 5 6]),'XTickLabel',{'  0','5','10','15','20   '})
+set(ha([3 5]),'YTickLabelMode','auto')
+axes(ha(1));plotTweak();
+p = get(gca,'Position'); p(2) = .75; set(gca,'Position',p);
+axes(ha(2));plotTweak()
+p = get(gca,'Position'); p(2) = .75; set(gca,'Position',p);
+
 %% S=1
-figure(200);
-subplot(4,1,1)
+axes(ha(3))
 hold on;
 
 c=sequence1('longdecel',45,225);
@@ -29,8 +38,7 @@ plot(c(1,end)*ones(100,1)+(i-1)*L+L,vline,'k:','LineWidth',2)
 end
 plotTweak()
 %% S=3
-figure(200);
-subplot(4,1,2)
+axes(ha(5))
 hold on;
 
 c=sequence1('longdecel',45,360);
@@ -65,8 +73,7 @@ end
 plotTweak()
 %% VSF
 
-figure(200);
-subplot(4,1,3)
+axes(ha(4))
 hold on;
 
 c=sequence1('longdecel',45+90,135+90);
@@ -98,7 +105,7 @@ plotTweak()
 %% SF
 %{
 figure(200);
-subplot(4,1,3)
+subplot(2,2,3)
 hold on;
 
 c=sequence1('longdecel',45+90,135+90);
@@ -131,10 +138,9 @@ plot(c(1,end)*ones(100,1)+(i)*L,vline2,'b','LineWidth',2)
 end
 %}
 %% XSF
-figure(200);
-subplot(4,1,4)
+axes(ha(6))
 hold on;
-phi1=-25;
+phi1=-45;
 phi2=45;
 c=sequence1('longdecel',phi1+180,phi2+180);
 d=sequence1('longdecel',0,360);
@@ -164,7 +170,16 @@ plot(c(1,end)*ones(100,1)+(i-1)*L+L,vline2,'k:','LineWidth',2)
 
 end
 
-plotTweak(33)
+plotTweak()
+
+
+%% Convert to PNG and output
+ff.Position = [100 50 900 350];
+ff.PaperPosition = [0 0 8.8889 3.5];
+print(gcf,'2x2-Diagram-Compare','-dpng','-r300')
+system('2x2-Diagram-Compare.png')
+
+
 
 %% Helper Functions
 % returns a 2 column array, first column gives z axis coordinates in mm,
@@ -189,13 +204,9 @@ end
 
 
 %% Plot Helper
-function plotTweak(varargin)
+function plotTweak()
     xlim([5 25])
     ylim([0 120])
-    set(gca,'XTickLabel',{''})
-    if nargin
-        set(gca,'XTickLabel',{'0','5','10','15','20'})
-    end
     set(gca,'FontSize',13)
-
+    set(gca,'LineWidth',2)
 end

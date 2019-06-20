@@ -77,7 +77,10 @@ elseif strcmp(selectPlot,'contourArray')
     a = axes('Parent',f);
     vvvfam = vvv;
     levels = [10,55,100,200];
-    colors = jet(length(levels));
+    %colors = jet(length(levels));
+    %colors = flipud(colors);
+    % these are the fixed brightness new matlab colors
+    colors = [0 0.447 0.741 ; 0.85 0.325 0.098 ; 0.929 0.694 0.125 ; 0.494 0.184 0.556 ; 0.446 0.674 0.188];
     colors = flipud(colors);
     for types=1:length(vvv)
         vvv = vvvfam{types};
@@ -85,12 +88,12 @@ elseif strcmp(selectPlot,'contourArray')
         xp = xp + ones(size(yp))*2.5e-3;
         for views = 1:length(levels)
             zp = zp + ones(size(zp))*4.5e-3*views;
-            if types==30
-                cut = 213;
+            if types==4
+                cut = 303;
             else
-                cut = 333;
+                cut = 193;
             end
-            makepatch(levels(views),colors(views,:),cut);
+            makepatch(levels(views),colors(types,:),cut);
             zp = zp - ones(size(zp))*4.5e-3*views;
         end
     end

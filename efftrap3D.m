@@ -111,7 +111,7 @@ mX = (length(x)+1)/2;
 % fictitious force corresponding to acceleration enough so this slope is
 % zeroed.
 slope = (vv(mX,mX,mZ+1)-vv(mX,mX,mZ-1))/(zp(mX,mX,mZ+1)-zp(mX,mX,mZ-1));
-vv = vv - zp.*slope2;
+vv = vv - zp.*slope;
    % vv = vv - (zp-2.5e-3).*slope;
 % We can also get the acceleration implied by that slope.
 accel = slope/mOH;

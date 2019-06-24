@@ -11,6 +11,7 @@ axes(ha(1));plotTweak();
 p = get(gca,'Position'); p(2) = .75; set(gca,'Position',p);
 axes(ha(2));plotTweak()
 p = get(gca,'Position'); p(2) = .75; set(gca,'Position',p);
+doF = true;
 
 %% S=1
 axes(ha(3))
@@ -71,8 +72,8 @@ plot(d(1,end)*ones(100,1)+(i-1)*3*L+2*L,vline,'k:','LineWidth',2)
 
 end
 plotTweak()
-%% VSF
-
+%% SF
+if ~doF
 axes(ha(4))
 hold on;
 
@@ -102,42 +103,42 @@ plot(c(1,end)*ones(100,1)+(i-1)*L+L,vline2,'k:','LineWidth',2)
 
 end
 plotTweak()
-%% SF
-%{
-figure(200);
-subplot(2,2,3)
+else
+%% F
+axes(ha(4))
 hold on;
 
 c=sequence1('longdecel',45+90,135+90);
 d=sequence1('longdecel',0,360);
-e=sequence2('singlerod2',45,135);
-f=sequence2('singlerod2',0,180);
-period=3;
+e=sequence1('singlerod',225,315);
+f=sequence1('singlerod',0,360);
+period=4;
 L=5;
 for i=1:period
 
 plot(c(1,:)+(i-1)*2*L,c(2,:),'k','LineWidth',2)
 
-plot(e(1,:)+(i-1)*2*L,e(2,:),'c','LineWidth',2)
+plot(e(1,:)+(i-1)*2*L,e(2,:),'r','LineWidth',2)
 
-plot(c(1,:)+(i-1)*2*L+L,c(2,:),'r','LineWidth',2)
-plot(e(1,:)+(i-1)*2*L+L,e(2,:),'m','LineWidth',2)
-plot(d(1,:)+(i-1)*2*L,d(2,:),'k-.')
-plot(f(1,:)+(i-1)*2*L,f(2,:),'c-.')
+plot(c(1,:)+(i-1)*2*L+L,c(2,:),'k','LineWidth',2)
+plot(e(1,:)+(i-1)*2*L+L,e(2,:),'r','LineWidth',2)
+plot(d(1,:)+(i-1)*2*L,d(2,:),'k-')
+plot(f(1,:)+(i-1)*2*L,f(2,:),'r--')
 
-plot(f(1,:)+(i-1)*2*L+L,f(2,:),'m-.')
-plot(d(1,:)+(i-1)*2*L+L,d(2,:),'r-.')
+plot(d(1,:)+(i-1)*2*L+L,d(2,:),'k--')
+plot(f(1,:)+(i-1)*2*L+L,f(2,:),'r-')
 
 vline1=linspace(e(2,end),c(2,1),100);
 vline2=linspace(e(2,1),c(2,end),100);
 
-plot(c(1,1)*ones(100,1)+(i-1)*L,vline1,'b','LineWidth',2)
-plot(c(1,1)*ones(100,1)+(i)*L,vline1,'b','LineWidth',2)
-plot(c(1,end)*ones(100,1)+(i-1)*L,vline2,'b','LineWidth',2)
-plot(c(1,end)*ones(100,1)+(i)*L,vline2,'b','LineWidth',2)
+plot(c(1,1)*ones(100,1)+(i-1)*L,vline1,'k:','LineWidth',2)
+plot(c(1,1)*ones(100,1)+(i)*L,vline1,'k:','LineWidth',2)
+plot(c(1,end)*ones(100,1)+(i-1)*L,vline2,'k:','LineWidth',2)
+plot(c(1,end)*ones(100,1)+(i)*L,vline2,'k:','LineWidth',2)
 end
-%}
-%% XSF
+plotTweak()
+end
+%% VSF
 axes(ha(6))
 hold on;
 phi1=-45;
@@ -170,6 +171,8 @@ plot(c(1,end)*ones(100,1)+(i-1)*L+L,vline2,'k:','LineWidth',2)
 
 end
 
+
+
 plotTweak()
 
 
@@ -177,7 +180,7 @@ plotTweak()
 ff.Position = [100 50 900 350];
 ff.PaperPosition = [0 0 8.8889 3.5];
 print(gcf,'2x2-Diagram-Compare','-dpng','-r300')
-system('2x2-Diagram-Compare.png')
+system('open 2x2-Diagram-Compare.png')
 
 
 
@@ -191,10 +194,17 @@ load(['Fields/' ss '.mat'],'aenergy');
 L=5;
 phi=-90:1:90;
 z=phi/180*L;
-energy=aenergy(-90:1:90);
-
+energy=aenergy(-90:10:90);
 phi_all=[0:1:360];
-energy_all=[aenergy(0:1:90) aenergy(89:-1:-89)     aenergy(-90:1:0) ];     
+
+if ~any(isnan(energy))
+    energy_all=[aenergy(0:1:90) aenergy(89:-1:-89)     aenergy(-90:1:0) ];     
+else
+    load(['Fields/' ss '.mat'],'vf');
+    pa = [90:450];
+    zall = pa/180*L*1e-3;
+    energy_all = vf(zeros(1,length(zall)),zeros(1,length(zall)),zall);
+end
 
 energy_all=flip(energy_all);
 amp_z0=interp1(phi_all,energy_all,phi0:1:phif);

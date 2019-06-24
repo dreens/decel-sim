@@ -80,21 +80,23 @@ elseif strcmp(selectPlot,'contourArray')
     %colors = jet(length(levels));
     %colors = flipud(colors);
     % these are the fixed brightness new matlab colors
-    colors = [0 0.447 0.741 ; 0.85 0.325 0.098 ; 0.929 0.694 0.125 ; 0.494 0.184 0.556 ; 0.446 0.674 0.188];
-    colors = flipud(colors);
+    colors = [0 0.447 0.741 ; 0.85 0.325 0.098 ; 0.929 0.694 0.125 ; 0.494 0.184 0.556 ; 0.466 0.674 0.188 ; 0.301 0.745 0.933 ; 0.635 0.078 0.184];
+    colors = colors*1.2;
+    colors(colors>1) = 1;
+    colors = flipud(colors(1:length(vvv),:));
     for types=1:length(vvv)
         vvv = vvvfam{types};
         vvv = permute(vvv,[3 2 1]);
         xp = xp + ones(size(yp))*2.5e-3;
         for views = 1:length(levels)
-            zp = zp + ones(size(zp))*4.5e-3*views;
+            zp = zp + ones(size(zp))*6e-3*views;
             if types==4
                 cut = 303;
             else
                 cut = 193;
             end
             makepatch(levels(views),colors(types,:),cut);
-            zp = zp - ones(size(zp))*4.5e-3*views;
+            zp = zp - ones(size(zp))*6e-3*views;
         end
     end
     xlim([-2e-3 2e-3]);
@@ -102,6 +104,12 @@ elseif strcmp(selectPlot,'contourArray')
     light('Position',[-5 5 -1]);
     light('Position',[0 5 0]);
     light('Position',[-5 -2 -5]);
+    set(a,'XColor','none')
+    set(a,'YColor','none')
+    set(a,'ZColor','none')
+    set(a,'XTickLabel',{})
+    set(a,'YTickLabel',{})
+    set(a,'ZTickLabel',{})
    % light('Position',[-5 -10 -1]);
 end
 

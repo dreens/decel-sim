@@ -21,14 +21,21 @@ assert(length(primes)==length(decels),'Specify a prime for each charge config');
 % simple rational.
 phis = phis + .01;
 
+% Mess with the potential relative to the one for OH, so as to simulate
+% other species.
+a = 200; b = 0.45; de = 3.3e-30; h = 6.626e-34; cc = 3e10;
+fff = @(j) h*cc*b*( sqrt(a^2 + (1e-5*j/de).^2) - a ) / ( sqrt(a^2 + 150^2) - a );
+
+
 % Load the fields that will be combined in different phase angle ranges
 % to give the effective moving trap.
 ds(1:length(decels)) = struct();
 for i=1:length(decels)
     if ~strcmp(decels{i},'None')
-        ds(i).ff = load(['Decels/' decels{i} '.mat']);
+        ds(i).ff = load(['Decels/' decels{i} '.mat'],'vf');
+        ds(i).vfvf = @(xyz,n) fff(ds(i).ff.vf(xyz,n));
     else
-        ds(i).ff.vf = @(x,~) zeros(max(size(x)),1);
+        ds(i).vfvf = @(x,~) zeros(max(size(x)),1);
     end
 end
 
@@ -50,9 +57,9 @@ x = (-.975:.025:.975)*1e-3;
 lfgrids(1:length(decels)) = struct('vv',zeros(size(xx)));
 for i=1:length(lfgrids)
     if primes(i)
-        lfgrids(i).vv(:) = ds(i).ff.vf([xx(:) yy(:) zz(:)],2);
+        lfgrids(i).vv(:) = ds(i).vfvf([xx(:) yy(:) zz(:)],2);
     else
-        lfgrids(i).vv(:) = ds(i).ff.vf([yy(:) -xx(:) zz(:)],1);
+        lfgrids(i).vv(:) = ds(i).vfvf([yy(:) -xx(:) zz(:)],1);
     end
 end
 

@@ -2,7 +2,7 @@
 % Make use of the Min Depth Finder to study some plots!
 %
 
-phis = [0:5:35];
+phis = [0:5:150];
 c = @(p) p + (p<=0)*180 + (p>90)*90;
 
 if ~exist('modes','var') || ~isstruct(modes)
@@ -28,11 +28,14 @@ if ~isfield(modes,'vsf')
     modes.vsf.decels = {'ppgg','longdecel'};
     modes.vsf.phifunc = @(p) [p-180, -p, p];
 end
+
 if ~isfield(modes,'xsf')
     modes.xsf = struct();
     modes.xsf.decels = {'ppmm_2mm','longdecel'};
     modes.xsf.phifunc = @(p) [p-180, -p, p];
 end
+
+
 if ~isfield(modes,'vsf0')
     modes.vsf0 = struct();
     modes.vsf0.decels = {'ppgg','None'};
@@ -63,31 +66,32 @@ if ~isfield(modes,'xsf01')
     modes.xsf01.decels = {'ppmm_2mm','None'};
     modes.xsf01.phifunc = @(p) [p-190, p-80, p-10];
 end
-% if ~isfield(modes,'xsfxb')
-%     modes.xsfxb = struct();
-%     modes.xsfxb.decels = {'longdecel','ppmm_2mm','longdecel'};
-%     modes.xsfxb.phifunc = @(p) [p-180, p-135, p-45, p];
-% end
-% if ~isfield(modes,'xsfxb10')
-%     modes.xsfxb10 = struct();
-%     modes.xsfxb10.decels = {'longdecel','ppmm_2mm','longdecel'};
-%     modes.xsfxb10.phifunc = @(p) [p-180, p-145, p-35, p];
-% end
-% if ~isfield(modes,'xsfxb20')
-%     modes.xsfxb20 = struct();
-%     modes.xsfxb20.decels = {'longdecel','ppmm_2mm','longdecel'};
-%     modes.xsfxb20.phifunc = @(p) [p-180, p-155, p-25, p];
-% end
+
+if ~isfield(modes,'xsfxb')
+    modes.xsfxb = struct();
+    modes.xsfxb.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb.phifunc = @(p) [p-180, p-135, p-45, p];
+end
+if ~isfield(modes,'xsfxb10')
+    modes.xsfxb10 = struct();
+    modes.xsfxb10.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb10.phifunc = @(p) [p-180, p-145, p-35, p];
+end
+if ~isfield(modes,'xsfxb20')
+    modes.xsfxb20 = struct();
+    modes.xsfxb20.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb20.phifunc = @(p) [p-180, p-155, p-25, p];
+end
 if ~isfield(modes,'xsfxb30')
     modes.xsfxb30 = struct();
     modes.xsfxb30.decels = {'longdecel','ppmm_2mm','longdecel'};
     modes.xsfxb30.phifunc = @(p) [p-180, p-165, p-15, p];
 end
-% if ~isfield(modes,'xsfxbm10')
-%     modes.xsfxbm10 = struct();
-%     modes.xsfxbm10.decels = {'longdecel','ppmm_2mm','longdecel'};
-%     modes.xsfxbm10.phifunc = @(p) [p-180, p-125, p-55, p];
-% end
+if ~isfield(modes,'xsfxbm10')
+    modes.xsfxbm10 = struct();
+    modes.xsfxbm10.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxbm10.phifunc = @(p) [p-180, p-125, p-55, p];
+end
 
 %% Vary Phi2
 for p2=10:10:170
@@ -105,6 +109,7 @@ for p2=10:10:170
     end
 
 end
+
 %% All of the needed potentials and min depths.
 allmodes = fields(modes);
 for i=1:length(allmodes)
@@ -147,16 +152,17 @@ end
 %legend('show')
 
 %% Plot Lots of Things, Edit as Needed
-if false
+if true
 figure; hold on
 allModes = fields(modes);
 for i=1:length(allModes)
     modeName = allModes{i};
-    if length(modeName)>=5 && strcmp(modeName(1),'x')
+    if true %length(modeName)>=5 && strcmp(modeName(1),'x')
         thisM = modes.(modeName);
         accs = [thisM([105:180 1:100]).acc]/1e3;
         depths = [thisM([105:180 1:100]).dep]/1.38e-23/1e-3;
         plot(accs,depths,'DisplayName',allModes{i})
+        hold on
     end
 end
 
@@ -167,7 +173,7 @@ end
 %% Plot the Non-Optimized, Well-Defined Modes
 figure; subplot(2,1,1); hold on
 allModes = fields(modes);
-plotModes = {'s1','s3','sf'};
+plotModes = {'s1','s3','sf','vsf','xsf'};
 for i=1:length(plotModes)
     modeName = plotModes{i};
     thisM = modes.(modeName);

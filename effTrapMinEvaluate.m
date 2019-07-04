@@ -87,6 +87,16 @@ if ~isfield(modes,'xsfxb30')
     modes.xsfxb30.decels = {'longdecel','ppmm_2mm','longdecel'};
     modes.xsfxb30.phifunc = @(p) [p-180, p-165, p-15, p];
 end
+if ~isfield(modes,'xsfxb35')
+    modes.xsfxb35 = struct();
+    modes.xsfxb35.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb35.phifunc = @(p) [p-180, p-170, p-10, p];
+end
+if ~isfield(modes,'xsfxb40')
+    modes.xsfxb40 = struct();
+    modes.xsfxb40.decels = {'longdecel','ppmm_2mm','longdecel'};
+    modes.xsfxb40.phifunc = @(p) [p-180, p-175, p-5, p];
+end
 if ~isfield(modes,'xsfxbm10')
     modes.xsfxbm10 = struct();
     modes.xsfxbm10.decels = {'longdecel','ppmm_2mm','longdecel'};
@@ -157,10 +167,10 @@ figure; hold on
 allModes = fields(modes);
 for i=1:length(allModes)
     modeName = allModes{i};
-    if true %length(modeName)>=5 && strcmp(modeName(1),'x')
+    if strcmp(modeName(1),'v')
         thisM = modes.(modeName);
-        accs = [thisM([105:180 1:100]).acc]/1e3;
-        depths = [thisM([105:180 1:100]).dep]/1.38e-23/1e-3;
+        accs = [thisM([180 1:100]).acc]/1e3;
+        depths = [thisM([180 1:100]).dep]/1.38e-23/1e-3;
         plot(accs,depths,'DisplayName',allModes{i})
         hold on
     end
@@ -173,7 +183,7 @@ end
 %% Plot the Non-Optimized, Well-Defined Modes
 figure; subplot(2,1,1); hold on
 allModes = fields(modes);
-plotModes = {'s1','s3','sf','vsf','xsf'};
+plotModes = {'s1','s3','sf'};
 for i=1:length(plotModes)
     modeName = plotModes{i};
     thisM = modes.(modeName);
@@ -189,39 +199,34 @@ end
 xlabel('Deceleration (km/s/s)')
 ylabel('Trap Depth (mK)')
 title('Effective Trap Depths')
-xlim([0 400])
+xlim([0 60])
 
 %% Optimized envelope for VSF mod
 % Let's just grab the peaks.
 %figure;
-grabNums = [20:10:100 120];
 bestModesVSF = {};
-for j=grabNums
-    bestModesVSF{end+1} = ['vsfe' num2str(j)];
-end
-bestPhisVSF = grabNums*0;
-for i=1:length(bestModesVSF)
-    modeName = bestModesVSF{i};
-    thisM = modes.(modeName);
-    phidef = [1:90 -89:0];
-    thesePhis = phidef(~cellfun(@isempty,{thisM.dep}));
-    depths = [thisM.dep];
-    accs = [thisM.acc];
-    deptweak = accs*5e-7*1.38e-23;
-    [~, loc] = max(depths+deptweak);
-    bestPhisVSF(i) = thesePhis(loc);
-end
+bestPhisVSF = [];
+bestModesVSF(1:4) = {'vsfe10'};
+bestPhisVSF(1:4) = 0:5:15;
+bestModesVSF{5} = 'vsfe20';
+bestPhisVSF(5) = [30];
+bestModesVSF{6} = 'vsfe30';
+bestPhisVSF(6) = 40;
+bestModesVSF{7} = 'vsfe40';
+bestPhisVSF(7) = 45;
+bestModesVSF{8} = 'vsfe50';
+bestPhisVSF(8) = [50];
+bestModesVSF{9} = 'vsfe60';
+bestPhisVSF(9) = 55;
+bestModesVSF{10} = 'vsfe80';
+bestPhisVSF(10) = 60;
+bestModesVSF{11} = 'vsfe90';
+bestPhisVSF(11) = 65;
+bestModesVSF(12:16) = {'vsfe130'};
+bestPhisVSF(12:16) = 70:5:90;
 
-% next we need to add the leading results onto the end:
-bestPhisVSF = [bestPhisVSF 70:5:90];
-bestModesVSF(end+1:end+5) = {'vsfe130'};
-
-% close to zero phase angle, nothing seems to work perfectly. I'm just
-% going to hard code it, these peaks come by plotting full envelopes.
-% Actually, let's grab peaks from the VSF modification where no
-% conventional charge config is used (vsf0, vsf01, vsf02 above)
-bestPhisVSF = [45 -5 bestPhisVSF];
-bestModesVSF = [{'vsf03' 'vsfe20'} bestModesVSF];
+bestModesVSF = {'vsf03',bestModesVSF};
+bestPhisVSF = [45 bestPhisVSF];
 
 bestAccs = bestPhisVSF;
 bestPeaks = bestPhisVSF;
@@ -240,34 +245,29 @@ plot(bestAccs,bestPeaks,'DisplayName','VSF*','LineWidth',2)
 %% Optimized envelope for XSF mod
 % Let's just grab the peaks.
 %figure;
-grabModes = cell(1,length(20:10:110));
-for j=20:10:110
-    grabModes{j/10-1} = ['xsfe' num2str(j)];
-end
-bestModesXSF = grabModes;
-bestPhisXSF = zeros(1,length(grabModes));
-for i=1:length(grabModes)
-    modeName = grabModes{i};
-    thisM = modes.(modeName);
-    phidef = [1:90 -89:0];
-    thesePhis = phidef(~cellfun(@isempty,{thisM.dep}));
-    depths = [thisM.dep];
-    accs = [thisM.acc];
-    deptweak = accs*5e-7*1.38e-23;
-    [~, loc] = max(depths+deptweak);
-    bestPhisXSF(i) = thesePhis(loc);
-end
-
-% next we need to add the leading results onto the end:
-bestPhisXSF = [bestPhisXSF 70:5:90];
+bestModesXSF = {};
+bestPhisXSF = [];
+bestModesXSF{1} = 'xsfxb35';
+bestPhisXSF(1) = 0;
+bestModesXSF(2:3) = {'xsfe20'};
+bestPhisXSF(2:3) = [10 15];
+bestModesXSF{4} = 'xsfe30';
+bestPhisXSF(4) = 25;
+bestModesXSF{5} = 'xsfe40';
+bestPhisXSF(5) = 35;
+bestModesXSF(6:7) = {'xsfe50'};
+bestPhisXSF(6:7) = [40 45];
+bestModesXSF{8} = 'xsfe60';
+bestPhisXSF(8) = 50;
+bestModesXSF{9} = 'xsfe70';
+bestPhisXSF(9) = 55;
+bestModesXSF{10} = 'xsfe90';
+bestPhisXSF(10) = 60;
+bestModesXSF{11} = 'xsfe100';
+bestPhisXSF(11) = 65;
 bestModesXSF(end+1:end+5) = {'xsfe110'};
+bestPhisXSF(end+1:end+5) = 70:5:90;
 
-% close to zero phase angle, nothing seems to work perfectly. I'm just
-% going to hard code it, these peaks come by plotting full envelopes.
-% Actually, let's grab peaks from the VSF modification where no
-% conventional charge config is used (vsf0, vsf01, vsf02 above)
-bestPhisXSF = [0 bestPhisXSF];
-bestModesXSF = [{'xsfxb30'} bestModesXSF];
 
 bestAccs = bestPhisXSF;
 bestPeaks = bestPhisXSF;
@@ -292,18 +292,6 @@ set(gca,'FontSize',13)
 hl = legend('show');
 hl.FontSize = 13;
 
-%% Delete Phi2 Related Modes
-if false
-    allModes = fields(modes);
-
-    for i=1:length(allModes)
-        if length(allModes{i})==7
-            modes = rmfield(modes,allModes{i});
-        end
-    end
-
-end
-
 %% Actual Simulation?
 % Here we make an attempt to actually load up these traps and see what
 % happens!
@@ -314,7 +302,7 @@ end
 % space volume from the remaining number.
 %
 % Did this mostly in simEffTrap. Here we just loop through and plot.
-simphis = 0:5:100;
+simphis = 0:5:110;
 NN = 1e5;
 subplot(2,1,2); hold on
 allModes = fields(modes);
@@ -328,15 +316,15 @@ for mode=plotModes
     for p=simphis
         fprintf(' Phi=%d:',p)
         if isfield(thisM(c(p)),'pot') && ~isempty(thisM(c(p)).pot)
-            f = 1+2*strcmp(modeName,'s1');
+            f = 3-2*strcmp(modeName,'s3');
             [num, psv] = simEffTrap(thisM(c(p)).pot,'num',NN*f);
             psvs = [psvs psv];
             accs = [accs thisM(c(p)).acc];
         elseif p>90
             if strcmp(modeName,'s3')
-                a = 4*((p-90)/5) + 86;
+                a = .2*((p-90)/5) + 13;
             else
-                a = 8*((p-90)/5) + 259;
+                a = .7*(p-90)/5 + 39
             end
             a = a * 1e3; % convert to m/s/s
             pot = efftrap3Dgen(thisM(1).decels,thisM(1).phifunc(90),[1 1],a);
@@ -344,7 +332,7 @@ for mode=plotModes
             psvs = [psvs psv];
             accs = [accs a];
         end
-        fprintf(' %d, %1.1f\n',num,psv)
+        fprintf(' %d, %f\n',num,psv)
     end
     accs = accs / 1e3; % back to km/s/s
     plot(accs,psvs,'DisplayName',upper(modeName),'LineWidth',2)
@@ -353,10 +341,10 @@ end
 xlabel('Deceleration (km/s/s)','FontSize',13)
 ylabel('Phase Space Volume (m^6/s^3)','FontSize',13)
 title('Monte-Carlo in Effective Trap','FontSize',14)
-xlim([0 400])
+xlim([0 60])
 set(gca,'FontSize',13)
 set(gca,'YScale','log')
-ylim([1e-6,1e-3]);
+ylim([1e-8,1e-5]);
 hl = legend('show');
 hl.FontSize = 13;
 
@@ -377,7 +365,7 @@ for i=1:length(bestPhisVSF)
 end
 
 % Add in some higher phase angles
-for a=[300e3 310e3]
+for a=[41e3 41.5e3 42e3 43.5e3]
     mode = modes.(bestModesVSF{end});
     mode = mode(90);
     pot = efftrap3Dgen(mode.decels,mode.phifunc(90),[1 1],a);
@@ -385,7 +373,7 @@ for a=[300e3 310e3]
     psvs = [psvs psv];
     accs = [accs a];
 end
-            
+%}            
 accs = accs * 1e-3;
 plot(accs,psvs,'DisplayName','VSF*','LineWidth',2)
 %% And the XSF
@@ -396,21 +384,21 @@ for i=1:length(bestPhisXSF)
     thisM = modes.(bestModesXSF{i});
     thisM = thisM(c(bestPhisXSF(i)));
     accs(i) = thisM.acc;
-    [num, psv] = simEffTrap(thisM.pot,'num',NN,'maxVel',17);
+    [num, psv] = simEffTrap(thisM.pot,'num',NN,'maxVel',7);
     fprintf(', N: %d, PSV: %f\n',num,psv)
     psvs(i) = psv;
 end    
     
 % Add in some higher phase angles
-for a=[370e3]
+for a=[52e3 54e3 56e3 58e3]
     mode = modes.(bestModesXSF{end});
     mode = mode(90);
     pot = efftrap3Dgen(mode.decels,mode.phifunc(90),[1 1],a);
-    [num, psv] = simEffTrap(pot,'num',NN,'maxVel',17);
+    [num, psv] = simEffTrap(pot,'num',NN);
     psvs = [psvs psv];
     accs = [accs a];
 end
-
+%}
 accs = accs*1e-3;
 plot(accs,psvs,'DisplayName','XSF*','LineWidth',2)
 
@@ -422,7 +410,7 @@ psvs = raccs;
 i = 1;
 for tp=tpots
     fprintf(' Acc=%d: ',raccs(i))
-    [num, psv] = simEffTrapRing(tp{:},'num',NN*3,'maxVel',17);
+    [num, psv] = simEffTrapRing(tp{:},'num',NN*3);
     psvs(i) = psv; i = i+1;
     fprintf('N=%d, PSV=%f\n',num,psv)
 end

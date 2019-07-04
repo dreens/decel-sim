@@ -46,6 +46,11 @@ energy = @(e)  arrayfun(energysingle,e);
 % get the potential energy
 vv = energy(ee);
 
+% convert for the 1 1 state of D2O.
+aa = 200; b = 0.45; de = 3.3e-30; h = 6.626e-34; cc = 3e10;
+fff = @(j) h*cc*b*( sqrt(aa^2 + (1e-5*j/de).^2) - aa ) / ( sqrt(aa^2 + 150^2) - aa );
+vv = fff(vv);
+
 allpots{ii+1} = vv;
 end
 %% Look things over
@@ -73,12 +78,12 @@ end
     
     
 %% Consider different tilts
-accs = 0:106;
-deps = zeros(size(accs));
+accs = 0:.25:3;
+deps = [];
 pot3D = zeros(2*size(meanpot,1)-1, size(meanpot,2), 3);
 mOH = 2.82328e-26; % Accounts for Oxygen binding energy
 mid = size(meanpot,1);
-raccs = [0:5:100 106];
+raccs = 0:.25:3;
 tpots = cell(size(raccs));
 
 for a=accs
@@ -87,7 +92,7 @@ for a=accs
     pot3D(mid:end,:,2) = thisTiltPot;
     pot3D(mid:-1:1,:,2) = thisTiltPot;
     pot3D(:,:,[1 3]) = max(thisTiltPot(:));
-    deps(a+1) = effTrapMinDepth(pot3D);
+    deps(end+1) = effTrapMinDepth(pot3D);
 end
 for i=1:length(raccs)
     thisTiltPot = meanpot + zz * raccs(i) * 1e3 * mOH;

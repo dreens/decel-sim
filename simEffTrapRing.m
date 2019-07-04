@@ -8,9 +8,9 @@ function varargout = simEffTrapRing(varargin)
     assert(~isempty(pot),'Can''t simulate an empty potential.');
 
     settings = struct();
-    settings.maxVel = 10;
-    settings.time = 3e-3;
-    settings.step = 1e-6;
+    settings.maxVel = 5;
+    settings.time = 20e-3;
+    settings.step = 1e-7;
     settings.num = 1e3;
     settings.zwidth = 3; %half width of the initialized volume in z direction
     

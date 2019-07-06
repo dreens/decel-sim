@@ -76,11 +76,11 @@ elseif strcmp(selectPlot,'contourArray')
     f = figure('Position',[10 10 1116 570]);
     a = axes('Parent',f);
     vvvfam = vvv;
-    levels = [10,55,100,200];
+    levels = [12,55,100,200];
     %colors = jet(length(levels));
     %colors = flipud(colors);
     % these are the fixed brightness new matlab colors
-    colors = [0 0.447 0.741 ; 0.85 0.325 0.098 ; 0.929 0.694 0.125 ; 0.494 0.184 0.556 ; 0.466 0.674 0.188 ; 0.301 0.745 0.933 ; 0.635 0.078 0.184];
+    colors = [0 0.447 0.741 ; .85 0.325 0.098 ; 0.929 0.694 0.125 ; 0.494 0.184 0.556 ; 0.466 0.674 0.188 ; 0.301 0.745 0.933 ; 0.635 0.078 0.184];
     colors = colors*1.2;
     colors(colors>1) = 1;
     colors = flipud(colors(1:length(vvv),:));
@@ -110,6 +110,7 @@ elseif strcmp(selectPlot,'contourArray')
     set(a,'XTickLabel',{})
     set(a,'YTickLabel',{})
     set(a,'ZTickLabel',{})
+    light('Position',[0 5 0]);
    % light('Position',[-5 -10 -1]);
 end
 
@@ -128,7 +129,7 @@ function h = makepatch(t,c,cut)
     h.EdgeAlpha = 0;
     h.FaceAlpha = 1;
     h.AmbientStrength = 0.1;
-    h.DiffuseStrength = .5;
+    h.DiffuseStrength = .4;
     h.SpecularStrength = .25;
     h.BackFaceLighting = 'unlit';
 end

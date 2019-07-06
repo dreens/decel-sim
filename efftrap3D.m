@@ -49,8 +49,8 @@ ii = zeros(size(xx));
 
 % Of course the separate possible translations are achieved by changing x
 % for y as appropriate.
-ff(:) = 2*r.vf([yy(:) -xx(:) zz(:)],2);
-gg(:) = 2*r.vf([xx(:) yy(:) zz(:)],2);
+ff(:) = r.vf([yy(:) -xx(:) zz(:)],2);
+gg(:) = r.vf([xx(:) yy(:) zz(:)],2);
 hh(:) = s.vf([yy(:) -xx(:) zz(:)],2);
 ii(:) = s.vf([xx(:) yy(:) zz(:)],2);
 

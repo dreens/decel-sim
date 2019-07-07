@@ -225,7 +225,7 @@ bestPhisVSF(11) = 65;
 bestModesVSF(12:16) = {'vsfe130'};
 bestPhisVSF(12:16) = 70:5:90;
 
-bestModesVSF = {'vsf03',bestModesVSF};
+bestModesVSF = {'vsf03',bestModesVSF{:}};
 bestPhisVSF = [45 bestPhisVSF];
 
 bestAccs = bestPhisVSF;

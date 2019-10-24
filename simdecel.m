@@ -9,22 +9,24 @@ function rsf = simdecel()
 
     %% constants for general use
     r.k = 1.381e-23;
-    r.mOH = 2.82328e-26; % Accounts for Oxygen binding energy
+    mOH = 2.82328e-26; % Accounts for Oxygen binding energy
     r.uOH = 9.27401e-24 * 1.4;
     r.h = 6.62607e-34;
     r.hb = r.h/(2*pi);
+    
+    r.mOH = num2cell(12.5*mOH./([10 10 11 11 12 12 13 13 14 14 15 15]));
     
     %% initialization of a run
     % Like the fortran sim, these can be put in braces to indicate several
     % runs over different parameter options.
     
     % variables for the initial distribution
-    r.dname = 'delayswitch_speed_panel_broaden';
+    r.dname = 'vary_voltage_S1_F';
     r.num = 1e6;
-    r.tempxy = 400e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    r.tempxy = 300e-3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     r.spreadxy = 3e-3;
-    r.tempz = 400e-3;
-    r.spreadz = 15e-3;
+    r.tempz = 300e-3;
+    r.spreadz = 10e-3;
     r.initvz = 820;
     r.dist = 'gaussian';
         
@@ -46,11 +48,13 @@ function rsf = simdecel()
     % decelerator timing variables
     p = 55;
     n = 333;
-    r.chargetype = repmat({repmat('ab',1,n), repmat('a',1,n)},1,6);
-    r.stages = repmat({floor((1:(2*n-1))/2+1), 1:n},1,6);
-    r.rot180 = repmat({mod(floor((1:(2*n-1))/4),2), zeros(1,n)},1,6);
-    r.endphases =   repmat({[p repmat([-p, p],1,n-1)], p*ones(1,n)},1,6);
-    r.finalvz = {800 800 500 500 200 200 100 100 50 50 37 37};
+    reps = 6;
+    r.chargetype = repmat({repmat('ab',1,n), repmat('a',1,n)},1,reps);
+    r.stages = repmat({floor((1:(2*n-1))/2+1), 1:n},1,reps);
+    r.rot180 = repmat({mod(floor((1:(2*n-1))/4),2), zeros(1,n)},1,reps);
+    r.endphases =   repmat({[p repmat([-p, p],1,n-1)], p*ones(1,n)},1,reps);
+    r.finalvz = 50;%{800 800 500 500 200 200 100 100 50 50 37 37};
+    
 
     % simulation timing variables
     r.smallt = 1e-7;
@@ -68,7 +72,9 @@ function rsf = simdecel()
     %% Here we just loop through the struct of runs, and run each one.
     for i=1:length(rs)
         rng(rs(i).seed) %seed the random number generator
-        fprintf('run:%3d/%d\n ',i,length(rs))
+        if ~mod(i,10) || i > length(rs)-10
+            fprintf('run:%3d/%d\n ',i,length(rs))
+        end
         rr = init(rs(i));
         rsf(i) = run(rr);
         rsf(i).f = 0; %clear the fields, massive data sink.
@@ -83,7 +89,7 @@ function rsf = simdecel()
     system(['cp simdecel.m ./autosaves/simdecel_' t '_' r.dname '.m']);
    
     %disp(rsf(1).vels(end))
-    %resultsdecel(rsf)
+    resultsdecel(rsf)
 end
 
 function r = init(r)

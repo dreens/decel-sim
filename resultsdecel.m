@@ -1,10 +1,12 @@
 %% Plots results
 function resultsdecel(rs)
+    mOH =  2.82328e-26;
     figure('Position',[0,0,2000,2000])
     colors = get(gca,'ColorOrder');
     colors = [colors ; (1-colors)];
-    lines = repmat({'-','--'},1,10);
-    sname = repmat({'DSwitch','Normal'},1,6);
+    colors = [colors ; colors];
+    lines = repmat({'-','--'},1,60);
+    sname = repmat({'DSwitch','Normal'},1,60);
     for i=1:length(rs)
         r = rs(i);
         i2 = round(i/2+.25);
@@ -12,7 +14,7 @@ function resultsdecel(rs)
         l = lines{i};
         subplot(2,3,1); hold on
         h = plot(r.molnum/r.molnum(1),'Color',c,'LineStyle',l);
-        h.DisplayName = sprintf('v=%2.1f, %s',r.vels(end),sname{i});
+        h.DisplayName = sprintf('V=%2.1f, %s',mOH*12.5/r.mOH,sname{i});
         
         subplot(2,3,2); hold on
         plot(0:max(r.stages),[r.initvz r.vels],'b-','Color',c,'LineStyle',l);
@@ -58,7 +60,7 @@ function resultsdecel(rs)
     set(gca,'FontSize',12)
     set(gca,'YScale','log')
     grid on
-    %legend('show')
+    legend('show')
     
     subplot(2,3,2)
     xlabel('Stage Number','FontSize',12)

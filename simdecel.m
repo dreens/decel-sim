@@ -14,7 +14,9 @@ function rsf = simdecel()
     r.h = 6.62607e-34;
     r.hb = r.h/(2*pi);
     
-    r.mOH = num2cell(12.5*mOH./([10 10 11 11 12 12 13 13 14 14 15 15]));
+    volt = 10:.25:13;
+    voltdouble = reshape([volt ; volt],1,2*length(volt));
+    r.mOH = num2cell(12.5*mOH./(voltdouble));
     
     %% initialization of a run
     % Like the fortran sim, these can be put in braces to indicate several
@@ -48,7 +50,7 @@ function rsf = simdecel()
     % decelerator timing variables
     p = 55;
     n = 333;
-    reps = 6;
+    reps = length(volt);
     r.chargetype = repmat({repmat('ab',1,n), repmat('a',1,n)},1,reps);
     r.stages = repmat({floor((1:(2*n-1))/2+1), 1:n},1,reps);
     r.rot180 = repmat({mod(floor((1:(2*n-1))/4),2), zeros(1,n)},1,reps);

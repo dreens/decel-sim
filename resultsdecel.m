@@ -2,6 +2,7 @@
 function resultsdecel(rs)
     figure('Position',[0,0,1000,1000])
     colors = get(gca,'ColorOrder');
+    colors = [ colors ; colors ; colors ; colors ];
     %colors = [colors([5 4 3 2 1 6 7],:) ; (1-colors)];
     lines = repmat({'-','-'},1,10);
     sname = repmat({'DSwitch','Normal'},1,6);

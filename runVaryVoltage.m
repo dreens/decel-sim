@@ -8,33 +8,33 @@ ivz = 825;
 dcs1 = struct('a','longdecel','b','longdecel');
 dcsf = struct('a','longdecel','b','singlerod');
 ct = ivz; rots = ivz; trans = ivz; ep = ivz;
-i = 1;
-for n = 333
-    ct = repmat('ba',1,n);
-    rot = [0 0 90 90 180 180 270 270];
-    rot = repmat(rot,1,ceil(n/4));
-    rots = rot(1:2*n);
+n = 333;
+ct = repmat('ba',1,n);
+rot = [0 0 90 90 180 180 270 270];
+rot = repmat(rot,1,ceil(n/4));
+rots = rot(1:2*n);
 
-    tran = [1 1 0 0];
-    tran = repmat(tran,1,ceil(n/2));
-    trans = tran(1:2*n);
+tran = [1 1 0 0];
+tran = repmat(tran,1,ceil(n/2));
+trans = tran(1:2*n);
 
-    ep = repmat([125 235 305 55],1,n); % S=1
-    %ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
-    %ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
-    %ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
-    
-    i = i + 1;
-end
+p = 57.415;
+ep = repmat([180-p 180+p 360-p p],1,n); % S=1
 
-rss1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,...
-    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000));
-rssf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,...
-    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000));
+s1test = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,...
+    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1);
+
+tt = s1test.times;
+m = num2cell((2.82328e-26)*12.5./(10:.25:13));
+s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,...
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000,'mOH',m);
+sf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,...
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000,'mOH',m);
+
 
 %% Next for VSF:
 
-
+%{
 %% Plotting
 %
 % Even for pathetically low speeds, I don't find much loss. I need to
@@ -84,5 +84,5 @@ end
 
 plot(sfv,sf,'DisplayName','SF','LineWidth',2)
 
-
+%}
 

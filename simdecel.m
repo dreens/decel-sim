@@ -336,6 +336,10 @@ function gone = stage()
     % Handle 'translations' of the potentials by artifically futzing with
     % the z coordinates.
     %checktrans()
+    
+    % Cluge in "turn-on" time by reducing acceleration over a certain
+    % timeframe.
+    r.turnontime = 0;
         
     % Make sure the synch molecule is "in" the fields. If not assume
     % loading and redefine z-coordinates
@@ -446,6 +450,7 @@ function smallstep(t)
             
     %update time.
     r.time = r.time + t;
+    r.turnontime = r.turnontime + t;
 end
 
 %gets acceleration
@@ -473,6 +478,7 @@ function a = acc()
     ay = r.f.(r.charge).dvdy(x,y,z);
     az = r.f.(r.charge).dvdz(x,y,z);
     a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
+    a = a * (1 - exp(-r.turnontime/500e-9));
     
     %r.xx(r.smallnum) = any(isnan(a(2,:)));
     %r.yy(r.smallnum) = any(isnan(a(3,:)));

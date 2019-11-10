@@ -27,6 +27,10 @@ function rsf = simdecel(varargin)
     ri.initvz = 900;
     ri.dist = 'flat'; % or gaussian, spherical, other options.
     ri.vdd = 1e-3; % valve decelerator distance
+    
+    % a few variables for messing with a turnon time.
+    ri.turnon = 400e-9;
+    ri.everyother = false;
 
     
     % set this to load fields from a previous run. Useful for separating
@@ -331,7 +335,7 @@ function gone = stage()
     global r
 
     c = r.chargetype(r.numstage);
-    r.charge = c;    
+    r.charge = c;
 
     % Handle 'translations' of the potentials by artifically futzing with
     % the z coordinates.
@@ -340,6 +344,9 @@ function gone = stage()
     % Cluge in "turn-on" time by reducing acceleration over a certain
     % timeframe.
     r.turnontime = 0;
+    if r.everyother && mod(r.numstage,2)
+        r.turnontime = 1; % essentially instant on
+    end
         
     % Make sure the synch molecule is "in" the fields. If not assume
     % loading and redefine z-coordinates
@@ -478,7 +485,7 @@ function a = acc()
     ay = r.f.(r.charge).dvdy(x,y,z);
     az = r.f.(r.charge).dvdz(x,y,z);
     a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
-    a = a * (1 - exp(-r.turnontime/500e-9));
+    a = a * (1 - exp(-r.turnontime/r.turnon));
     
     %r.xx(r.smallnum) = any(isnan(a(2,:)));
     %r.yy(r.smallnum) = any(isnan(a(3,:)));

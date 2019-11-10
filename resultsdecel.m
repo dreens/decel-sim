@@ -26,7 +26,7 @@ function rs = resultsdecel(rs)
         plot(r.pos(:,3)*1e3+xx,r.vel(:,3),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
-        diamL = 3e-3; 
+        diamL = 5e-3; 
         distL = 3e-3 + 333*5e-3;
         tof = zeros(1,6000);
         times = (1e-7)*(1:length(tof));

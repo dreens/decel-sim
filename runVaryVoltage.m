@@ -41,10 +41,10 @@ voltages = 10:.25:13;
 plot(voltages,[s1.tofpeak],'b-')
 hold on
 plot(voltages,[sf.tofpeak],'r-')
-legend('S=1','SF')
+legend('S=1','F')
 title('Corrected phase variation issue')
 xlabel('Voltage (kV)')
-ylabel('Population (ToF Area)')
+ylabel('Population (ToF Peak)')
 
 %% Next for VSF:
 

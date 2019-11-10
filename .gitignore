@@ -23,6 +23,9 @@
 # In this case they should be moved into the main directory.
 Cluster/
 
+# This one is more iffy, but the Fields can in principle be regenerated.
+Fields/
+
 #The autosave feature predates version control, and should be unnecessary
 # moving forward. It will still be useful while working locally.
 autosaves/

@@ -27,9 +27,9 @@ ep = repmat([180-p 180+p 360-p p],1,n); % S=1
 tt = s1test.times;
 m = num2cell((2.82328e-26)*12.5./(10:.25:13));
 s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,...
-    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',100000,'mOH',m);
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000000,'mOH',m);
 sf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,...
-    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',100000,'mOH',m);
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000000,'mOH',m);
 
 %% plot it up
 s1 = resultsdecel(s1);

@@ -26,7 +26,7 @@ ep = repmat([180-p 180+p 360-p p],1,n); % S=1
 
 tt = s1test.times;
 m = num2cell((2.82328e-26)*12.5./(10:.25:13));
-s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'everyother',true,...
+s1s = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'everyother',true,...
     'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',3000000,'mOH',m);
 sf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'everyother',false,...
     'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',3000000,'mOH',m);
@@ -34,13 +34,13 @@ sf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'everyother'
 %% plot it up
 s1 = resultsdecel(s1);
 
-sf = resultsdecel(sf);
+s1s= resultsdecel(s1s);
 
 figure
 voltages = 10:.25:13;
 plot(voltages,[s1.tofpeak],'b-')
 hold on
-plot(voltages,[sf.tofpeak],'r-')
+plot(voltages,[s1s.tofpeak],'r-')
 legend('S=1','F')
 title('Corrected phase variation issue')
 xlabel('Voltage (kV)')

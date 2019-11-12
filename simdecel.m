@@ -344,7 +344,7 @@ function gone = stage()
     % Cluge in "turn-on" time by reducing acceleration over a certain
     % timeframe.
     r.turnontime = 0;
-    if r.everyother && mod(r.numstage,2)
+    if r.everyother && ~mod(r.numstage,2)
         r.turnontime = 1; % essentially instant on
     end
         

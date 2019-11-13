@@ -18,9 +18,9 @@ tran = [1 1 0 0];
 tran = repmat(tran,1,ceil(n/2));
 trans = tran(1:2*n);
 
-velocities = 50:25:825;
-phases = (825^2 - velocities.^2)/(825^2-50^2)*57.415;
-tt = cell(1,length(phases));
+velocities = 50:20:820;
+phases = (825^2 - velocities.^2)/(825^2-50^2)*57.64;
+tt = {};
 
 for p=phases
     ep = repmat([180-p 180+p 360-p p],1,n); % S=1
@@ -30,14 +30,14 @@ for p=phases
 end
 
 s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'everyother',true,...
-    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',100);
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000000);
 f = simdecel('initvz',ivz,'decels',dcf,'chargetype',ct,'rot',rots,'everyother',false,...
-    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',100);
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000000);
 
 %% plot it up
-s1 = resultsdecel(s1);
+s1 = resultsTOFprocess(s1);
 
-f = resultsdecel(f);
+f = resultsTOFprocess(f);
 
 for i=1:length(f)
     f(i).finalvel = f(i).vels(end);

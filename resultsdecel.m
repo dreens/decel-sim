@@ -1,14 +1,13 @@
 %% Plots results
 function rs = resultsdecel(rs)
-    figure('Position',[0,0,1000,1000])
+    figure(3);%figure('Position',[0,0,1000,1000])
     colors = get(gca,'ColorOrder');
-    colors = [ colors ; colors ; colors ; colors ];
-    %colors = [colors([5 4 3 2 1 6 7],:) ; (1-colors)];
+    colors = [colors ; (1-colors)];
     lines = repmat({'-','-'},1,60);
     sname = repmat({'DSwitch','Normal'},1,60);
     for i=1:length(rs)
         r = rs(i);
-        i2 = i;%round(i/2+.25);
+        i2 = mod(i-1,length(colors))+1;
         c = colors(i2,:);
         l = lines{i};
         subplot(2,3,1); hold on
@@ -19,15 +18,15 @@ function rs = resultsdecel(rs)
         plot([r.initvz r.vels],'b-','Color',c,'LineStyle',l);
         
         subplot(2,3,3); hold on
-        plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3);
+        %plot(r.pos(:,2)*1e3,r.vel(:,2),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,4); hold on
         xx = 0*10*mod(i-1,3);
-        plot(r.pos(:,3)*1e3+xx,r.vel(:,3),'b.','Color',c,'MarkerSize',3);
+        %plot(r.pos(:,3)*1e3+xx,r.vel(:,3),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
-        diamL = 5e-3; 
-        distL = 3e-3 + 333*5e-3;
+        diamL = 2e-3; 
+        distL = 10e-3 + 333*5e-3;
         tof = zeros(1,6000);
         times = (1e-7)*(1:length(tof));
         for j=1:length(tof)

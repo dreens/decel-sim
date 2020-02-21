@@ -30,9 +30,9 @@ for p=phases
 end
 
 s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'everyother',true,...
-    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000000);
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',3000000);
 f = simdecel('initvz',ivz,'decels',dcf,'chargetype',ct,'rot',rots,'everyother',false,...
-    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',1000000);
+    'trans',trans,'endphases',tt,'calctype',repmat('t',1,1000),'num',3000000);
 
 %% plot it up
 s1 = resultsTOFprocess(s1);

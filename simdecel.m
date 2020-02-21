@@ -29,7 +29,7 @@ function rsf = simdecel(varargin)
     ri.vdd = 1e-3; % valve decelerator distance
     
     % a few variables for messing with a turnon time.
-    ri.turnon = 400e-9;
+    ri.turnon = 400e-16;
     ri.everyother = false;
 
     

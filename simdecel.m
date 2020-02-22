@@ -17,7 +17,7 @@ function rsf = simdecel(varargin)
     ri.dname = 'Vary_Initial_Speed_Length';
     
     % initial number:
-    ri.num = 1e4;
+    ri.num = 1e2;
     
     % initial temperature, spatial distribution:
     ri.tempxy = 5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
@@ -73,31 +73,27 @@ function rsf = simdecel(varargin)
     ri.phi2off = 0;
     
     ri.initvz = 900;
-    i = 1;
-    for n = 300
-        ri.chargetype{i} = repmat('ba',1,n);
-        rt = [0 0 90 90 180 180 270 270];
-        rt = repmat(rt,1,ceil(n/4));
-        ri.rot{i} = rt(1:2*n);
 
-        tran = [1 1 0 0];
-        tran = repmat(tran,1,ceil(n/2));
-        ri.trans{i} = tran(1:2*n);
+    n = 333;
+    ri.chargetype = repmat('ba',1,n);
+
+    rt = [0 0 90 90 180 180 270 270];
+    rt = repmat(rt,1,ceil(n/4));
+    ri.rot = rt(1:2*n);
+
+    tran = [1 1 0 0];
+    tran = repmat(tran,1,ceil(n/2));
+    ri.trans{i} = tran(1:2*n);
     
-    
-        % the inf flag will get replaced with the ri.phase variable
-        %ri.endphases{i} = repmat([125 235 305 55],1,n); % S=1
-        ri.endphases{i} = [repmat([125 235 305 55],1,n)]; % SF
-        %ri.endphases{i} = [repmat([145 234.3 325 54.3],1,n)]; % VSF
-        %ri.endphases{i} = [repmat([150 229.35 330 49.35],1,n)]; % XSF
-        ri.finalvz = 0; % leaving the 'inf' flag allows phase tuning for final vz.
+    % The end phase for each charge type is specified as a function of "phase"
+    ri.endphases = @(p) repmat([180-p 180+p 360-p p],1,n);
 
-        % each stage has its endpoint calculated by phase, velocity, or time.
-        % specify this as 'p', 'v', or 't':
-        ri.calctype{i} = [repmat('pp',1,n)];
+    ri.finalvz = 0; % Leave zero if it is desired not to optimize for final speed.
+    ri.phase = 55;
 
-        i = i + 1;
-    end
+    % each stage has its endpoint calculated by phase, velocity, or time.
+    % specify this as 'p', 'v', or 't':
+    ri.calctype = [repmat('pp',1,n)];
     
     % simulation timing variables
     ri.smallt = 2e-7;
@@ -199,9 +195,6 @@ function init()
     end
     
     % Insert phase wherever 'inf' flag is found:
-    if r.verbose
-        fprintf('%s%.2f\n','Phase: ',r.phase)
-    end
     r.endphases(r.endphases==inf) = r.phase;
     r.endphases(r.endphases==-inf) = -r.phase;
     
@@ -209,21 +202,16 @@ function init()
     % number. Don't do this if r.finalvz is set to zero.
     if r.finalvz 
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
-        % changed the bounds for acceleration
-        c = labels{1};
-        d = labels{2};
-        r.phase = fminbnd(@(phi) (r.f.(c).aenergy(phi)*(max(r.stages)-1) ...
-            + r.f.(d).aenergy(-phi+r.phi2off)*(max(r.stages)-1) ...
-            - r.f.(c).aenergy(-phi+r.phi2off)*(max(r.stages)-2) ...
-            - r.f.(d).aenergy(-phi)*(max(r.stages)-1) ...
-            - r.f.(c).aenergy(-90) - energy)^2,-90,90); 
-        if r.verbose
-            fprintf('Phase Angle: %2.3f\n',r.phase);
-        end
-        p1 = max(r.endphases);
-        p2 = min(r.endphases);
-        r.endphases(r.endphases==p1) = r.phase;
-        r.endphases(r.endphases==p2) = -r.phase+r.phi2off;
+
+        r.phase = fminbnd(@(phi) (energyLost(phi) - energy)^2,0,90); 
+    end
+
+    % Replace r.endphases the function with an array 
+    % based on the specified or determined phase angle.
+    r.endphases = r.endphases(r.phase);
+
+    if r.verbose
+        fprintf('Phase Angle: %2.3f\n',r.phase);
     end
     
 
@@ -287,6 +275,18 @@ function init()
     r.xx = zeros(30000,1);
     r.smallnum = 1;
 end
+
+function energyLost(p)
+    global r
+    ep = r.endphases(p);
+    sp = [-90 ep(1:end-1)];
+    for i=1:r.numstages
+        e = e + r.f.(r.chargetype(i)).aenergy(ep(i)) ...
+              - r.f.(r.chargetype(i)).aenergy(sp(i));
+    end
+    return e
+end
+
 
 
 %% This function does a run.

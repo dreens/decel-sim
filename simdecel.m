@@ -72,10 +72,11 @@ function rsf = simdecel(varargin)
     ri.phase = 50;
     ri.phi2off = 0;
     
-    ri.initvz = 900;
+    ri.initvz = 820;
 
     n = 333;
     ri.chargetype = repmat('ba',1,n);
+    ri.chargetype(1) = 'a';
 
     rt = [0 0 90 90 180 180 270 270];
     rt = repmat(rt,1,ceil(n/4));
@@ -83,12 +84,12 @@ function rsf = simdecel(varargin)
 
     tran = [1 1 0 0];
     tran = repmat(tran,1,ceil(n/2));
-    ri.trans{i} = tran(1:2*n);
+    ri.trans = tran(1:2*n);
     
     % The end phase for each charge type is specified as a function of "phase"
     ri.endphases = @(p) repmat([180-p 180+p 360-p p],1,n);
 
-    ri.finalvz = 0; % Leave zero if it is desired not to optimize for final speed.
+    ri.finalvz = 100; % Leave zero if it is desired not to optimize for final speed.
     ri.phase = 55;
 
     % each stage has its endpoint calculated by phase, velocity, or time.
@@ -159,6 +160,13 @@ end
 
 function init()
     global r
+    
+    % Stage Number
+    r.numstage = 1;
+    r.numstages = length(r.chargetype);
+
+    
+    
     %% Initialize fields, 
     % Load the mat file, or generate it from a COMSOL .dat file if it
     % doesn't exist yet.
@@ -193,10 +201,6 @@ function init()
         % corresponding charge configuration.
         r.f.(labels{i}) = load(['Fields/' dname '.mat']);
     end
-    
-    % Insert phase wherever 'inf' flag is found:
-    r.endphases(r.endphases==inf) = r.phase;
-    r.endphases(r.endphases==-inf) = -r.phase;
     
     % Choose the phase angle as a function of vfinal, vinitial, and stage
     % number. Don't do this if r.finalvz is set to zero.
@@ -254,9 +258,6 @@ function init()
     end
 
     %% Initialize other variables
-    % Stage Number
-    r.numstage = 1;
-    r.numstages = length(r.chargetype);
     r.charge = r.chargetype(1);
     r.rot = r.rot * pi / 180;
 
@@ -276,15 +277,20 @@ function init()
     r.smallnum = 1;
 end
 
-function energyLost(p)
+function e = energyLost(p)
     global r
-    ep = r.endphases(p);
-    sp = [-90 ep(1:end-1)];
+    e = 0;
+    ep = r.endphases(p) ;
+    sp = [-90 ep];
     for i=1:r.numstages
-        e = e + r.f.(r.chargetype(i)).aenergy(ep(i)) ...
-              - r.f.(r.chargetype(i)).aenergy(sp(i));
+        wrap = @(a) 90-abs(mod(a+90,360)-180);
+        a1 = wrap(ep(i)-r.trans(i)*180);
+        a2 = wrap(sp(i)-r.trans(i)*180);
+        if a1~=a2
+            e = e + r.f.(r.chargetype(i)).aenergy(a1) ...
+                  - r.f.(r.chargetype(i)).aenergy(a2);
+        end
     end
-    return e
 end
 
 

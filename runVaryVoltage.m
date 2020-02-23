@@ -10,6 +10,7 @@ dcsf = struct('a','longdecel','b','singlerod');
 ct = ivz; rots = ivz; trans = ivz; ep = ivz;
 n = 333;
 ct = repmat('ba',1,n);
+ct(1) = 'a';
 rot = [0 0 90 90 180 180 270 270];
 rot = repmat(rot,1,ceil(n/4));
 rots = rot(1:2*n);
@@ -19,28 +20,38 @@ tran = repmat(tran,1,ceil(n/2));
 trans = tran(1:2*n);
 
 p = 50;
-ep = repmat([180-p 180+p 360-p p],1,n); % S=1
+ep = @(p) repmat([180-p 180+p 360-p p],1,n); % S=1
 
-%s1test = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'turnon',1e-12,...
-%    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1);
+% get the masses
+voltages = 10:.25:14;
+m = num2cell((2.82328e-26)*12.5./voltages);
 
+% get the times
+%s1t = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'turnon',1e-16,...
+%    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1,'mOH',m);
+%sft = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'turnon',1e-16,...
+%    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1,'mOH',m);
+%tts1 = {};
+%ttsf = {};
+%for i=1:length(voltages)
+%    tts1{i} = @(x) s1t(i).times;
+%    ttsf{i} = @(x) sft(i).times;
+%end
 %tt = s1test.times;
-m = num2cell((2.82328e-26)*12.5./(10:.25:13));
-s1s = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'everyother',true,...
-    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',30000,'mOH',m);
-sf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'everyother',false,...
-    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',30000,'mOH',m);
+s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'turnon',500e-9,...
+    'trans',trans,'endphases',tts1,'calctype',repmat('t',1,1000),'num',3000000,'mOH',m);
+sf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'turnon',500e-9,...
+    'trans',trans,'endphases',ttsf,'calctype',repmat('t',1,1000),'num',3000000,'mOH',m);
 
 %% plot it up
 s1 = resultsdecel(s1);
 
-s1s= resultsdecel(s1s);
+sf = resultsdecel(sf);
 
 figure
-voltages = 10:.25:13;
 plot(voltages,[s1.tofpeak],'b-')
 hold on
-plot(voltages,[s1s.tofpeak],'r-')
+plot(voltages,[sf.tofpeak],'r-')
 legend('S=1','F')
 title('Corrected phase variation issue')
 xlabel('Voltage (kV)')

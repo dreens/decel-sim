@@ -20,13 +20,13 @@ function rsf = simdecel(varargin)
     ri.num = 1e2;
     
     % initial temperature, spatial distribution:
-    ri.tempxy = 5; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
+    ri.tempxy = 3; %{100e-3 200e-3 400e-3 800e-3 1.6 3 6 12};
     ri.spreadxy = 3e-3;
     ri.tempz = 5;
     ri.spreadz = 8e-3;
-    ri.initvz = 900;
+    ri.initvz = 820;
     ri.dist = 'flat'; % or gaussian, spherical, other options.
-    ri.vdd = 1e-3; % valve decelerator distance
+    ri.vdd = 0e-3; % valve decelerator distance
     
     % a few variables for messing with a turnon time.
     ri.turnon = 400e-16;
@@ -89,7 +89,7 @@ function rsf = simdecel(varargin)
     % The end phase for each charge type is specified as a function of "phase"
     ri.endphases = @(p) repmat([180-p 180+p 360-p p],1,n);
 
-    ri.finalvz = 100; % Leave zero if it is desired not to optimize for final speed.
+    ri.finalvz = 52; % Leave zero if it is desired not to optimize for final speed.
     ri.phase = 55;
 
     % each stage has its endpoint calculated by phase, velocity, or time.
@@ -207,7 +207,8 @@ function init()
     if r.finalvz 
         energy = .5*r.mOH*(r.initvz^2 - r.finalvz^2);
 
-        r.phase = fminbnd(@(phi) (energyLost(phi) - energy)^2,0,90); 
+        ops = optimset('TolX',1e-6);
+        r.phase = fminbnd(@(phi) (energyLost(phi) - energy)^2,0,90,ops); 
     end
 
     % Replace r.endphases the function with an array 
@@ -281,15 +282,18 @@ function e = energyLost(p)
     global r
     e = 0;
     ep = r.endphases(p) ;
-    sp = [-90 ep];
+    sp = [90 ep];
     for i=1:r.numstages
         wrap = @(a) 90-abs(mod(a+90,360)-180);
         a1 = wrap(ep(i)-r.trans(i)*180);
         a2 = wrap(sp(i)-r.trans(i)*180);
-        if a1~=a2
-            e = e + r.f.(r.chargetype(i)).aenergy(a1) ...
-                  - r.f.(r.chargetype(i)).aenergy(a2);
+        if r.chargetype(i)=='a'
+            e = e + r.f.a.aenergy(a1) ...
+                  - r.f.a.aenergy(a2);
         end
+    end
+    if isnan(e)
+        e = 0;
     end
 end
 
@@ -491,7 +495,7 @@ function a = acc()
     ay = r.f.(r.charge).dvdy(x,y,z);
     az = r.f.(r.charge).dvdz(x,y,z);
     a = [ax*c + ay*s , -ax*s + ay*c , az]/r.mOH;
-    a = a * (1 - exp(-r.turnontime/r.turnon));
+    %a = a * (1 - exp(-r.turnontime/r.turnon));
     
     %r.xx(r.smallnum) = any(isnan(a(2,:)));
     %r.yy(r.smallnum) = any(isnan(a(3,:)));

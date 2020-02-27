@@ -438,7 +438,7 @@ function gone = stage()
         end
     end
     
-    %r.pos(abs(r.pos(:,3)-r.pos(1,3))>10e-3,:)=nan;
+    r.pos(abs(r.pos(:,3)-r.pos(1,3))>10e-3,:)=nan;
     %r.pos(r.vel(:,3)<0,:)=nan;
     r.lost    = isnan(sum(r.pos,2));
     r.pos     = r.pos(~r.lost,:);

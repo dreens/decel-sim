@@ -25,7 +25,7 @@ function rs = resultsdecel(rs)
         %plot(r.pos(:,3)*1e3+xx,r.vel(:,3),'b.','Color',c,'MarkerSize',3);
         
         subplot(2,3,5); hold on
-        diamL = 2e-3; 
+        diamL = 3e-3; 
         distL = 10e-3 + 333*5e-3;
         tof = zeros(1,6000);
         times = (1e-7)*(1:length(tof));
@@ -34,7 +34,7 @@ function rs = resultsdecel(rs)
             zsq = (r.pos(:,3)-distL + t*r.vel(:,3)).^2;
             xsq = (r.pos(:,1)+t*r.vel(:,1)).^2;
             ya = abs(r.pos(:,2)+t*r.vel(:,2));
-            tof(j) = sum( zsq + xsq < diamL^2/4 & ya < 2e-3);
+            tof(j) = sum( zsq + xsq < diamL^2/4 & ya < 4e-3);
         end
         rs(i).tofpeak = max(tof);
         rs(i).tofarea = trapz(times,tof);

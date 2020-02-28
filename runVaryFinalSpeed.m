@@ -23,15 +23,15 @@ ep = @(p) repmat([180-p 180+p 360-p p],1,n); % S=1
 
 vf = num2cell(800:-25:25);
 
-n = 5000000;
+n = 1000000;
 
 f = simdecel('initvz',ivz,'decels',dcf,'chargetype',ct,'rot',rots,'finalvz',vf,...
     'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',n,...
-    'tempz',2,'tempxy',1,'spreadz',10e-3,'spreadxy',2e-3,'dist','flat','smallt',1e-7);
+    'tempz',5,'tempxy',5,'spreadz',10e-3,'spreadxy',3e-3,'dist','sphere','smallt',1e-7);
 
 s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'finalvz',vf,...
     'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',n,...
-    'tempz',2,'tempxy',1,'spreadz',10e-3,'spreadxy',2e-3,'dist','flat','smallt',1e-7);
+    'tempz',5,'tempxy',5,'spreadz',10e-3,'spreadxy',3e-3,'dist','sphere','smallt',1e-7);
 %% plot it up
 s1 = resultsTOFprocess(s1);
 
@@ -40,13 +40,13 @@ f = resultsTOFprocess(f);
 for i=1:length(f)
     f(i).finalvel = f(i).vels(end);
 end
-%%
+
 figure
 plot([f.finalvel],[s1.tofpeak],'b-')
 hold on
 plot([f.finalvel],[f.tofpeak],'r-')
 legend('S=1','F')
-title('Vary Final Speed Sim')
+title('10, 1x1')
 xlabel('Final Speed (m/s)')
 ylabel('Population (ToF Peak)')
 

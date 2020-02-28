@@ -23,43 +23,43 @@ p = 50;
 ep = @(p) repmat([180-p 180+p 360-p p],1,n); % S=1
 
 % get the masses
-voltages = 9:.2:14;
+voltages = 9:.25:14;
 m = num2cell((2.82328e-26)*12.5./voltages);
 voltage_flat = [ones(1,5)*9.85 10:.2:14];
 m1 = num2cell((2.82328e-26)*12.5./voltage_flat);
 
 % get the times
-s1t = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'turnon',1e-16,...
-    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1,'mOH',m1);
-sft = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'turnon',1e-16,...
-    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1,'mOH',m1);
-tts1 = {};
-ttsf = {};
-for i=1:length(voltages)
-    tts1{i} = @(x) s1t(i).times;
-    ttsf{i} = @(x) sft(i).times;
-end
+%s1t = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'turnon',1e-16,...
+%    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1,'mOH',m1);
+%sft = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'turnon',1e-16,...
+%    'trans',trans,'endphases',ep,'calctype',repmat('p',1,1000),'num',1,'mOH',m1);
+%tts1 = {};
+%ttsf = {};
+%for i=1:length(voltages)
+%    tts1{i} = @(x) s1t(i).times;
+%    ttsf{i} = @(x) sft(i).times;
+%end
 
-s1 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'turnon',600e-19,...
-    'trans',trans,'endphases',tts1,'calctype',repmat('t',1,1000),'num',3000000,'mOH',m,...
+s1t3 = simdecel('initvz',ivz,'decels',dcs1,'chargetype',ct,'rot',rots,'turnon',300e-9,...
+    'trans',trans,'endphases',tts1,'calctype',repmat('t',1,1000),'num',1000000,'mOH',m,...
     'tempz',5,'tempxy',5,'spreadz',10e-3,'spreadxy',3e-3,'dist','sphere','smallt',2e-7);
-sf = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'turnon',600e-19,...
-    'trans',trans,'endphases',ttsf,'calctype',repmat('t',1,1000),'num',3000000,'mOH',m,...
-    'tempz',5,'tempxy',5,'spreadz',10e-3,'spreadxy',2e-3,'dist','sphere','smallt',2e-7);
+sft3 = simdecel('initvz',ivz,'decels',dcsf,'chargetype',ct,'rot',rots,'turnon',300e-9,...
+    'trans',trans,'endphases',ttsf,'calctype',repmat('t',1,1000),'num',1000000,'mOH',m,...
+    'tempz',5,'tempxy',5,'spreadz',10e-3,'spreadxy',3e-3,'dist','sphere','smallt',2e-7);
 
 %% plot it up
-s1 = resultsdecel(s1);
+s1t3 = resultsTOFprocess(s1t3);
 
-sf = resultsdecel(sf);
+sft3 = resultsTOFprocess(sft3);
 
-s = 11.5/10.5;
+s = 1;%11.5/10.5;
 
 figure
-plot(voltages*s,[s1.tofpeak],'b-')
+plot(voltages*s,[s1t3.tofpeak],'b-')
 hold on
-plot(voltages*s,[sf.tofpeak],'r-')
+plot(voltages*s,[sft3.tofpeak],'r-')
 legend('S=1','F')
-title('Corrected phase variation issue')
+title('Vary Voltage, Full Initial Distribution.')
 xlim([9.9 13.1])
 xlabel('Voltage (kV)')
 ylabel('Population (ToF Peak)')

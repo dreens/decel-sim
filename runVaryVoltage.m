@@ -52,7 +52,7 @@ s1t3 = resultsTOFprocess(s1t3);
 
 sft3 = resultsTOFprocess(sft3);
 
-s = 1;%11.5/10.5;
+s = 11.2/10.5;
 
 figure
 plot(voltages*s,[s1t3.tofpeak],'b-')
